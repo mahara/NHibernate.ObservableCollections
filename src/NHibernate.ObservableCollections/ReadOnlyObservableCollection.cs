@@ -45,31 +45,13 @@ namespace Iesi.Collections.Generic
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
-
-        /// <summary>
-        ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
-        /// </summary>
-        event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
-        {
-            add => CollectionChanged += value;
-            remove => CollectionChanged -= value;
-        }
+        public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler? PropertyChanged;
-
-        /// <summary>
-        ///     Occurs when a property value changes.
-        /// </summary>
-        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
-        {
-            add => PropertyChanged += value;
-            remove => PropertyChanged -= value;
-        }
+        public virtual event PropertyChangedEventHandler? PropertyChanged;
 
 #if !NET8_0_OR_GREATER
         /// <summary>

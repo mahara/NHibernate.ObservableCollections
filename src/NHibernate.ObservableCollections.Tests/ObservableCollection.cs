@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace Iesi.Collections.Generic.Tests
 {
-    internal class TestObservableCollection<T> : ObservableCollection<T>
+    public class TestObservableCollection<T> : ObservableCollection<T>
     {
         public TestObservableCollection()
         {
@@ -22,7 +22,7 @@ namespace Iesi.Collections.Generic.Tests
 
         public List<PropertyChangedEventArgs> PropertyChangedEventArgsList { get; } = [];
 
-        public void ResetAllArgsLists()
+        public void ResetAllEventArgsLists()
         {
             CollectionChangedEventArgsList.Clear();
 
@@ -33,7 +33,7 @@ namespace Iesi.Collections.Generic.Tests
         {
             base.OnCollectionChanged(e);
 
-            if (!EventNotificationIsDeferred)
+            if (!EventNotificationsAreDeferred)
             {
                 CollectionChangedEventArgsList.Add(e);
             }
@@ -43,14 +43,14 @@ namespace Iesi.Collections.Generic.Tests
         {
             base.OnPropertyChanged(e);
 
-            if (!EventNotificationIsDeferred)
+            if (!EventNotificationsAreDeferred)
             {
                 PropertyChangedEventArgsList.Add(e);
             }
         }
     }
 
-    internal class TestReadOnlyObservableCollection<T> : ReadOnlyObservableCollection<T>
+    public class TestReadOnlyObservableCollection<T> : ReadOnlyObservableCollection<T>
     {
         public TestReadOnlyObservableCollection(ObservableCollection<T> collection) :
             base(collection)
@@ -61,7 +61,7 @@ namespace Iesi.Collections.Generic.Tests
 
         public List<PropertyChangedEventArgs> PropertyChangedEventArgsList { get; } = [];
 
-        public void ResetAllArgsLists()
+        public void ResetAllEventArgsLists()
         {
             CollectionChangedEventArgsList.Clear();
 

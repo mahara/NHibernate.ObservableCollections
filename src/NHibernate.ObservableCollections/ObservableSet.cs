@@ -1,9 +1,13 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+
+using Iesi.Collections.Generic.Properties;
 
 namespace Iesi.Collections.Generic
 {
     /// <summary>
-    ///     Represents a dynamic data set that provides notifications
+    ///     Represents a dynamic data ordered set that provides notifications
     ///     when items get added or removed, or when the whole set is refreshed.
     /// </summary>
     /// <typeparam name="T">
@@ -28,13 +32,26 @@ namespace Iesi.Collections.Generic
         ISet<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
+        //
+        //  NOTES:  Invariant conditions to preserve:
+        //          -   _set owns uniqueness and membership using _set.Comparer.
+        //          -   _list owns public order, enumeration order, indexer order, CopyTo order,
+        //              and CollectionChanged indexes.
+        //          -   _set.Count must always equal _list.Count.
+        //          -   All items in _list must be in _set.
+        //          -   No two items in _list may be equal according to _set.Comparer.
+        //          -   Never rebuild _list from _set enumeration when preserving ordered-set semantics.
+        //
+        private readonly HashSet<T> _set;
+        private readonly List<T> _list;
+
         private SimpleMonitor? _monitor; // Lazily allocated only when a subclass calls BlockReentrancy() or during serialization. Do not rename (binary serialization).
 
         [NonSerialized]
         private int _blockReentrancyCount;
 
-        private HashSet<T> _set;
-        private List<T> _list;
+        [NonSerialized]
+        private DeferredEventNotificationsOperation? _deferredEventNotificationsOperation;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
@@ -84,39 +101,50 @@ namespace Iesi.Collections.Generic
         /// </param>
         public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
-            _set = new HashSet<T>(collection, comparer);
-            _list = [.. _set];
+            _set = new HashSet<T>(comparer);
+            _list = [];
+
+            foreach (var item in collection)
+            {
+                if (_set.Add(item))
+                {
+                    _list.Add(item);
+                }
+            }
         }
 
         /// <summary>
         ///     Occurs when the contents of the <see cref="ObservableSet{T}" /> changes.
         /// </summary>
+        [field: NonSerialized]
         public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when a property of this <see cref="ObservableSet{T}" /> (such as <see cref="Count" />) is changing.
         /// </summary>
+        [field: NonSerialized]
         public virtual event PropertyChangingEventHandler? PropertyChanging;
 
         /// <summary>
         ///     Occurs when a property of this <see cref="ObservableSet{T}" /> (such as <see cref="Count" />) changes.
         /// </summary>
+        [field: NonSerialized]
         public virtual event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         ///     Gets the number of elements that are contained in the <see cref="ObservableSet{T}" />.
         /// </summary>
-        public virtual int Count => _set.Count;
+        public int Count => _set.Count;
 
         /// <summary>
         ///     Gets a value indicating whether the <see cref="ObservableSet{T}" /> is read-only.
         /// </summary>
-        public virtual bool IsReadOnly => ((ICollection<T>) _set).IsReadOnly;
+        public bool IsReadOnly => ((ICollection<T>) _set).IsReadOnly;
 
         /// <summary>
         ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
         /// </summary>
-        public virtual IEqualityComparer<T> Comparer => _set.Comparer;
+        public IEqualityComparer<T> Comparer => _set.Comparer;
 
         /// <summary>
         ///     Gets the element at the specified index in the <see cref="ObservableSet{T}" />.
@@ -125,15 +153,30 @@ namespace Iesi.Collections.Generic
         /// <returns>The element at the specified index in the <see cref="ObservableSet{T}" />.</returns>
         public T this[int index] => _list[index];
 
+        protected bool EventNotificationsAreDeferred
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _deferredEventNotificationsOperation is not null;
+        }
+
         /// <summary>
         ///     Returns an enumerator that iterates through the <see cref="ObservableSet{T}" />.
         /// </summary>
         /// <returns>
         ///     An enumerator for the <see cref="ObservableSet{T}" />.
         /// </returns>
-        public virtual HashSet<T>.Enumerator GetEnumerator()
+        /// <remarks>
+        ///     WPF collection views observe this collection through <see cref="IEnumerable{T}" />
+        ///     and validate <see cref="NotifyCollectionChangedEventArgs" /> indexes
+        ///     against the visible enumeration order.
+        ///
+        ///     Therefore, enumeration order, indexer order, and CollectionChanged indexes
+        ///     must all describe the same order. Do not enumerate <c>_set</c> if Add/Remove indexes
+        ///     are calculated from <c>_list</c>.
+        /// </remarks>
+        public IEnumerator<T> GetEnumerator()
         {
-            return _set.GetEnumerator();
+            return _list.GetEnumerator();
         }
 
         /// <inheritdoc />
@@ -153,6 +196,8 @@ namespace Iesi.Collections.Generic
         /// </summary>
         public void Refresh()
         {
+            VerifyState();
+
             RefreshItems();
         }
 
@@ -161,8 +206,14 @@ namespace Iesi.Collections.Generic
         /// </summary>
         protected virtual void RefreshItems()
         {
-            OnCountPropertyChanged();
+            OnCountPropertyChanging();
+
+            VerifyState();
+
             OnCollectionReset();
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
         }
 
         /// <summary>
@@ -172,8 +223,10 @@ namespace Iesi.Collections.Generic
         /// <returns>
         ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> contains the specified element; otherwise, <see langword="false" />.
         /// </returns>
-        public virtual bool Contains(T item)
+        public bool Contains(T item)
         {
+            VerifyState();
+
             return _set.Contains(item);
         }
 
@@ -187,9 +240,21 @@ namespace Iesi.Collections.Generic
         /// <returns>
         ///     The zero-based index of the first occurrence of item within the entire <see cref="ObservableSet{T}" />, if found; otherwise, -1.
         /// </returns>
-        public virtual int IndexOf(T item)
+        public int IndexOf(T item)
         {
-            return _list.IndexOf(item);
+            VerifyState();
+
+            var comparer = _set.Comparer;
+
+            for (var i = 0; i < _list.Count; i++)
+            {
+                if (comparer.Equals(_list[i], item))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -197,32 +262,94 @@ namespace Iesi.Collections.Generic
         /// </summary>
         /// <param name="item">The element to add to the set.</param>
         /// <returns>
-        ///     <see langword="true" /> if the element is added to the <see cref="ObservableSet{T}" />; <see langword="false" /> if the element is already present.
+        ///     <see langword="true" /> if the element is added to the <see cref="ObservableSet{T}" />;
+        ///     <see langword="false" /> if the element is already present.
         /// </returns>
-        public virtual bool Add(T item)
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) event to any listeners.
+        /// </remarks>
+        public bool Add(T item)
         {
-            CheckReentrancy();
-
-            var isAdded = _set.Add(item);
-            if (isAdded)
-            {
-                OnCountPropertyChanging();
-
-                _list.Add(item);
-
-                var index = _set.Count - 1;
-
-                OnCountPropertyChanged();
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
-            }
-
-            return isAdded;
+            return Insert(Count, item);
         }
 
         /// <inheritdoc />
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) event to any listeners.
+        /// </remarks>
         void ICollection<T>.Add(T item)
         {
             Add(item);
+        }
+
+        /// <summary>
+        ///     Inserts the specified element into the <see cref="ObservableSet{T}" /> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which item should be inserted.</param>
+        /// <param name="item">The element to insert.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is inserted into the <see cref="ObservableSet{T}" />;
+        ///     <see langword="false" /> if the element is already present.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     <paramref name="index" /> is less than zero or greater than <see cref="Count" />.
+        /// </exception>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) event to any listeners.
+        /// </remarks>
+        public bool Insert(int index, T item)
+        {
+            if (index < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            VerifyState();
+
+            if (index > Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (_set.Contains(item))
+            {
+                return false;
+            }
+
+            InsertItem(index, item);
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Inserts the specified element into the <see cref="ObservableSet{T}" /> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which item should be inserted.</param>
+        /// <param name="item">The element to insert.</param>
+        /// <remarks>
+        ///     The caller must ensure that <paramref name="index" /> is valid
+        ///     and that <paramref name="item" /> is not already present.
+        ///
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) event to any listeners.
+        /// </remarks>
+        protected virtual void InsertItem(int index, T item)
+        {
+            CheckReentrancy();
+
+            OnCountPropertyChanging();
+
+            var isAdded = _set.Add(item);
+
+            Debug.Assert(isAdded);
+
+            _list.Insert(index, item);
+
+            VerifyState();
+
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
         }
 
         /// <summary>
@@ -230,26 +357,208 @@ namespace Iesi.Collections.Generic
         /// </summary>
         /// <param name="item">The element to remove.</param>
         /// <returns>
-        ///     <see langword="true" /> if the element is successfully found and removed; otherwise, <see langword="false" />.
+        ///     <see langword="true" /> if the element is successfully found and removed;
+        ///     otherwise, <see langword="false" />.
         /// </returns>
-        public virtual bool Remove(T item)
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) event to any listeners.
+        /// </remarks>
+        public bool Remove(T item)
+        {
+            var index = IndexOf(item);
+
+            if (index < 0)
+            {
+                return false;
+            }
+
+            VerifyState();
+
+            RemoveItem(index);
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Removes the element at the specified index of the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) event to any listeners.
+        /// </remarks>
+        public void RemoveAt(int index)
+        {
+            if (index < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            VerifyState();
+
+            if (index >= Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            RemoveItem(index);
+        }
+
+        /// <summary>
+        ///     Removes the element at the specified index of the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
+        /// <remarks>
+        ///     The caller must ensure that <paramref name="index" /> is valid.
+        ///
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) event to any listeners.
+        /// </remarks>
+        protected virtual void RemoveItem(int index)
         {
             CheckReentrancy();
 
-            var isRemoved = _set.Remove(item);
-            if (isRemoved)
+            var itemRemoved = _list[index];
+
+            OnCountPropertyChanging();
+
+            var isRemoved = _set.Remove(itemRemoved);
+
+            Debug.Assert(isRemoved);
+
+            _list.RemoveAt(index);
+
+            VerifyState();
+
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, itemRemoved, index);
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Moves the item at the specified index to a new location in the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="oldIndex">The zero-based index specifying the location of the item to be moved.</param>
+        /// <param name="newIndex">The zero-based index specifying the new location of the item.</param>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
+        /// </remarks>
+        public void Move(int oldIndex, int newIndex)
+        {
+            if (oldIndex < 0)
             {
-                OnCountPropertyChanging();
-
-                var index = _list.IndexOf(item);
-
-                _list.Remove(item);
-
-                OnCountPropertyChanged();
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
+                throw new ArgumentOutOfRangeException(nameof(oldIndex));
             }
 
-            return isRemoved;
+            if (newIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(newIndex));
+            }
+
+            VerifyState();
+
+            if (oldIndex >= Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(oldIndex));
+            }
+
+            if (newIndex >= Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(newIndex));
+            }
+
+            MoveItem(oldIndex, newIndex);
+        }
+
+        /// <summary>
+        ///     Moves the item at the specified index to a new location in the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="oldIndex">The zero-based index specifying the location of the item to be moved.</param>
+        /// <param name="newIndex">The zero-based index specifying the new location of the item.</param>
+        /// <remarks>
+        ///     The caller must ensure that <paramref name="oldIndex" /> and <paramref name="newIndex" /> are valid.
+        ///
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
+        /// </remarks>
+        protected virtual void MoveItem(int oldIndex, int newIndex)
+        {
+            CheckReentrancy();
+
+            var itemMoved = _list[oldIndex];
+
+            _list.RemoveAt(oldIndex);
+            _list.Insert(newIndex, itemMoved);
+
+            VerifyState();
+
+            OnCollectionChanged(itemMoved, oldIndex, newIndex);
+
+            OnIndexerPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Removes all elements from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
+        /// </remarks>
+        public void Clear()
+        {
+            VerifyState();
+
+            if (Count == 0)
+            {
+                return;
+            }
+
+            ClearItems();
+        }
+
+        /// <summary>
+        ///     Removes all elements from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
+        /// </remarks>
+        protected virtual void ClearItems()
+        {
+            CheckReentrancy();
+
+            using var _ = BlockReentrancy();
+
+            OnCountPropertyChanging();
+
+            _set.Clear();
+            _list.Clear();
+
+            VerifyState();
+
+            OnCollectionReset();
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Sets the capacity of the <see cref="ObservableSet{T}" /> to the actual number of elements it contains,
+        ///     rounded up to a nearby, implementation-specific value.
+        /// </summary>
+        public void TrimExcess()
+        {
+            VerifyState();
+
+            TrimExcessItems();
+
+            VerifyState();
+        }
+
+        /// <summary>
+        ///     Sets the capacity of the <see cref="ObservableSet{T}" /> to the actual number of elements it contains,
+        ///     rounded up to a nearby, implementation-specific value.
+        /// </summary>
+        protected virtual void TrimExcessItems()
+        {
+            _set.TrimExcess();
+            _list.TrimExcess();
         }
 
         /// <summary>
@@ -261,65 +570,172 @@ namespace Iesi.Collections.Generic
         /// <returns>
         ///     The number of elements that were removed from the <see cref="ObservableSet{T}" />.
         /// </returns>
-        public virtual int RemoveWhere(Predicate<T> match)
+        /// <exception cref="ArgumentNullException">
+        ///     <paramref name="match" /> is <see langword="null" />.
+        /// </exception>
+        /// <remarks>
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events,
+        ///     or a <see cref="NotifyCollectionChangedAction.Reset" /> event when all items are removed.
+        /// </remarks>
+        public int RemoveWhere(Predicate<T> match)
         {
-            if (_set.Count == 0)
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(match);
+#else
+            if (match is null)
+            {
+                throw new ArgumentNullException(nameof(match));
+            }
+#endif
+
+            VerifyState();
+
+            if (Count == 0)
             {
                 return 0;
             }
 
+            return RemoveItemsWhere(match);
+        }
+
+        /// <summary>
+        ///     Removes all elements that match the conditions defined by the specified predicate from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="match">
+        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+        /// </param>
+        /// <returns>
+        ///     The number of elements that were removed from the <see cref="ObservableSet{T}" />.
+        /// </returns>
+        /// <remarks>
+        ///     The caller must ensure that <paramref name="match" /> is not <see langword="null" />.
+        ///
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events,
+        ///     or a <see cref="NotifyCollectionChangedAction.Reset" /> event when all items are removed.
+        /// </remarks>
+        protected virtual int RemoveItemsWhere(Predicate<T> match)
+        {
             CheckReentrancy();
 
-            var copy = new HashSet<T>(_set, _set.Comparer);
+            using (BlockReentrancy())
+            {
+                using var deferredEventNotifications = DeferEventNotifications();
 
-            var removedCount = copy.RemoveWhere(match);
+                var itemsRemovedCount = RemoveItemsWhereCore(match);
 
-            if (removedCount == 0)
+                deferredEventNotifications.Complete();
+
+                return itemsRemovedCount;
+            }
+        }
+
+        /// <summary>
+        ///     Removes all elements that match the conditions defined by the specified predicate from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="match">
+        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+        /// </param>
+        /// <returns>
+        ///     The number of elements that were removed from the <see cref="ObservableSet{T}" />.
+        /// </returns>
+        /// <remarks>
+        ///     The caller must ensure that <paramref name="match" /> is not <see langword="null" />.
+        ///
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events,
+        ///     or a <see cref="NotifyCollectionChangedAction.Reset" /> event when all items are removed.
+        /// </remarks>
+        protected virtual int RemoveItemsWhereCore(Predicate<T> match)
+        {
+            //
+            // Phase 1: Create Removal Plan
+            // - Read-only scan.
+            // - Evaluate predicate and build removal clusters.
+            //
+            var itemRemovedClusters = new List<(int Index, List<T> Items)>();
+
+            List<T>? itemRemovedCluster = null;
+            var itemRemovedClusterIndex = -1;
+            var itemsRemovedCount = 0;
+
+            for (var indexOriginal = 0; indexOriginal < _list.Count; indexOriginal++)
+            {
+                var item = _list[indexOriginal];
+
+                if (!match(item))
+                {
+                    itemRemovedCluster = null;
+                    itemRemovedClusterIndex = -1;
+
+                    continue;
+                }
+
+                var itemRemovedIndex = indexOriginal - itemsRemovedCount;
+
+                if (itemRemovedCluster is not null &&
+                    itemRemovedClusterIndex == itemRemovedIndex)
+                {
+                    itemRemovedCluster.Add(item);
+                }
+                else
+                {
+                    itemRemovedCluster = [item];
+                    itemRemovedClusterIndex = itemRemovedIndex;
+
+                    itemRemovedClusters.Add((itemRemovedIndex, itemRemovedCluster));
+                }
+
+                itemsRemovedCount++;
+            }
+
+            if (itemsRemovedCount == 0)
             {
                 return 0;
             }
 
-            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
-
+            //
+            // Phase 2: Execute Removal Plan
+            // - Commit.
+            // - From here onward, mutation is allowed.
+            //
             OnCountPropertyChanging();
 
-            _set = copy;
-            _list = [.. _set];
+            var itemsCount = Count;
 
-            OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
-
-            return removedCount;
-        }
-
-        /// <summary>
-        ///     Removes all elements from the <see cref="ObservableSet{T}" />.
-        /// </summary>
-        public virtual void Clear()
-        {
-            CheckReentrancy();
-
-            if (_set.Count == 0)
+            if (itemsRemovedCount == itemsCount)
             {
-                return;
+                _set.Clear();
+                _list.Clear();
+
+                OnCollectionReset();
+            }
+            else
+            {
+                foreach (var itemRemovedClusterInfo in itemRemovedClusters)
+                {
+                    foreach (var itemRemoved in itemRemovedClusterInfo.Items)
+                    {
+                        var isRemoved = _set.Remove(itemRemoved);
+
+                        Debug.Assert(isRemoved);
+                    }
+
+                    _list.RemoveRange(
+                        itemRemovedClusterInfo.Index,
+                        itemRemovedClusterInfo.Items.Count);
+
+                    OnCollectionChanged(
+                        NotifyCollectionChangedAction.Remove,
+                        itemRemovedClusterInfo.Items,
+                        itemRemovedClusterInfo.Index);
+                }
             }
 
-            OnCountPropertyChanging();
-
-            _set.Clear();
-            _list.Clear();
-
             OnCountPropertyChanged();
-            OnCollectionReset();
-        }
+            OnIndexerPropertyChanged();
 
-        /// <summary>
-        ///     Sets the capacity of the <see cref="ObservableSet{T}" /> to the actual number of elements it contains,
-        ///     rounded up to a nearby, implementation-specific value.
-        /// </summary>
-        public virtual void TrimExcess()
-        {
-            _set.TrimExcess();
+            VerifyState();
+
+            return itemsRemovedCount;
         }
 
         /// <summary>
@@ -328,26 +744,74 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void UnionWith(IEnumerable<T> other)
         {
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(other);
+#else
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+#endif
+
+            VerifyState();
+
             CheckReentrancy();
 
-            var copy = new HashSet<T>(_set, _set.Comparer);
-
-            copy.UnionWith(other);
-
-            if (copy.Count == _set.Count)
+            using (BlockReentrancy())
             {
-                return;
+                using var deferredEventNotifications = DeferEventNotifications();
+
+                //
+                // Phase 1: Create Union Plan
+                // - Read-only scan.
+                // - Existing order is preserved.
+                // - New unique items are appended in 'other' enumeration order.
+                //
+                var set_Plan = new HashSet<T>(_set, _set.Comparer);
+                var list_Plan_ItemsAdded = new List<T>();
+
+                foreach (var item in other)
+                {
+                    if (set_Plan.Add(item))
+                    {
+                        list_Plan_ItemsAdded.Add(item);
+                    }
+                }
+
+                if (list_Plan_ItemsAdded.Count == 0)
+                {
+                    return;
+                }
+
+                //
+                // Phase 2: Execute Union Plan
+                // - Commit.
+                //
+                OnCountPropertyChanging();
+
+                var index = Count;
+
+                foreach (var itemAdded in list_Plan_ItemsAdded)
+                {
+                    var isAdded = _set.Add(itemAdded);
+
+                    Debug.Assert(isAdded);
+                }
+
+                _list.AddRange(list_Plan_ItemsAdded);
+
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Add,
+                    list_Plan_ItemsAdded,
+                    index);
+
+                OnCountPropertyChanged();
+                OnIndexerPropertyChanged();
+
+                VerifyState();
+
+                deferredEventNotifications.Complete();
             }
-
-            var added = copy.Where(i => !_set.Contains(i)).ToArray();
-
-            OnCountPropertyChanging();
-
-            _set = copy;
-            _list = [.. _set];
-
-            OnCountPropertyChanged();
-            OnCollectionChanged(EventArgsCache.Items_Empty, added, 0);
         }
 
         /// <summary>
@@ -357,26 +821,42 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void IntersectWith(IEnumerable<T> other)
         {
-            CheckReentrancy();
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(other);
+#else
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+#endif
 
-            var copy = new HashSet<T>(_set, _set.Comparer);
+            VerifyState();
 
-            copy.IntersectWith(other);
-
-            if (copy.Count == _set.Count)
+            if (Count == 0)
             {
                 return;
             }
 
-            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+            CheckReentrancy();
 
-            OnCountPropertyChanging();
+            using (BlockReentrancy())
+            {
+                using var deferredEventNotifications = DeferEventNotifications();
 
-            _set = copy;
-            _list = [.. _set];
+                //
+                // Phase 1: Create Intersection Plan
+                // - Materialize 'other' before mutation.
+                //
+                var set_Plan_ItemsKept = new HashSet<T>(other, _set.Comparer);
 
-            OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
+                //
+                // Phase 2: Execute Intersection Plan
+                // - Remove every current item not present in 'other'.
+                //
+                RemoveItemsWhereCore(item => !set_Plan_ItemsKept.Contains(item));
+
+                deferredEventNotifications.Complete();
+            }
         }
 
         /// <summary>
@@ -385,26 +865,47 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection of items to remove from the current <see cref="ObservableSet{T}" />.</param>
         public virtual void ExceptWith(IEnumerable<T> other)
         {
-            CheckReentrancy();
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(other);
+#else
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+#endif
 
-            var copy = new HashSet<T>(_set, _set.Comparer);
+            VerifyState();
 
-            copy.ExceptWith(other);
-
-            if (copy.Count == _set.Count)
+            if (Count == 0)
             {
                 return;
             }
 
-            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+            CheckReentrancy();
 
-            OnCountPropertyChanging();
+            using (BlockReentrancy())
+            {
+                using var deferredEventNotifications = DeferEventNotifications();
 
-            _set = copy;
-            _list = [.. _set];
+                //
+                // Phase 1: Create Removal Predicate (Except) Plan
+                // - Materialize 'other' before mutation.
+                //
+                var set_Plan_ItemsRemoved = new HashSet<T>(other, _set.Comparer);
 
-            OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
+                if (set_Plan_ItemsRemoved.Count == 0)
+                {
+                    return;
+                }
+
+                //
+                // Phase 2: Execute Removal Predicate (Except) Plan
+                // - Remove matching current items while preserving survivor order.
+                //
+                RemoveItemsWhereCore(set_Plan_ItemsRemoved.Contains);
+
+                deferredEventNotifications.Complete();
+            }
         }
 
         /// <summary>
@@ -414,27 +915,152 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void SymmetricExceptWith(IEnumerable<T> other)
         {
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(other);
+#else
+            if (other is null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+#endif
+
+            VerifyState();
+
             CheckReentrancy();
 
-            var copy = new HashSet<T>(_set, _set.Comparer);
-
-            copy.SymmetricExceptWith(other);
-
-            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
-            var added = copy.Where(i => !_set.Contains(i)).ToArray();
-
-            if (removed.Length == 0 && added.Length == 0)
+            using (BlockReentrancy())
             {
-                return;
+                using var deferredEventNotifications = DeferEventNotifications();
+
+                var comparer = _set.Comparer;
+
+                //
+                // Phase 1: Create Symmetric Difference (SymmetricExcept) Plan
+                // - Read-only scan.
+                //
+                var set_ItemsSnapshot = new HashSet<T>(_set, comparer);
+                var set_Plan_ItemsProcessed = new HashSet<T>(comparer);
+                var set_Plan_ItemsRemoved = new HashSet<T>(comparer);
+                var list_Plan_ItemsAdded = new List<T>();
+
+                foreach (var item in other)
+                {
+                    if (!set_Plan_ItemsProcessed.Add(item))
+                    {
+                        continue;
+                    }
+
+                    if (set_ItemsSnapshot.Contains(item))
+                    {
+                        set_Plan_ItemsRemoved.Add(item);
+                    }
+                    else
+                    {
+                        list_Plan_ItemsAdded.Add(item);
+                    }
+                }
+
+                if (set_Plan_ItemsRemoved.Count == 0 && list_Plan_ItemsAdded.Count == 0)
+                {
+                    return;
+                }
+
+                var itemRemovedClusters = new List<(int Index, List<T> Items)>();
+
+                List<T>? itemRemovedCluster = null;
+                var itemRemovedClusterIndex = -1;
+                var itemsRemovedCount = 0;
+
+                for (var indexOriginal = 0; indexOriginal < _list.Count; indexOriginal++)
+                {
+                    var item = _list[indexOriginal];
+
+                    if (!set_Plan_ItemsRemoved.Contains(item))
+                    {
+                        itemRemovedCluster = null;
+                        itemRemovedClusterIndex = -1;
+
+                        continue;
+                    }
+
+                    var itemRemovedIndex = indexOriginal - itemsRemovedCount;
+
+                    if (itemRemovedCluster is not null &&
+                        itemRemovedClusterIndex == itemRemovedIndex)
+                    {
+                        itemRemovedCluster.Add(item);
+                    }
+                    else
+                    {
+                        itemRemovedCluster = [item];
+                        itemRemovedClusterIndex = itemRemovedIndex;
+
+                        itemRemovedClusters.Add((itemRemovedIndex, itemRemovedCluster));
+                    }
+
+                    itemsRemovedCount++;
+                }
+
+                //
+                // Phase 2: Execute Symmetric Difference (SymmetricExcept) Plan
+                // - Commit.
+                //
+                var countChanged = itemsRemovedCount != list_Plan_ItemsAdded.Count;
+
+                if (countChanged)
+                {
+                    OnCountPropertyChanging();
+                }
+
+                foreach (var itemRemovedClusterInfo in itemRemovedClusters)
+                {
+                    foreach (var itemRemoved in itemRemovedClusterInfo.Items)
+                    {
+                        var isRemoved = _set.Remove(itemRemoved);
+
+                        Debug.Assert(isRemoved);
+                    }
+
+                    _list.RemoveRange(
+                        itemRemovedClusterInfo.Index,
+                        itemRemovedClusterInfo.Items.Count);
+
+                    OnCollectionChanged(
+                        NotifyCollectionChangedAction.Remove,
+                        itemRemovedClusterInfo.Items,
+                        itemRemovedClusterInfo.Index);
+                }
+
+                if (list_Plan_ItemsAdded.Count > 0)
+                {
+                    var index = Count;
+
+                    foreach (var itemAdded in list_Plan_ItemsAdded)
+                    {
+                        var isAdded = _set.Add(itemAdded);
+
+                        Debug.Assert(isAdded);
+                    }
+
+                    _list.AddRange(list_Plan_ItemsAdded);
+
+                    OnCollectionChanged(
+                        NotifyCollectionChangedAction.Add,
+                        list_Plan_ItemsAdded,
+                        index);
+                }
+
+                if (countChanged)
+                {
+                    OnCountPropertyChanged();
+                }
+
+                OnIndexerPropertyChanged();
+
+                VerifyState();
+
+                deferredEventNotifications.Complete();
             }
-
-            OnCountPropertyChanging();
-
-            _set = copy;
-            _list = [.. _set];
-
-            OnCountPropertyChanged();
-            OnCollectionChanged(removed, added, 0);
         }
 
         /// <summary>
@@ -446,6 +1072,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool IsSubsetOf(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.IsSubsetOf(other);
         }
 
@@ -458,6 +1086,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool IsProperSubsetOf(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.IsProperSubsetOf(other);
         }
 
@@ -470,6 +1100,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool IsSupersetOf(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.IsSupersetOf(other);
         }
 
@@ -482,6 +1114,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool IsProperSupersetOf(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.IsProperSupersetOf(other);
         }
 
@@ -494,6 +1128,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool Overlaps(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.Overlaps(other);
         }
 
@@ -506,6 +1142,8 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool SetEquals(IEnumerable<T> other)
         {
+            VerifyState();
+
             return _set.SetEquals(other);
         }
 
@@ -518,7 +1156,18 @@ namespace Iesi.Collections.Generic
         /// </param>
         public virtual void CopyTo(T[] array)
         {
-            _set.CopyTo(array);
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(array);
+#else
+            if (array is null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+#endif
+
+            VerifyState();
+
+            _list.CopyTo(array);
         }
 
         /// <summary>
@@ -531,7 +1180,23 @@ namespace Iesi.Collections.Generic
         /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
         public virtual void CopyTo(T[] array, int arrayIndex)
         {
-            _set.CopyTo(array, arrayIndex);
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(array);
+#else
+            if (array is null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+#endif
+
+            if (arrayIndex < 0 || arrayIndex > array.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+            }
+
+            VerifyState();
+
+            _list.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -545,7 +1210,73 @@ namespace Iesi.Collections.Generic
         /// <param name="count">The number of elements to copy to array.</param>
         public virtual void CopyTo(T[] array, int arrayIndex, int count)
         {
-            _set.CopyTo(array, arrayIndex, count);
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(array);
+#else
+            if (array is null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+#endif
+
+            if (arrayIndex < 0 || arrayIndex > array.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+            }
+
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count));
+            }
+
+            if (array.Length - arrayIndex < count)
+            {
+                throw new ArgumentException(
+                    Resources.ObservableSet_DestinationArrayTooSmall,
+                    nameof(array));
+            }
+
+            VerifyState();
+
+            if (count > Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count));
+            }
+
+            _list.CopyTo(0, array, arrayIndex, count);
+        }
+
+        protected void VerifyState()
+        {
+            EnsureStorageConsistency();
+            AssertStorageInvariants();
+        }
+
+        private void EnsureStorageConsistency()
+        {
+            if (_set.Count != _list.Count)
+            {
+                throw new InvalidOperationException(
+                    string.Format(Resources.ObservableSet_InternalStorageInconsistent,
+                                  $"{nameof(_set)}.{nameof(_set.Count)}",
+                                  _set.Count,
+                                  $"{nameof(_list)}.{nameof(_list.Count)}",
+                                  _list.Count));
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private void AssertStorageInvariants()
+        {
+            Debug.Assert(_set.Count == _list.Count);
+
+            var items = new HashSet<T>(_set.Comparer);
+
+            foreach (var item in _list)
+            {
+                Debug.Assert(_set.Contains(item));
+                Debug.Assert(items.Add(item));
+            }
         }
 
         /// <summary>
@@ -575,7 +1306,7 @@ namespace Iesi.Collections.Generic
 #endif
                )
                 {
-                    throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
+                    throw new InvalidOperationException(Resources.ObservableSet_ReentrancyNotAllowed);
                 }
             }
         }
@@ -612,6 +1343,23 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Defers collection and property change event notifications until the returned operation is completed.
+        /// </summary>
+        /// <returns>
+        ///     An operation that queues event notifications and replays them when completed.
+        /// </returns>
+        /// <remarks>
+        ///     Event notifications raised during the operation are queued and replayed in the order they were raised
+        ///     when <see cref="DeferredEventNotificationsOperation.Complete" /> is called.
+        ///     If the operation is disposed before completion, queued event notifications are discarded.
+        ///     Deferred event notification operations cannot be nested.
+        /// </remarks>
+        protected DeferredEventNotificationsOperation DeferEventNotifications()
+        {
+            return new DeferredEventNotificationsOperation(this);
+        }
+
+        /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
         /// </summary>
         protected void OnCollectionReset()
@@ -620,17 +1368,26 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
         /// </summary>
-        [Obsolete("Use OnCollectionChanged(NotifyCollectionChangedAction, object?, int) instead.")]
-        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
+        protected void OnCollectionChanged(object? item, int oldIndex, int newIndex)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, newIndex, oldIndex));
         }
 
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
+        /// <remarks>
+        ///     WPF ICollectionView/ListCollectionView consumers require Add and Remove notifications
+        ///     to contain the actual item index as observed through this collection's public enumeration order.
+        ///     If the supplied index does not match the item position visible through <see cref="IEnumerable{T}" />,
+        ///     WPF may throw errors such as "Added item does not appear at given index".
+        ///
+        ///     The index must be based on <c>_list</c>, because <c>_list</c> defines
+        ///     this collection's stable insertion/enumeration order.
+        ///     <c>_set</c> is only for uniqueness and membership lookup.
+        /// </remarks>
         protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item, index));
@@ -645,20 +1402,19 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Replace" />) event to any listeners.
         /// </summary>
-        [Obsolete("Use OnCollectionChanged(IList, IList, int) instead.")]
-        protected void OnCollectionChanged(IList oldItems, IList newItems)
+        protected void OnCollectionChanged(IList oldItems, IList newItems, int startingIndex)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
+            OnCollectionChanged(NotifyCollectionChangedAction.Replace, oldItems, newItems, startingIndex);
         }
 
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
-        protected void OnCollectionChanged(IList oldItems, IList newItems, int startingIndex)
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, IList oldItems, IList newItems, int startingIndex)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, startingIndex));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, newItems, oldItems, startingIndex));
         }
 
         /// <summary>
@@ -672,7 +1428,27 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            CollectionChanged?.Invoke(this, e);
+            if (_deferredEventNotificationsOperation is not null)
+            {
+                _deferredEventNotificationsOperation.AddEventArgs(e);
+
+                return;
+            }
+
+            if (CollectionChanged is NotifyCollectionChangedEventHandler handler)
+            {
+                // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
+                _blockReentrancyCount++;
+
+                try
+                {
+                    handler(this, e);
+                }
+                finally
+                {
+                    _blockReentrancyCount--;
+                }
+            }
         }
 
         protected void OnCountPropertyChanging()
@@ -685,7 +1461,17 @@ namespace Iesi.Collections.Generic
         /// </summary>
         protected virtual void OnPropertyChanging(PropertyChangingEventArgs e)
         {
-            PropertyChanging?.Invoke(this, e);
+            if (_deferredEventNotificationsOperation is not null)
+            {
+                _deferredEventNotificationsOperation.AddEventArgs(e);
+
+                return;
+            }
+
+            if (PropertyChanging is PropertyChangingEventHandler handler)
+            {
+                handler(this, e);
+            }
         }
 
         protected void OnCountPropertyChanged()
@@ -694,20 +1480,54 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Raises the <see cref="PropertyChanged" /> event for the Indexer property.
+        /// </summary>
+        protected void OnIndexerPropertyChanged()
+        {
+            OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
+        }
+
+        /// <summary>
         ///     Raises the <see cref="PropertyChanged" /> event.
         /// </summary>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, e);
+            if (_deferredEventNotificationsOperation is not null)
+            {
+                _deferredEventNotificationsOperation.AddEventArgs(e);
+
+                return;
+            }
+
+            if (PropertyChanged is PropertyChangedEventHandler handler)
+            {
+                handler(this, e);
+            }
+        }
+
+        [OnSerializing]
+        private void OnSerializing(StreamingContext context)
+        {
+            EnsureMonitorInitialized();
+
+            _monitor!._busyCount = _blockReentrancyCount;
+        }
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (_monitor is not null)
+            {
+                _blockReentrancyCount = _monitor._busyCount;
+                _monitor._collection = this;
+            }
         }
 
         // This class helps prevent reentrant calls.
         [Serializable]
         private sealed class SimpleMonitor : IDisposable
         {
-#pragma warning disable CS0649
             internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization).
-#pragma warning restore CS0649
 
             [NonSerialized]
             internal ObservableSet<T> _collection;
@@ -725,13 +1545,124 @@ namespace Iesi.Collections.Generic
             }
         }
 
+        protected sealed class DeferredEventNotificationsOperation : IDisposable
+        {
+            private readonly ObservableSet<T> _collection;
+            private readonly List<EventArgs> _eventArgsList = [];
+
+            private bool _isDisposed;
+
+            private bool _isCompleted;
+
+            public DeferredEventNotificationsOperation(ObservableSet<T> collection)
+            {
+#if NET8_0_OR_GREATER
+                ArgumentNullException.ThrowIfNull(collection);
+#else
+                if (collection is null)
+                {
+                    throw new ArgumentNullException(nameof(collection));
+                }
+#endif
+
+                if (collection._deferredEventNotificationsOperation is not null)
+                {
+                    throw new InvalidOperationException(Resources.ObservableSet_NestedDeferredEventNotificationsNotAllowed);
+                }
+
+                _collection = collection;
+                _collection._deferredEventNotificationsOperation = this;
+            }
+
+            public void Dispose()
+            {
+                if (_isDisposed)
+                {
+                    return;
+                }
+
+                _isDisposed = true;
+
+                _collection._deferredEventNotificationsOperation = null;
+
+                if (!_isCompleted)
+                {
+                    _eventArgsList.Clear();
+                }
+            }
+
+            public void Complete()
+            {
+#if NET8_0_OR_GREATER
+                ObjectDisposedException.ThrowIf(_isDisposed, this);
+#else
+                if (_isDisposed)
+                {
+                    throw new ObjectDisposedException(nameof(DeferredEventNotificationsOperation));
+                }
+#endif
+
+                if (_isCompleted)
+                {
+                    return;
+                }
+
+                _isCompleted = true;
+
+                _collection._deferredEventNotificationsOperation = null;
+
+                try
+                {
+                    foreach (var eventArgs in _eventArgsList)
+                    {
+                        if (eventArgs is NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+                        {
+                            _collection.OnCollectionChanged(collectionChangedEventArgs);
+                        }
+                        else if (eventArgs is PropertyChangingEventArgs propertyChangingEventArgs)
+                        {
+                            _collection.OnPropertyChanging(propertyChangingEventArgs);
+                        }
+                        else if (eventArgs is PropertyChangedEventArgs propertyChangedEventArgs)
+                        {
+                            _collection.OnPropertyChanged(propertyChangedEventArgs);
+                        }
+                    }
+                }
+                finally
+                {
+                    _eventArgsList.Clear();
+                }
+            }
+
+            public void AddEventArgs<TEventArgs>(TEventArgs eventArgs) where TEventArgs : EventArgs
+            {
+#if NET8_0_OR_GREATER
+                ObjectDisposedException.ThrowIf(_isDisposed, this);
+#else
+                if (_isDisposed)
+                {
+                    throw new ObjectDisposedException(nameof(DeferredEventNotificationsOperation));
+                }
+#endif
+
+                if (_isCompleted)
+                {
+                    throw new InvalidOperationException(Resources.ObservableSet_DeferredEventNotificationsCompleted);
+                }
+
+                _eventArgsList.Add(eventArgs);
+            }
+        }
+
         internal static class EventArgsCache
         {
-            public static readonly T[] Items_Empty = [];
-
+            public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
             public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
-            public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
+            public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
+
+            public static readonly T[] Items_Empty = [];
         }
     }
 }
