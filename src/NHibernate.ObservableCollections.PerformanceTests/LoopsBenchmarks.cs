@@ -1,5 +1,3 @@
-using BenchmarkDotNet.Attributes;
-
 namespace NHibernate.ObservableCollections.PerformanceTests
 {
     /// <summary>
@@ -8,11 +6,10 @@ namespace NHibernate.ObservableCollections.PerformanceTests
     ///     REFERENCES:
     ///     -   <see href="https://stackoverflow.com/questions/365615/in-net-which-loop-runs-faster-for-or-foreach" />
     /// </remarks>
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class LoopsBenchmarks
     {
-#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
         [Params(10_000, 10_000_000)]
-#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
         public int ItemsCount;
 
         private List<int> _items = null!;

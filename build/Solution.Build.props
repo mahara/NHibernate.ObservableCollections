@@ -222,6 +222,8 @@
     <OutputPath>$(OutputFolderPath)</OutputPath>
     <OutDir>$(OutputFolderPath)</OutDir>
 
+    <RunWorkingDirectory>$(OutputFolderPath)</RunWorkingDirectory>
+
     <PackageOutputBaseFolderPath>$(ArtifactsFolderPath)$(PackageOutputFolderName)\</PackageOutputBaseFolderPath>
     <PackageOutputFolderPath>$(PackageOutputBaseFolderPath)$(Configuration)\</PackageOutputFolderPath>
     <PackageOutputPath>$(PackageOutputFolderPath)</PackageOutputPath>

@@ -1,14 +1,12 @@
-using BenchmarkDotNet.Attributes;
-
 using Iesi.Collections.Generic;
 
 namespace NHibernate.ObservableCollections.PerformanceTests
 {
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class ObservableCollection_Benchmarks
     {
-#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-        [Params(1_000, 10_000, 100_000)]
-#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
+        [Params(100, 1_000, 10_000)]
+        //[Params(1_000, 10_000, 100_000)]
         public int ItemsCount;
 
         private List<int> _items = null!;
@@ -50,11 +48,11 @@ namespace NHibernate.ObservableCollections.PerformanceTests
         }
     }
 
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class ObservableCollection_ReplaceRange_Benchmarks
     {
-#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-        [Params(1_000, 10_000, 100_000)]
-#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
+        [Params(100, 1_000, 10_000)]
+        //[Params(1_000, 10_000, 100_000)]
         public int ItemsCount;
 
         private List<int> _items = null!;
@@ -75,9 +73,10 @@ namespace NHibernate.ObservableCollections.PerformanceTests
         [Benchmark]
         public void ObservableCollection_ReplaceRange()
         {
-            int startIndex, count;
-            startIndex = count = ItemsCount * (40 / 100);
-            _collection.ReplaceRange(startIndex, count, _items);
+            int index, count;
+            index = count = ItemsCount * (40 / 100);
+
+            _collection.ReplaceRange(index, count, _items);
         }
     }
 }
