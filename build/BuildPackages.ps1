@@ -20,20 +20,20 @@
 # EXECUTION MODEL
 # ========================
 #
-# This script builds, tests, and packages the configured build units.
+# This script builds, tests, and packages build units defined in build configuration.
 #
-# The main stages of execution are configuration loading,
+# The main stages of execution are build configuration initialization,
 # parameter resolution and validation,
 # and execution of build, test, and package operations of all build units.
 #
-# Configuration defines what operations are performed and their parameters.
+# Build configuration, or simply configuration, defines what operations are performed
+# for all build units through their corresponding parameters.
+#
 # The Configuration Model describes this configuration using configuration-level vocabulary.
-# The Configuration Execution Model represents the same configuration for execution.
+# The Configuration Execution Model represents the same configuration for execution
+# using execution-level vocabulary.
 #
 # Resolution and validation establish valid execution inputs before execution begins.
-#
-# Each stage has a single responsibility and passes its established state or result
-# to the next stage rather than independently re-resolving the same configuration.
 #
 #
 # ========================
@@ -72,13 +72,12 @@
 #         └── ...
 #
 #
-# BUILD_UNITS defines the build units to be processed.
-#
+# BUILD_UNITS defines the build units to process.
 # BUILD_UNIT_PARAMETERS defines build unit parameters for all build units.
 # Each BUILD_UNIT has exactly one BUILD_UNIT_PARAMETER.
 #
-# A BUILD_UNIT_PARAMETER defines
-# the following parameter groups for the operations performed for that build unit:
+# A BUILD_UNIT_PARAMETER defines the following parameter groups
+# for the operations performed for that build unit:
 # - BUILD_PARAMETERS
 #   Parameters for building the build unit.
 # - TEST_PARAMETERS
@@ -93,23 +92,25 @@
 # CONFIGURATION EXECUTION MODEL
 # ================================
 #
-# The Configuration Execution Model represents the same build configuration
-# for execution.
+# The Configuration Execution Model represents the same build configuration for execution.
+# It is derived from the Configuration Model and uses execution-level vocabulary.
 #
 # Configuration Execution Model vocabulary consists of
 # *ParameterSpecification and *Parameter types.
-#
-# The Configuration Execution Model represents parameters in two forms:
+# Thus it represents parameters in build configuration in two forms:
 # - *ParameterSpecification types represent the raw string-encoded form.
 # - *Parameter types represent the strongly typed form.
 #
+# The Configuration Execution Model directly corresponds to the Configuration Model.
 # A BuildUnit has exactly one BuildUnitParameterSpecification.
 # A BuildUnitParameterSpecification represents the following parameter groups:
 # BUILD_PARAMETERS, TEST_PARAMETERS, PACKAGE_PARAMETERS, and PACKAGE_NEV_PARAMETERS.
-#
 # BUILD_PARAMETERS, TEST_PARAMETERS, and PACKAGE_PARAMETERS are represented
 # as arrays of BuildParameterSpecifications (BuildParameterSpecification[]).
 # PACKAGE_NEV_PARAMETERS is represented as an array of strings (string[]).
+#
+# The following diagram illustrates the corresponding Configuration Execution Model representation
+# of the Configuration Model defined in build configuration:
 #
 #     BUILD_UNITS                                     →   string[]
 #
@@ -122,15 +123,25 @@
 #                     └── PACKAGE_NEV_PARAMETERS      →   string[]
 #
 #
-# ================================
-# CONFIGURATION MODEL CONVERSION
-# ================================
+# ========================================
+# CONFIGURATION MODEL DECOMPOSITION
+# ========================================
 #
-# The Configuration Model is converted to the Configuration Execution Model
-# first through the raw string-encoded form and then through the strongly typed form
+# The Configuration Model is progressively decomposed
+# into Configuration Execution Model representations for execution.
+#
+# The decomposition is also a staged derivation process:
+# each Configuration Execution Model representation is derived
+# from the preceding representation.
+#
+# Conversion is the process used to derive each subsequent representation
+# when further decomposition is required.
+#
+# The Configuration Model is converted to the Configuration Execution Model first
+# through the raw string-encoded form, and then through the strongly typed form as needed,
 # before BuildUnit execution phases consume the resulting values.
 #
-# The conversion and representation flow is:
+# The decomposition and representation flow is:
 #
 #     Configuration Model
 #             ↓
@@ -144,40 +155,45 @@
 #         └── Invoke-Package
 #
 #
-# Configuration Model parameter groups are first represented
-# as their corresponding *ParameterSpecification representations.
-# Parameter specifications are then converted to *Parameter representations
-# before being consumed by BuildUnit execution phases.
-#
 # BUILD_UNIT_PARAMETERS is converted to BuildUnitParameterSpecification[]
 # through Get-BuildUnitParameterSpecification for each BuildUnit.
 #
-# Parameters containing InputFileName and Frameworks
-# are represented as BuildParameterSpecification[] in the Configuration Execution Model
-# and are converted to BuildParameter[] through ConvertTo-BuildParameters
+# BuildUnitParameterSpecification (BUILD_UNIT_PARAMETER) parameter groups
+# are first converted to their corresponding *ParameterSpecification representations.
+# *ParameterSpecifications are then further converted to *Parameter representations as needed.
+#
+# Parameters containing InputFileName and Frameworks are represented
+# as BuildParameterSpecification[] in the Configuration Execution Model,
+# and are then converted to BuildParameter[] through ConvertTo-BuildParameters when needed,
 # before being consumed by BuildUnit execution phases.
 #
 # Parameters containing only package ID prefix filters are represented
-# as string[] in the Configuration Execution Model and are normalized
-# through Normalize-StringCollection before being consumed by BuildUnit execution phases.
+# as string[] in the Configuration Execution Model,
+# and are then normalized through Normalize-StringCollection,
+# before being consumed by BuildUnit execution phases.
+#
+# The following diagram illustrates the decomposition and representation flow
+# of build configuration:
 #
 #     BUILD_UNIT_PARAMETERS                           →   BuildUnitParameterSpecification[]
 #         │   Get-BuildUnitParameterSpecification
 #         │
-#         ├── BUILD_PARAMETERS                        →   BuildParameter[]
-#         │         ConvertTo-BuildParameters
-#         │
-#         ├── TEST_PARAMETERS                         →   BuildParameter[]
-#         │         ConvertTo-BuildParameters
-#         │
-#         ├── PACKAGE_PARAMETERS                      →   BuildParameter[]
-#         │         ConvertTo-BuildParameters
-#         │
-#         └── PACKAGE_NEV_PARAMETERS                  →   string[]
-#                   Normalize-StringCollection
+#         └── BuildUnitParameterSpecification
+#               │
+#               ├── BUILD_PARAMETERS                  →   BuildParameter[]
+#               │         ConvertTo-BuildParameters
+#               │
+#               ├── TEST_PARAMETERS                   →   BuildParameter[]
+#               │         ConvertTo-BuildParameters
+#               │
+#               ├── PACKAGE_PARAMETERS                →   BuildParameter[]
+#               │         ConvertTo-BuildParameters
+#               │
+#               └── PACKAGE_NEV_PARAMETERS            →   string[]
+#                         Normalize-StringCollection
 #
 #
-# BuildUnit execution phases consume converted values only:
+# BuildUnit execution phases then consume the converted values above:
 #
 #     Invoke-Build
 #         BuildParameter[]
@@ -271,7 +287,8 @@
 # EXECUTION FLOW
 # ========================
 #
-# The script resolves and validates its configuration before executing operations for the BuildUnits.
+# The script resolves and validates its build configuration
+# before executing operations for the defined BuildUnits.
 #
 # The execution flow is:
 #
@@ -299,14 +316,16 @@
 #
 #     BUILD_UNITS (BuildUnits)
 #     A collection of build units.
-#     BuildUnits is the conceptual type of BUILD_UNITS.
+#     BuildUnits is both the Configuration Execution Model representation
+#     and the collection name of BUILD_UNITS.
 #
 #     BUILD_UNIT (BuildUnit)
 #     A single build unit derived from BUILD_UNITS/BuildUnits.
-#     BuildUnit is the conceptual type of BUILD_UNIT.
+#     BuildUnit is the Configuration Execution Model representation of a BUILD_UNIT.
 #
 #     *ParameterSpecification
-#     A Configuration Execution Model representation of a *_PARAMETER from configuration.
+#     A Configuration Execution Model representation
+#     of a *_PARAMETER from the Configuration Model in build configuration.
 #
 #     BUILD_UNIT_PARAMETERS (BuildUnitParameters/BuildUnitParameterSpecifications/BuildUnitParameterSpecification[])
 #     A collection of BUILD_UNIT_PARAMETERs/BuildUnitParameterSpecifications of all build units.
@@ -331,19 +350,26 @@
 #     BUILD_PARAMETERS, TEST_PARAMETERS, and PACKAGE_PARAMETERS.
 #     It defines an input file name and frameworks parameter specification (FrameworksParameterSpecification).
 #
-#     FrameworksParameterSpecification
-#     A Configuration Execution Model representation of a collection of target framework monikers (TFMs)
-#     in a semicolon-separated string format.
-#     For example: "net10.0;net9.0;net8.0;net48".
-#
-#     FrameworkParameter/Framework
-#     A Configuration Execution Model representation of a single target framework moniker (TFM)
-#     derived from FrameworksParameterSpecification in a string format.
-#     For example: "net10.0".
-#
 #     BuildParameter
 #     A Configuration Execution Model representation of BuildParameterSpecification
 #     containing an input file name and an array of FrameworkParameters/Frameworks (string[]).
+#
+#     FrameworksParameterSpecification
+#     A Configuration Execution Model representation of a collection of target framework monikers (TFMs)
+#     in a semicolon-separated string format (string).
+#     For example: "net10.0;net9.0;net8.0;net48".
+#
+#     FrameworkParameters/Frameworks
+#     A Configuration Execution Model representation of a collection of target framework monikers (TFMs)
+#     derived from FrameworksParameterSpecification in a string array form (string[]).
+#     FrameworkParameters is the conceptual type of FrameworksParameterSpecification.
+#     Frameworks is the collection name.
+#     For example: @("net10.0", "net9.0", "net8.0", "net48").
+#
+#     FrameworkParameter/Framework
+#     A Configuration Execution Model representation of a single target framework moniker (TFM)
+#     derived from FrameworksParameterSpecification in a string form (string).
+#     For example: "net10.0".
 #
 #     exit code                         = script/subroutine result code.
 #     $args                             = all original command-line arguments.
@@ -358,7 +384,7 @@
 # 0  = Build operations completed successfully.
 # 1  = Missing required build infrastructure.
 # 2  = Invalid command-line argument.
-# 3  = Build units, build unit's parameters, or build unit's parameter's build parameters are not defined.
+# 3  = Build units, build unit parameters, or build unit parameter's build parameters are not defined.
 # 4  = Build input file name is not defined, or file path resolution failed.
 # 5  = Build frameworks are not defined.
 # 6  = dotnet build failed.
@@ -541,7 +567,7 @@ function Validate-BuildUnitsParameters {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
         'PSUseApprovedVerbs',
         '',
-        Justification = 'Validate accurately describes validating build units'' parameters from configuration before execution; Test and Assert do not convey the same semantic intent.'
+        Justification = 'Validate accurately describes validating build units'' parameters from build configuration before execution; Test and Assert do not convey the same semantic intent.'
     )]
 
     param()
@@ -558,7 +584,7 @@ function Validate-BuildUnitsParameters {
         if ($null -eq $BUILD_UNIT_PARAMETERS -or
             -not $BUILD_UNIT_PARAMETERS.ContainsKey($buildUnit)) {
 
-            Write-Host "Build unit `"$buildUnit`" is invalid because no build unit's parameter is defined."
+            Write-Host "Build unit `"$buildUnit`" is invalid because no build unit parameter is defined."
             Write-Host
             exit 3
         }
@@ -568,7 +594,7 @@ function Validate-BuildUnitsParameters {
         if ($null -eq $buildUnitParameterSpecification.BUILD_PARAMETERS -or
             @($buildUnitParameterSpecification.BUILD_PARAMETERS).Count -eq 0) {
 
-            Write-Host "Build unit `"$buildUnit`" is invalid because no build parameters are defined."
+            Write-Host "Build unit `"$buildUnit`" is invalid because no build unit parameter's build parameters are defined."
             Write-Host
             exit 3
         }

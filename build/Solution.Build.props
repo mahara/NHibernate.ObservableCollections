@@ -94,17 +94,19 @@
 
           OR
 
-          $(ArtifactsFolderName)\               = $(ArtifactsFolderPath)
-            $(OutputFolderName)\                = $(BaseOutputBaseFolderPath) / $(BaseOutputFolderPath) / $(BaseOutputPath)
+          $(WorkspaceFolderPath)\
+              +
+          $(ArtifactsFolderName)\               → $(ArtifactsFolderPath)
+            $(OutputFolderName)\                → $(BaseOutputBaseFolderPath) / $(BaseOutputFolderPath) / $(BaseOutputPath)
               $(Configuration)\
-                $(TargetFramework)\             = $(OutputBaseFolderPath)
-                  $(MSBuildProjectName)\        = $(OutputFolderPath) / $(OutputPath) / $(OutDir)
-            $(IntermediateOutputFolderName)\    = $(BaseIntermediateOutputBaseFolderPath)
-              $(MSBuildProjectName)\            = $(BaseIntermediateOutputFolderPath) / $(BaseIntermediateOutputPath)
+                $(TargetFramework)\             → $(OutputBaseFolderPath)
+                  $(MSBuildProjectName)\        → $(OutputFolderPath) / $(OutputPath) / $(OutDir)
+            $(IntermediateOutputFolderName)\    → $(BaseIntermediateOutputBaseFolderPath)
+              $(MSBuildProjectName)\            → $(BaseIntermediateOutputFolderPath) / $(BaseIntermediateOutputPath)
                 $(Configuration)\
-                  $(TargetFramework)\           = $(IntermediateOutputFolderPath) / $(IntermediateOutputPath)
-            $(PackageOutputFolderName)\         = $(PackageOutputBaseFolderPath)
-              $(Configuration)\                 = $(PackageOutputFolderPath) / $(PackageOutputPath)
+                  $(TargetFramework)\           → $(IntermediateOutputFolderPath) / $(IntermediateOutputPath)
+            $(PackageOutputFolderName)\         → $(PackageOutputBaseFolderPath)
+              $(Configuration)\                 → $(PackageOutputFolderPath) / $(PackageOutputPath)
 
 
       NOTE:   How to move project artifacts out of project folder.

@@ -45,7 +45,7 @@ REM ================
 REM 0  = Build operations completed successfully.
 REM 1  = Missing required build infrastructure.
 REM 2  = Invalid command-line argument.
-REM 3  = Build units, build unit's parameters, or build unit's parameter's build parameters are not defined.
+REM 3  = Build units, build unit parameters, or build unit parameter's build parameters are not defined.
 REM 4  = Build input file name is not defined, or file path resolution failed.
 REM 5  = Build frameworks are not defined.
 REM 6  = dotnet build failed.
@@ -220,14 +220,14 @@ FOR %%U IN (%BUILD_UNITS%) DO (
         IF NOT DEFINED BUILD_UNIT___%%~U___TEST_PARAMETERS (
             IF NOT DEFINED BUILD_UNIT___%%~U___PACKAGE_PARAMETERS (
                 IF NOT DEFINED BUILD_UNIT___%%~U___PACKAGE_NEV_PARAMETERS (
-                    ECHO Build unit "%%~U" is invalid because no build unit's parameter is defined.
+                    ECHO Build unit "%%~U" is invalid because no build unit parameter is defined.
                     ECHO.
                     EXIT /B 3
                 )
             )
         )
 
-        ECHO Build unit "%%~U" is invalid because no build parameters are defined.
+        ECHO Build unit "%%~U" is invalid because no build unit parameter's build parameters are defined.
         ECHO.
         EXIT /B 3
     )
