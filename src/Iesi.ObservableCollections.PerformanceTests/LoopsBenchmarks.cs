@@ -1,4 +1,4 @@
-namespace Iesi.Collections.Generic.PerformanceTests
+namespace Iesi.Collections.PerformanceTests
 {
     /// <summary>
     /// </summary>
@@ -6,7 +6,7 @@ namespace Iesi.Collections.Generic.PerformanceTests
     ///     REFERENCES:
     ///     -   <see href="https://stackoverflow.com/questions/365615/in-net-which-loop-runs-faster-for-or-foreach" />
     /// </remarks>
-    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory | BenchmarkFeatures.Plotting)]
     public class LoopsBenchmarks
     {
         [Params(10_000, 10_000_000)]
