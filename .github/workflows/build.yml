@@ -1,6 +1,3 @@
-# https://github.com/actions/setup-dotnet
-
-
 name: Build
 
 on: [ push, pull_request ]
@@ -11,27 +8,18 @@ env:
 
 jobs:
 
-  Test:
+  Framework_Validation:
 
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        project:
-          - 'NHibernate.ObservableCollections.slnx'
         framework: [net10.0, net9.0, net8.0, net48]
         configuration: [Release]
-        exclude:
-          - os: ubuntu-latest
-            framework: net48
-          - os: macos-latest
-            framework: net48
-      fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     env:
-      TestResults_Trx_FileName: 'TestResults.trx'
-      TestResults_MarkDown_FileName: 'TestResults.md' # Report file name for LiquidTestReports.Markdown
+      TestResults_ArtifactName: TestResults_${{ matrix.framework }}_${{ matrix.configuration }}
 
     steps:
 
@@ -41,41 +29,102 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            10.0.x
+            9.0.x
+            8.0.x
 
-        # https://www.jamescroft.co.uk/setting-github-actions-environment-variables-in-powershell/
-        # https://github.com/orgs/community/discussions/25713
       - name: Setup Environment Variables
         run: |
           $WorkingDirectory = "$env:GITHUB_WORKSPACE"
-          $ProjectName = [System.IO.Path]::GetFileNameWithoutExtension("${{matrix.project}}")
-          $TestResults_ArtifactName = "TestResults_${ProjectName}_${{matrix.os}}_${{matrix.framework}}_${{matrix.configuration}}"
-          $TestResults_NUnit_FileName = "${ProjectName}_${{matrix.os}}_${{matrix.framework}}_${{matrix.configuration}}_TestResults-NUnit.xml"
 
-          Write-Host "Project Name: $ProjectName"
-          Write-Host "Test Results Artifact Name: $TestResults_ArtifactName"
           Write-Host "Working Directory: $WorkingDirectory"
+          Write-Host "Framework: ${{ matrix.framework }}"
+          Write-Host "Configuration: ${{ matrix.configuration }}"
 
-          Write-Output "ProjectName=$ProjectName" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Write-Output "TestResults_ArtifactName=$TestResults_ArtifactName" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Write-Output "TestResults_NUnit_FileName=$TestResults_NUnit_FileName" | Out-File -FilePath $env:GITHUB_ENV -Append
-          # Set the Azure DevOps default working directory env variable, so our tests only need to deal with a single env variable
-          Write-Output "SYSTEM_DEFAULTWORKINGDIRECTORY=$WorkingDirectory" | Out-File -FilePath $env:GITHUB_ENV -Append
-          # Title for LiquidTestReports.Markdown
-          Write-Output "Title=Test Run for $ProjectName - ${{matrix.os}} - ${{matrix.framework}}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # Set the Azure DevOps default working directory env variable,
+          # so tests only need to deal with a single env variable.
+          "SYSTEM_DEFAULTWORKINGDIRECTORY=$WorkingDirectory" | Out-File -FilePath $env:GITHUB_ENV -Append
         shell: pwsh
 
-      - name: Build
+      - name: Build and Test Framework
         run: |
-          dotnet build ${{matrix.project}} --configuration ${{matrix.configuration}} --framework ${{matrix.framework}}
-
-      - name: Test
-        run: |
-          dotnet test ${{matrix.project}} --configuration ${{matrix.configuration}} --framework ${{matrix.framework}} --no-build --no-restore --blame-hang --blame-hang-dump-type mini --blame-hang-timeout 10minutes --results-directory:"${{github.workspace}}/${{env.TestResults_ArtifactName}}/${{env.ProjectName}}" --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=${{env.TestResults_Trx_FileName}}" --logger "nunit;LogFileName=${{env.TestResults_NUnit_FileName}};format=nunit3" --logger:"liquid.md;LogFileName=${{env.TestResults_MarkDown_FileName}};Title=${{env.Title}};"
+          call "%GITHUB_WORKSPACE%\build\Build.Properties.cmd"
+          call "%GITHUB_WORKSPACE%\build\BuildPackages.cmd" ^
+            --configuration "${{ matrix.configuration }}" ^
+            --frameworks "${{ matrix.framework }}" ^
+            --no-package
+        shell: cmd
 
       - name: Upload Test Results Artifacts
         uses: actions/upload-artifact@v4
-        if: ${{always()}}
+        if: ${{ always() }}
         with:
-          name: '${{env.TestResults_ArtifactName}}'
-          path: '${{github.workspace}}/${{env.TestResults_ArtifactName}}'
+          name: ${{ env.TestResults_ArtifactName }}
+          path: ${{ github.workspace }}\artifacts\testresults\${{ matrix.configuration }}
+          if-no-files-found: warn
+
+
+  Package:
+
+    needs: Framework_Validation
+
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Release]
+
+    env:
+      Packages_ArtifactName: Packages_${{ matrix.configuration }}
+      TestResults_ArtifactName: TestResults_Package_${{ matrix.configuration }}
+
+    steps:
+
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            10.0.x
+            9.0.x
+            8.0.x
+
+      - name: Setup Environment Variables
+        run: |
+          $WorkingDirectory = "$env:GITHUB_WORKSPACE"
+
+          Write-Host "Working Directory: $WorkingDirectory"
+          Write-Host "Configuration: ${{ matrix.configuration }}"
+
+          # Set the Azure DevOps default working directory env variable,
+          # so tests only need to deal with a single env variable.
+          "SYSTEM_DEFAULTWORKINGDIRECTORY=$WorkingDirectory" | Out-File -FilePath $env:GITHUB_ENV -Append
+        shell: pwsh
+
+      - name: Build and Package
+        run: |
+          call "%GITHUB_WORKSPACE%\build\Build.Properties.cmd"
+          call "%GITHUB_WORKSPACE%\build\BuildPackages.cmd" ^
+            --configuration "${{ matrix.configuration }}" ^
+            --no-test
+        shell: cmd
+
+      - name: Upload Package Artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: ${{ env.Packages_ArtifactName }}
+          path: ${{ github.workspace }}\artifacts\packages\${{ matrix.configuration }}
+          if-no-files-found: warn
+
+      - name: Upload Test Results Artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: ${{ env.TestResults_ArtifactName }}
+          path: ${{ github.workspace }}\artifacts\testresults\${{ matrix.configuration }}
+          if-no-files-found: warn

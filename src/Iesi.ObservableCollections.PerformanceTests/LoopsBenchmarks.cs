@@ -1,4 +1,4 @@
-namespace Iesi.Collections.Generic.PerformanceTests
+namespace Iesi.Collections.PerformanceTests
 {
     /// <summary>
     /// </summary>
