@@ -6,4 +6,5 @@ global using BenchmarkDotNet.Exporters;
 global using BenchmarkDotNet.Jobs;
 global using BenchmarkDotNet.Running;
 
-global using Iesi.Collections.Generic.PerformanceTests;
+global using Iesi.Collections.Generic;
+global using Iesi.Collections.PerformanceTests;

@@ -34,7 +34,7 @@
     <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
     <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
 
-    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageTags>nhibernate;iesi;collections;observable;observablecollections</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
     <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->

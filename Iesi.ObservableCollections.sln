@@ -59,7 +59,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NHibernate.ObservableCollections", "src\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj", "{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections", "src\Iesi.ObservableCollections\Iesi.ObservableCollections.csproj", "{B885F7EE-E976-4D75-B50B-80A6E52558DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections.Tests", "src\Iesi.ObservableCollections.Tests\Iesi.ObservableCollections.Tests.csproj", "{E891E139-445A-4C15-A680-BF9BFCBCDD02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections.PerformanceTests", "src\Iesi.ObservableCollections.PerformanceTests\Iesi.ObservableCollections.PerformanceTests.csproj", "{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,10 +71,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,9 +92,11 @@ Global
 		{5B28214B-C4BF-4151-92AB-BEABBD436DC9} = {854CB877-2A9E-4D7A-B5ED-C2225289004C}
 		{BBAFF222-AC65-4137-AC35-8B5E2536C435} = {854CB877-2A9E-4D7A-B5ED-C2225289004C}
 		{A5F5C950-E591-459D-8AB9-A957A4FABFC5} = {BBAFF222-AC65-4137-AC35-8B5E2536C435}
-		{DAC68090-3DE8-4F6A-9DE4-81A416DA1EDF} = {4DC9D87F-0C2A-436D-9E9D-095AE1DB0462}
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE} = {4DC9D87F-0C2A-436D-9E9D-095AE1DB0462}
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02} = {712661E7-D72D-45FE-ABC2-3BB18960B9DB}
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1} = {712661E7-D72D-45FE-ABC2-3BB18960B9DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {533C1EB4-B488-47CC-AB26-AD9C1A24E5CF}
+		SolutionGuid = {58568655-2931-4E27-8187-86FA0624F0EC}
 	EndGlobalSection
 EndGlobal
