@@ -1,11 +1,8 @@
-internal class Program
+internal static class Program
 {
     private static void Main(string[] args)
     {
-        var baseJob = Job.Default;
-
-        var baseConfig = DefaultConfig.Instance
-                                      .AddExporter(RPlotExporter.Default);
+        var baseConfig = DefaultConfig.Instance;
 
         //var baseConfig = ManualConfig.CreateEmpty()
         //                             .AddLogger(BenchmarkDotNet.Loggers.ConsoleLogger.Default)
@@ -14,8 +11,16 @@ internal class Program
 
 
 
+        var baseJob = Job.Default;
+
+
+
+        var baseFeatures = BenchmarkFeatures.None;
+
+
+
         var type = typeof(Program);
 
-        BenchmarkExecutor.Execute(args, type, baseJob, baseConfig);
+        BenchmarkExecutor.Execute(args, type, baseConfig, baseJob, baseFeatures);
     }
 }

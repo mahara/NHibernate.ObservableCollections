@@ -14,6 +14,7 @@
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.1.593" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
+    <PackageVersion Include="Iesi.ObservableCollections" Version="6.0.0" />
     <PackageVersion Include="LiquidTestReports.Markdown" Version="1.0.9" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.8" />

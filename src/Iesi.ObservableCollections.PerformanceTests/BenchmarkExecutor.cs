@@ -2,10 +2,85 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Iesi.Collections.Generic.PerformanceTests;
+using BenchmarkDotNet.Environments;
+using BenchmarkDotNet.Filters;
+using BenchmarkDotNet.Running;
+
+namespace Iesi.Collections.PerformanceTests;
+
+[Flags]
+public enum BenchmarkFeatures
+{
+    None = 0,
+    Memory = 1 << 0,
+    Disassembly = 1 << 1,
+    LongRun = 1 << 2,
+    Stable = 1 << 3,
+    Plotting = 1 << 4,
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public sealed class BenchmarkFeaturesAttribute : Attribute
+{
+    public BenchmarkFeatures Enable { get; }
+
+    public BenchmarkFeatures Disable { get; }
+
+    public BenchmarkFeaturesAttribute(
+        BenchmarkFeatures enable = BenchmarkFeatures.None,
+        BenchmarkFeatures disable = BenchmarkFeatures.None)
+    {
+        Enable = enable;
+        Disable = disable;
+    }
+}
+
+
 
 public class BenchmarkExecutor
 {
+    private sealed record RuntimeJobDefinition(
+        string RuntimeTfm,
+        Func<Job> JobFactory);
+
+    private sealed record ExporterDefinition(
+        string Name,
+        IExporter Exporter);
+
+    private sealed record BenchmarkCaseSelection(
+        string[] FilterPatterns,
+        string[] Categories)
+    {
+        public bool HasFilterPatterns => FilterPatterns.Length > 0;
+
+        public bool HasCategories => Categories.Length > 0;
+    }
+
+    private sealed record BenchmarkTypePlan(
+        Type BenchmarkType,
+        List<Job> EffectiveJobs,
+        BenchmarkExecutionGroupKey BenchmarkExecutionGroupKey,
+        List<string> BenchmarkCaseDisplayInfos)
+    {
+        public int BenchmarkCaseCount => BenchmarkCaseDisplayInfos.Count;
+    }
+
+    private sealed record BenchmarkExecutionGroup(
+        BenchmarkExecutionGroupKey BenchmarkExecutionGroupKey,
+        List<BenchmarkTypePlan> BenchmarkTypePlans)
+    {
+        public int BenchmarkTypeCount => BenchmarkTypePlans.Count;
+
+        public int BenchmarkCaseCount => BenchmarkTypePlans.Sum(p => p.BenchmarkCaseCount);
+    }
+
+    private sealed record BenchmarkExecutionGroupKey(
+        BenchmarkFeatures EffectiveFeatures,
+        bool HasMemoryDiagnoserAttribute,
+        bool HasDisassemblyDiagnoserAttribute);
+
+
+
     public static readonly List<Runtime> BaseRuntimes =
     [
         CoreRuntime.Core10_0,
@@ -30,50 +105,72 @@ public class BenchmarkExecutor
     public static void Execute(
         string[] args,
         Type type,
+        IConfig baseConfig,
         Job baseJob,
-        IConfig baseConfig)
+        BenchmarkFeatures baseFeatures)
     {
         Type Type = type;
         List<Type> AllTypes = [.. Type.Assembly.GetTypes().OrderBy(t => t.FullName, Type_FullName_StringComparer)];
         List<Type> AllBenchmarkTypes = [.. AllTypes.Where(IsBenchmarkType).OrderBy(t => t.FullName, Type_FullName_StringComparer)];
-        List<RuntimeJob> BaseRuntimeJobs = CreateRuntimeJobs(BaseRuntimes, baseJob);
-        Dictionary<string, RuntimeJob> BaseRuntimeJobsByRuntimeTfm = BaseRuntimeJobs.ToDictionary(rj => rj.RuntimeTfm, StringComparer.Ordinal);
+        List<RuntimeJobDefinition> BaseRuntimeJobDefinitions = CreateRuntimeJobDefinitions(BaseRuntimes, baseJob);
+        Dictionary<string, RuntimeJobDefinition> BaseRuntimeJobDefinitionsByRuntimeTfm = BaseRuntimeJobDefinitions.ToDictionary(rj => rj.RuntimeTfm, StringComparer.Ordinal);
 
 
 
-        var runtimeJobs = ParseRuntimeJobs(args, BaseRuntimeJobsByRuntimeTfm);
-
-        var baseFeatures = ResolveBaseFeatures(args);
+        var runtimeJobDefinitions = ResolveRuntimeJobDefinitions(BaseRuntimeJobDefinitionsByRuntimeTfm, args);
 
 
 
-        var jobs = BuildJobs(runtimeJobs, BaseRuntimeJobs);
-
-        SetBaselineJob(jobs);
+        var features = ResolveFeatures(baseFeatures, args);
 
 
 
-        var benchmarks = FilterBenchmarks(args, AllBenchmarkTypes);
+        var benchmarkCaseSelection = ResolveBenchmarkCaseSelection(args);
 
-        benchmarks = ApplyCategoryFilter(args, benchmarks);
 
-        if (benchmarks.Count == 0)
+
+        var benchmarkTypes = AllBenchmarkTypes;
+
+        if (benchmarkTypes.Count == 0)
         {
-            Console.WriteLine("No benchmarks matched current filter and/or category.");
+            Console.WriteLine("No benchmark types found.");
 
             return;
         }
 
 
 
-        var benchmarksBySignature = GroupBenchmarksByExecutionSignature(baseFeatures, benchmarks);
+        var benchmarkTypePlans = BuildBenchmarkTypePlans(
+            BaseRuntimeJobDefinitions,
+            runtimeJobDefinitions,
+            baseConfig,
+            features,
+            benchmarkTypes,
+            benchmarkCaseSelection);
+
+        if (benchmarkTypePlans.Count == 0)
+        {
+            Console.WriteLine("No benchmark cases matched current filter and/or category.");
+
+            return;
+        }
+
+
+
+        var benchmarkExecutionGroups = BuildBenchmarkExecutionGroups(benchmarkTypePlans);
 
 
 
         // ---- ANALYSIS ----
 
-        ShowBenchmarksExecutionPlan(args, runtimeJobs, jobs, baseFeatures, benchmarks, benchmarksBySignature);
-
+        ShowBenchmarkExecutionPlan(
+            args,
+            BaseRuntimeJobDefinitions,
+            runtimeJobDefinitions,
+            features,
+            benchmarkTypes,
+            benchmarkCaseSelection,
+            benchmarkExecutionGroups);
 
 
         if (IsPreviewMode(args))
@@ -85,40 +182,46 @@ public class BenchmarkExecutor
 
         // ---- EXECUTION ----
 
-        ExecuteBenchmarks(jobs, baseConfig, benchmarksBySignature);
+        ExecuteBenchmarks(
+            baseConfig,
+            benchmarkCaseSelection,
+            benchmarkExecutionGroups);
     }
 
 
 
-    private static List<RuntimeJob> CreateRuntimeJobs(List<Runtime> baseRuntimes, Job baseJob)
+    private static List<RuntimeJobDefinition> CreateRuntimeJobDefinitions(
+        List<Runtime> baseRuntimes,
+        Job baseJob)
     {
         if (baseRuntimes.Count == 0)
         {
             throw new InvalidOperationException("No runtimes defined.");
         }
 
-        var runtimeJobs =
+        var RuntimeJobDefinitions =
             baseRuntimes.Select(r =>
-                                new RuntimeJob(
+                                new RuntimeJobDefinition(
                                     r.MsBuildMoniker,
                                     () => baseJob.WithRuntime(r)))
 
                         .ToList();
 
-        return runtimeJobs;
+        return RuntimeJobDefinitions;
     }
 
-    private static List<RuntimeJob> ParseRuntimeJobs(
-        string[] args,
-        Dictionary<string, RuntimeJob> baseRuntimeJobsByRuntimeTfm)
+    private static List<RuntimeJobDefinition> ResolveRuntimeJobDefinitions(
+        Dictionary<string, RuntimeJobDefinition> baseRuntimeJobDefinitionsByRuntimeTfm,
+        string[] args)
     {
         var values = new List<string>();
 
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             var arg = args[i];
 
-            if (!arg.StartsWith("--runtimes", StringComparison.Ordinal))
+            if (arg != "--runtimes" &&
+                !arg.StartsWith("--runtimes=", StringComparison.Ordinal))
             {
                 continue;
             }
@@ -152,61 +255,46 @@ public class BenchmarkExecutor
             break;
         }
 
-        values = [.. values.Distinct()];
+        values = [.. values.Distinct(StringComparer.Ordinal)];
 
         if (values.Count == 0)
         {
             return [];
         }
 
-        var runtimeJobs = new List<RuntimeJob>(values.Count);
+        var runtimeJobDefinitions = new List<RuntimeJobDefinition>(values.Count);
 
         foreach (var runtimeTfm in values)
         {
-            if (!baseRuntimeJobsByRuntimeTfm.TryGetValue(runtimeTfm, out var runtimeJob))
+            if (!baseRuntimeJobDefinitionsByRuntimeTfm.TryGetValue(runtimeTfm, out var runtimeJob))
             {
                 throw new ArgumentException($"Unknown runtime TFM: '{runtimeTfm}'. Runtime must exactly match TFM (Target Framework Moniker).");
             }
 
-            runtimeJobs.Add(runtimeJob);
+            runtimeJobDefinitions.Add(runtimeJob);
         }
 
-        return runtimeJobs;
+        return runtimeJobDefinitions;
     }
 
-    private static BenchmarkFeatures ResolveBaseFeatures(string[] args)
+    private static BenchmarkFeatures ResolveFeatures(
+        BenchmarkFeatures baseFeatures,
+        string[] args)
     {
-        var baseFeatures = BenchmarkFeatures.None;
-
-        baseFeatures = baseFeatures |
+        var features = baseFeatures |
                        ParseCliProfileFeatures(args) |
                        ParseCliFeatures(args);
 
-        baseFeatures = ApplyBaseFeatureOverrides(args, baseFeatures);
+        features = ApplyFeatureOverrides(features, args);
 
-        return baseFeatures;
-    }
-
-    private static BenchmarkFeatures ApplyBaseFeatureOverrides(string[] args, BenchmarkFeatures baseFeatures)
-    {
-        if (args.HasArg("--no-memory"))
-        {
-            baseFeatures &= ~BenchmarkFeatures.Memory;
-        }
-
-        if (args.HasArg("--no-disassembly", "--no-disasm"))
-        {
-            baseFeatures &= ~BenchmarkFeatures.Disassembly;
-        }
-
-        return baseFeatures;
+        return features;
     }
 
     private static BenchmarkFeatures ParseCliProfileFeatures(string[] args)
     {
         string? value = null;
 
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             var arg = args[i];
 
@@ -238,7 +326,7 @@ public class BenchmarkExecutor
 
             "allocation" => BenchmarkFeatures.Memory,
 
-            _ => BenchmarkFeatures.None
+            _ => throw new ArgumentException($"Unknown benchmark profile: '{value}'.")
         };
     }
 
@@ -266,257 +354,257 @@ public class BenchmarkExecutor
             features |= BenchmarkFeatures.Stable;
         }
 
+        if (args.HasArg("--plotting", "--plot"))
+        {
+            features |= BenchmarkFeatures.Plotting;
+        }
+
+
+
         if (args.HasArg("--deep"))
         {
-            features |= BenchmarkFeatures.Disassembly |
-                        BenchmarkFeatures.Stable;
+            features |= BenchmarkFeatures.Memory |
+                        BenchmarkFeatures.Disassembly |
+                        BenchmarkFeatures.LongRun |
+                        BenchmarkFeatures.Stable |
+                        BenchmarkFeatures.Plotting;
+        }
+
+
+
+        return features;
+    }
+
+    private static BenchmarkFeatures ApplyFeatureOverrides(BenchmarkFeatures features, string[] args)
+    {
+        if (args.HasArg("--no-memory"))
+        {
+            features &= ~BenchmarkFeatures.Memory;
+        }
+
+        if (args.HasArg("--no-disassembly", "--no-disasm"))
+        {
+            features &= ~BenchmarkFeatures.Disassembly;
+        }
+
+        if (args.HasArg("--no-long-run"))
+        {
+            features &= ~BenchmarkFeatures.LongRun;
+        }
+
+        if (args.HasArg("--no-stable"))
+        {
+            features &= ~BenchmarkFeatures.Stable;
+        }
+
+        if (args.HasArg("--no-plotting", "--no-plot"))
+        {
+            features &= ~BenchmarkFeatures.Plotting;
         }
 
         return features;
     }
 
-    private static List<Job> BuildJobs(List<RuntimeJob> runtimeJobs, List<RuntimeJob> baseRuntimeJobs)
+    private static BenchmarkCaseSelection ResolveBenchmarkCaseSelection(string[] args)
     {
-        if (runtimeJobs.Count == 0)
+        return new BenchmarkCaseSelection(
+            ParseFilterPatterns(args),
+            ParseCategories(args));
+    }
+
+    private static string[] ParseFilterPatterns(string[] args)
+    {
+        var filterPatterns = args.GetArgValues("--filter");
+
+        if (filterPatterns.Length == 1 &&
+            filterPatterns[0] == "*")
         {
-            return [.. baseRuntimeJobs.Select(r => r.JobBuilder())];
+            return [];
         }
 
-        return [.. runtimeJobs.Select(r => r.JobBuilder())];
+        return filterPatterns;
+    }
+
+    private static string[] ParseCategories(string[] args)
+    {
+        return args.GetArgValues("--category");
+    }
+
+    private static IConfig BuildConfig(
+        IConfig baseConfig,
+        List<Job> effectiveJobs,
+        BenchmarkCaseSelection benchmarkCaseSelection,
+        BenchmarkExecutionGroupKey benchmarkExecutionGroupKey)
+    {
+        ManualConfig baseManualConfig = ManualConfig.Create(baseConfig)
+                                                    .WithUnionRule(ConfigUnionRule.AlwaysUseLocal);
+
+        baseManualConfig = ApplyBenchmarkCaseSelectionFilters(
+            baseManualConfig,
+            benchmarkCaseSelection);
+
+        foreach (var job in effectiveJobs)
+        {
+            baseManualConfig = baseManualConfig.AddJob(job);
+        }
+
+        IConfig config = ApplyDiagnosers(
+            benchmarkExecutionGroupKey,
+            baseManualConfig);
+
+        config = ApplyExporters(
+            config,
+            benchmarkExecutionGroupKey);
+
+        return config;
+    }
+
+    private static ManualConfig ApplyBenchmarkCaseSelectionFilters(
+        ManualConfig config,
+        BenchmarkCaseSelection benchmarkCaseSelection)
+    {
+        if (benchmarkCaseSelection.HasFilterPatterns)
+        {
+            config = config.AddFilter(
+                new GlobFilter(benchmarkCaseSelection.FilterPatterns));
+        }
+
+        if (benchmarkCaseSelection.HasCategories)
+        {
+            config = config.AddFilter(
+                new AnyCategoriesFilter(benchmarkCaseSelection.Categories));
+        }
+
+        return config;
+    }
+
+    private static IConfig ApplyDiagnosers(
+        BenchmarkExecutionGroupKey benchmarkExecutionGroupKey,
+        IConfig config)
+    {
+        if (HasMemoryFeature(benchmarkExecutionGroupKey.EffectiveFeatures) &&
+            !benchmarkExecutionGroupKey.HasMemoryDiagnoserAttribute)
+        {
+            config = config.AddDiagnoser(CreateMemoryDiagnoser());
+        }
+
+        if (HasDisassemblyFeature(benchmarkExecutionGroupKey.EffectiveFeatures) &&
+            !benchmarkExecutionGroupKey.HasDisassemblyDiagnoserAttribute)
+        {
+            config = config.AddDiagnoser(CreateDisassemblyDiagnoser());
+        }
+
+        return config;
+    }
+
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+    private static IDiagnoser CreateMemoryDiagnoser()
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+    {
+        return MemoryDiagnoser.Default;
+    }
+
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+    private static IDiagnoser CreateDisassemblyDiagnoser()
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+    {
+        return new DisassemblyDiagnoser(
+            new DisassemblyDiagnoserConfig(
+                maxDepth: DisassemblyDiagnoser_MaxDepth,
+                printSource: true,
+                printInstructionAddresses: false,
+                exportHtml: true,
+                exportCombinedDisassemblyReport: true,
+                exportDiff: true));
+    }
+
+    private static IConfig ApplyExporters(
+        IConfig config,
+        BenchmarkExecutionGroupKey benchmarkExecutionGroupKey)
+    {
+        var exporterDefinitions = BuildEffectiveExporterDefinitions(
+            benchmarkExecutionGroupKey);
+
+        foreach (var exporterDefinition in exporterDefinitions)
+        {
+            config = config.AddExporter(exporterDefinition.Exporter);
+        }
+
+        return config;
+    }
+
+    private static List<ExporterDefinition> BuildEffectiveExporterDefinitions(
+        BenchmarkExecutionGroupKey benchmarkExecutionGroupKey)
+    {
+        var exporterDefinitions = new List<ExporterDefinition>();
+
+        if (HasPlottingFeature(benchmarkExecutionGroupKey.EffectiveFeatures))
+        {
+            exporterDefinitions.Add(CreatePlottingExporter());
+        }
+
+        return exporterDefinitions;
+    }
+
+    private static ExporterDefinition CreatePlottingExporter()
+    {
+        return new ExporterDefinition(
+            nameof(RPlotExporter),
+            RPlotExporter.Default);
+    }
+
+    private static List<Job> BuildJobs(
+        List<RuntimeJobDefinition> baseRuntimeJobDefinitions,
+        List<RuntimeJobDefinition> runtimeJobDefinitions)
+    {
+        if (runtimeJobDefinitions.Count == 0)
+        {
+            return [.. baseRuntimeJobDefinitions.Select(r => r.JobFactory())];
+        }
+
+        return [.. runtimeJobDefinitions.Select(r => r.JobFactory())];
     }
 
     /// <summary>
     /// </summary>
-    /// <param name="jobs"></param>
+    /// <param name="baseRuntimeJobDefinitions"></param>
+    /// <param name="runtimeJobDefinitions"></param>
+    /// <param name="effectiveFeatures"></param>
+    /// <returns></returns>
     /// <remarks>
     ///     REFERENCES:
     ///     -   <see href="https://stackoverflow.com/questions/79631422/remove-or-skip-defaultjob" />
     /// </remarks>
-    private static void SetBaselineJob(List<Job> jobs)
+    private static List<Job> BuildEffectiveJobs(
+        List<RuntimeJobDefinition> baseRuntimeJobDefinitions,
+        List<RuntimeJobDefinition> runtimeJobDefinitions,
+        BenchmarkFeatures effectiveFeatures)
     {
-        for (int i = 0; i < jobs.Count; i++)
-        {
-            var isPrimary = i == 0;
+        var jobs = BuildJobs(baseRuntimeJobDefinitions, runtimeJobDefinitions);
 
-            // DO NOT set Meta.IsDefault.
-            // It participates in BDN's internal job inference,
-            // and can cause implicit job creation or override explicitly added jobs.
-            //jobs[i].Meta.IsDefault = isPrimary;
-            jobs[i].Meta.Baseline = isPrimary;
+        var effectiveJobs = new List<Job>(jobs.Count);
+
+        for (var i = 0; i < jobs.Count; i++)
+        {
+            var effectiveJob = ApplyEffectiveFeatures(jobs[i], effectiveFeatures);
+
+            //
+            //  NOTE:   DO NOT set Meta.IsDefault.
+            //          It participates in BDN's internal job inference,
+            //          and can cause implicit job creation or override explicitly added jobs.
+            //
+            //effectiveJob.Meta.IsDefault = i == 0;   // INCORRECT
+            effectiveJob.Meta.Baseline = i == 0;    // CORRECT
+
+            effectiveJobs.Add(effectiveJob.Freeze());
         }
+
+        return effectiveJobs;
     }
 
-    private static List<Type> FilterBenchmarks(string[] args, List<Type> benchmarks)
-    {
-        var filter = args.GetArgValue("--filter");
-
-        if (filter.IsEmpty() || filter == "*")
-        {
-            return [.. benchmarks];
-        }
-
-        var patterns = filter.SplitBySemicolon();
-
-        return [.. benchmarks.Where(b => patterns.Any(p => MatchesFilter(b, p)))];
-    }
-
-    private static bool MatchesFilter(Type benchmark, string pattern)
-    {
-        string name = benchmark.FullName!;
-
-        if (pattern.StartsWith('*') && pattern.EndsWith('*'))
-        {
-            return name.Contains(pattern.Trim('*'), StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (pattern.StartsWith('*'))
-        {
-            return name.EndsWith(pattern[1..], StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (pattern.EndsWith('*'))
-        {
-            return name.StartsWith(pattern[..^1], StringComparison.OrdinalIgnoreCase);
-        }
-
-        return name.Equals(pattern, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static List<Type> ApplyCategoryFilter(string[] args, List<Type> benchmarks)
-    {
-        var category = args.GetArgValue("--category");
-
-        if (category.IsEmpty())
-        {
-            return benchmarks;
-        }
-
-        var categories = category.SplitBySemicolon();
-
-        return [.. benchmarks.Where(b => categories.Any(c => HasCategory(b, c)))];
-    }
-
-    private static bool HasCategory(Type benchmark, string category)
-    {
-        // --- Type-level ---
-        if (benchmark.GetAttributes<BenchmarkCategoryAttribute>()
-                     .Any(a => a.Categories.Contains(category, StringComparer.OrdinalIgnoreCase)))
-        {
-            return true;
-        }
-
-        // --- Method-level ---
-        return benchmark.GetMethods()
-                        .Where(m => m.HasAttribute<BenchmarkAttribute>())
-                        .SelectMany(m => m.GetAttributes<BenchmarkCategoryAttribute>())
-                        .Any(a => a.Categories.Contains(category, StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static Dictionary<ExecutionSignature, List<Type>> GroupBenchmarksByExecutionSignature(
-        BenchmarkFeatures baseFeatures,
-        List<Type> benchmarks)
-    {
-        return benchmarks.GroupBy(b => ResolveSignature(baseFeatures, b))
-                         .OrderBy(g => g.Key.EffectiveFeatures)
-                         .ThenBy(g => g.Key.ConfigIdentity)
-                         .ToDictionary(
-                             g => g.Key,
-                             g => g.OrderBy(t => t.FullName, Type_FullName_StringComparer)
-                                   .ToList());
-    }
-
-    private static ExecutionSignature ResolveSignature(
-        BenchmarkFeatures baseFeatures,
-        Type benchmark)
-    {
-        var features = baseFeatures;
-
-        var attribute = benchmark.GetAttribute<BenchmarkFeaturesAttribute>();
-
-        if (attribute is not null)
-        {
-            features = (features | attribute.Enable) & ~attribute.Disable;
-        }
-
-        if (HasMemoryDiagnoserAttribute(benchmark))
-        {
-            features |= BenchmarkFeatures.Memory;
-        }
-
-        if (HasDisassemblyDiagnoserAttribute(benchmark))
-        {
-            features |= BenchmarkFeatures.Disassembly;
-        }
-
-        int configIdentity = GetConfigIdentity(benchmark);
-
-        return new ExecutionSignature(
-            features,
-            configIdentity);
-    }
-
-    private static void ExecuteBenchmarks(
-        List<Job> jobs,
-        IConfig baseConfig,
-        Dictionary<ExecutionSignature, List<Type>> benchmarksBySignature)
-    {
-        foreach (var group in benchmarksBySignature)
-        {
-            var signature = group.Key;
-            var groupedBenchmarks = group.Value;
-
-            // Representative benchmark (guaranteed equivalent).
-            var benchmark = groupedBenchmarks[0];
-
-            var config = BuildConfig(
-                jobs,
-                signature.EffectiveFeatures,
-                baseConfig,
-                benchmark);
-
-            BenchmarkRunner.Run([.. groupedBenchmarks], config);
-        }
-    }
-
-    private static IConfig BuildConfig(
-        List<Job> jobs,
-        BenchmarkFeatures effectiveFeatures,
-        IConfig baseConfig,
-        Type benchmark)
-    {
-        // ---- GLOBAL BASE CONFIG ----
-        ManualConfig baseManualConfig = ManualConfig.Create(baseConfig)
-                                                    .WithUnionRule(ConfigUnionRule.AlwaysUseLocal);
-
-        // ---- LOCAL (CLONED) BASE (ATTRIBUTE) CONFIG ----
-        IConfig? benchmarkBaseConfig = GetConfig(benchmark);
-
-        if (benchmarkBaseConfig is not null)
-        {
-            baseManualConfig.Add(benchmarkBaseConfig);
-        }
-
-        // ---- JOBS ----
-        foreach (var job in jobs)
-        {
-            var jobWithFeatures = ApplyFeatures(effectiveFeatures, job).Freeze();
-
-            baseManualConfig = baseManualConfig.AddJob(jobWithFeatures);
-        }
-
-        // ---- DIAGNOSERS ----
-        IConfig benchmarkConfig = ApplyDiagnosers(effectiveFeatures, baseManualConfig, benchmark);
-
-        return benchmarkConfig;
-    }
-
-    private static IConfig? GetConfig(Type benchmark)
-    {
-        var attribute = benchmark.GetAttribute<ConfigAttribute>();
-
-        if (attribute?.Config is null)
-        {
-            return null;
-        }
-
-        // CRITICAL: clone to avoid shared mutation.
-        return ManualConfig.Create(attribute.Config);
-    }
-
-    private static int GetConfigIdentity(Type benchmark)
-    {
-        var attribute = benchmark.GetAttribute<ConfigAttribute>();
-
-        return attribute?.Config is not null ?
-               GetFilterIdentity(attribute.Config) :
-               0;
-    }
-
-    private static int GetFilterIdentity(IConfig config)
-    {
-        //
-        //  NOTES:  Config identity is defined solely by filter types.
-        //          Filter instance state is intentionally ignored.
-        //
-
-        var filters = config.GetFilters().ToList();
-        var filterTypes = filters.Select(f => f.GetType())
-                                 .OrderBy(t => t.FullName, Type_FullName_StringComparer)
-                                 .ToList();
-
-        int hash = 47;
-
-        foreach (var filterType in filterTypes)
-        {
-            hash = (hash * 101) ^ RuntimeHelpers.GetHashCode(filterType);
-        }
-
-        return hash;
-    }
-
-    private static Job ApplyFeatures(
-        BenchmarkFeatures effectiveFeatures,
-        Job job)
+    private static Job ApplyEffectiveFeatures(
+        Job job,
+        BenchmarkFeatures effectiveFeatures)
     {
         // --- Long runs ---
         if (HasLongRunFeature(effectiveFeatures))
@@ -536,39 +624,121 @@ public class BenchmarkExecutor
         return job;
     }
 
-    private static IConfig ApplyDiagnosers(
-        BenchmarkFeatures effectiveFeatures,
-        IConfig config,
-        Type benchmark)
+    private static List<BenchmarkTypePlan> BuildBenchmarkTypePlans(
+        List<RuntimeJobDefinition> baseRuntimeJobDefinitions,
+        List<RuntimeJobDefinition> runtimeJobDefinitions,
+        IConfig baseConfig,
+        BenchmarkFeatures baseFeatures,
+        List<Type> benchmarkTypes,
+        BenchmarkCaseSelection benchmarkCaseSelection)
     {
-        if (HasMemoryFeature(effectiveFeatures) &&
-            !HasMemoryDiagnoserAttribute(benchmark))
+        var benchmarkTypePlans = new List<BenchmarkTypePlan>(benchmarkTypes.Count);
+
+        foreach (var benchmarkType in benchmarkTypes)
         {
-            config = config.AddDiagnoser(MemoryDiagnoser.Default);
+            var benchmarkExecutionGroupKey = ResolveBenchmarkExecutionGroupKey(
+                baseFeatures,
+                benchmarkType);
+
+            var effectiveJobs = BuildEffectiveJobs(
+                baseRuntimeJobDefinitions,
+                runtimeJobDefinitions,
+                benchmarkExecutionGroupKey.EffectiveFeatures);
+
+            var config = BuildConfig(
+                baseConfig,
+                effectiveJobs,
+                benchmarkCaseSelection,
+                benchmarkExecutionGroupKey);
+
+            using var runInfo = BenchmarkConverter.TypeToBenchmarks(
+                benchmarkType,
+                config);
+
+            if (runInfo.BenchmarksCases.Length == 0)
+            {
+                continue;
+            }
+
+            var benchmarkCaseDisplayInfos =
+                runInfo.BenchmarksCases
+                       .Select(c => c.DisplayInfo)
+                       .OrderBy(s => s, StringComparer.Ordinal)
+                       .ToList();
+
+            benchmarkTypePlans.Add(
+                new BenchmarkTypePlan(
+                    benchmarkType,
+                    effectiveJobs,
+                    benchmarkExecutionGroupKey,
+                    benchmarkCaseDisplayInfos));
         }
 
-        if (HasDisassemblyFeature(effectiveFeatures) &&
-            !HasDisassemblyDiagnoserAttribute(benchmark))
-        {
-            config = config.AddDiagnoser(
-                new DisassemblyDiagnoser(
-                    new DisassemblyDiagnoserConfig(
-                        maxDepth: DisassemblyDiagnoser_MaxDepth,
-                        exportCombinedDisassemblyReport: true,
-                        printSource: true,
-                        printInstructionAddresses: true)));
-        }
-
-        return config;
+        return benchmarkTypePlans;
     }
 
-    private static void ShowBenchmarksExecutionPlan(
+    private static List<BenchmarkExecutionGroup> BuildBenchmarkExecutionGroups(
+        List<BenchmarkTypePlan> benchmarkTypePlans)
+    {
+        return
+        [
+            .. benchmarkTypePlans.GroupBy(p => p.BenchmarkExecutionGroupKey)
+                                 .OrderBy(g => g.Key.EffectiveFeatures)
+                                 .ThenBy(g => g.Key.HasMemoryDiagnoserAttribute)
+                                 .ThenBy(g => g.Key.HasDisassemblyDiagnoserAttribute)
+                                 .Select(g =>
+                                 {
+                                     var benchmarkTypePlansInGroup =
+                                         g.OrderBy(p => p.BenchmarkType.FullName, Type_FullName_StringComparer)
+                                          .ToList();
+
+                                     return new BenchmarkExecutionGroup(
+                                         g.Key,
+                                         benchmarkTypePlansInGroup);
+                                 }),
+        ];
+    }
+
+    private static BenchmarkExecutionGroupKey ResolveBenchmarkExecutionGroupKey(
+        BenchmarkFeatures features,
+        Type benchmarkType)
+    {
+        var effectiveFeatures = features;
+
+        var attribute = benchmarkType.GetAttribute<BenchmarkFeaturesAttribute>();
+
+        if (attribute is not null)
+        {
+            effectiveFeatures = (effectiveFeatures | attribute.Enable) & ~attribute.Disable;
+        }
+
+        var hasMemoryDiagnoserAttribute = HasMemoryDiagnoserAttribute(benchmarkType);
+        var hasDisassemblyDiagnoserAttribute = HasDisassemblyDiagnoserAttribute(benchmarkType);
+
+        if (hasMemoryDiagnoserAttribute)
+        {
+            effectiveFeatures |= BenchmarkFeatures.Memory;
+        }
+
+        if (hasDisassemblyDiagnoserAttribute)
+        {
+            effectiveFeatures |= BenchmarkFeatures.Disassembly;
+        }
+
+        return new BenchmarkExecutionGroupKey(
+            effectiveFeatures,
+            hasMemoryDiagnoserAttribute,
+            hasDisassemblyDiagnoserAttribute);
+    }
+
+    private static void ShowBenchmarkExecutionPlan(
         string[] args,
-        List<RuntimeJob> runtimeJobs,
-        List<Job> jobs,
+        List<RuntimeJobDefinition> baseRuntimeJobDefinitions,
+        List<RuntimeJobDefinition> runtimeJobDefinitions,
         BenchmarkFeatures baseFeatures,
-        List<Type> benchmarks,
-        Dictionary<ExecutionSignature, List<Type>> benchmarksBySignature)
+        List<Type> benchmarkTypes,
+        BenchmarkCaseSelection benchmarkCaseSelection,
+        List<BenchmarkExecutionGroup> benchmarkExecutionGroups)
     {
         Console.WriteLine();
         Console.WriteLine("============================================================");
@@ -576,14 +746,12 @@ public class BenchmarkExecutor
         Console.WriteLine("============================================================");
         Console.WriteLine();
 
-        int i = 0;
-
         // ---- ARGS ----
         Console.WriteLine("[Args]");
 
-        for (i = 0; i < args.Length; i++)
+        for (var argsIndex = 0; argsIndex < args.Length; argsIndex++)
         {
-            Console.WriteLine($"  [{i}] \"{args[i]}\"");
+            Console.WriteLine($"  [{argsIndex}] \"{args[argsIndex]}\"");
         }
 
         if (args.Length == 0)
@@ -595,16 +763,16 @@ public class BenchmarkExecutor
         Console.WriteLine();
         Console.WriteLine("[Args.Parsed.Runtimes]");
 
-        i = 0;
+        var runtimeJobDefinitionIndex = 0;
 
-        foreach (var runtimeJob in runtimeJobs)
+        foreach (var runtimeJobDefinition in runtimeJobDefinitions)
         {
-            Console.WriteLine($"  [{i}] {runtimeJob.RuntimeTfm}");
+            Console.WriteLine($"  [{runtimeJobDefinitionIndex}] {runtimeJobDefinition.RuntimeTfm}");
 
-            i++;
+            runtimeJobDefinitionIndex++;
         }
 
-        if (runtimeJobs.Count == 0)
+        if (runtimeJobDefinitions.Count == 0)
         {
             Console.WriteLine("  (default: all runtimes)");
         }
@@ -618,17 +786,51 @@ public class BenchmarkExecutor
         Console.WriteLine();
         Console.WriteLine("[Args.Parsed.Filter]");
 
-        var filter = args.GetArgValue("--filter");
-
-        Console.WriteLine($"  Filter: {filter ?? "(none)"}");
+        Console.WriteLine(
+            benchmarkCaseSelection.FilterPatterns.Length == 0 ?
+            "  Filter: (none)" :
+            $"  Filter: {string.Join("; ", benchmarkCaseSelection.FilterPatterns)}");
 
         // ---- CATEGORY FILTER ARGS ----
         Console.WriteLine();
         Console.WriteLine("[Args.Parsed.Category]");
 
-        var category = args.GetArgValue("--category");
+        Console.WriteLine(
+            benchmarkCaseSelection.Categories.Length == 0 ?
+            "  Category: (none)" :
+            $"  Category: {string.Join("; ", benchmarkCaseSelection.Categories)}");
 
-        Console.WriteLine($"  Category: {category ?? "(none)"}");
+        // ---- BASE JOBS ----
+        Console.WriteLine();
+        Console.WriteLine("[Jobs.Base]");
+
+        var baseJobs = BuildJobs(baseRuntimeJobDefinitions, runtimeJobDefinitions);
+
+        for (var baseJobIndex = 0; baseJobIndex < baseJobs.Count; baseJobIndex++)
+        {
+            var baseJob = baseJobs[baseJobIndex];
+
+            Console.WriteLine($"  [{baseJobIndex}]");
+            Console.WriteLine($"    Runtime:    {baseJob.Environment.Runtime} ({baseJob.Environment.Runtime!.MsBuildMoniker})");
+            Console.WriteLine($"    Baseline:   {baseJobIndex == 0}");
+            Console.WriteLine($"    Warmup:     {baseJob.Run?.WarmupCount.ToString() ?? "(default)"}");
+            Console.WriteLine($"    Iteration:  {baseJob.Run?.IterationCount.ToString() ?? "(default)"}");
+
+            if (baseJob.Environment?.EnvironmentVariables?.Count > 0)
+            {
+                Console.WriteLine($"    Environment Variables:");
+
+                foreach (var environmentVariable in baseJob.Environment.EnvironmentVariables)
+                {
+                    Console.WriteLine($"      {environmentVariable.Key}={environmentVariable.Value}");
+                }
+            }
+        }
+
+        if (baseJobs.Count == 0)
+        {
+            Console.WriteLine("  (no base jobs)");
+        }
 
         // ---- BASE FEATURES ----
         Console.WriteLine();
@@ -642,89 +844,94 @@ public class BenchmarkExecutor
         var baseFeatureValues = Array.AsReadOnly(((BenchmarkFeatures[]) Enum.GetValues(typeof(BenchmarkFeatures))).Where(f => f != BenchmarkFeatures.None).ToArray());
 #endif
 
-        i = 0;
+        var baseFeatureIndex = 0;
 
-        foreach (var feature in baseFeatureValues)
+        foreach (var baseFeature in baseFeatureValues)
         {
-            Console.WriteLine($"  [{i}] {$"{feature}:",-16} {((baseFeatures & feature) != 0 ? "enabled" : "disabled")}");
+            Console.WriteLine($"  [{baseFeatureIndex}] {$"{baseFeature}:",-16} {((baseFeatures & baseFeature) != 0 ? "enabled" : "disabled")}");
 
-            i++;
-        }
-
-        // ---- JOBS ----
-        Console.WriteLine();
-        Console.WriteLine("[Jobs]");
-
-        for (i = 0; i < jobs.Count; i++)
-        {
-            var job = jobs[i];
-
-            Console.WriteLine($"  [{i}]");
-            Console.WriteLine($"    Runtime:   {job.Environment.Runtime} ({job.Environment.Runtime!.MsBuildMoniker})");
-            Console.WriteLine($"    Baseline:  {job.Meta.Baseline}");
-            Console.WriteLine($"    Warmup:    {job.Run?.WarmupCount.ToString() ?? "(default)"}");
-            Console.WriteLine($"    Iteration: {job.Run?.IterationCount.ToString() ?? "(default)"}");
-
-            if (job.Environment?.EnvironmentVariables?.Count > 0)
-            {
-                Console.WriteLine($"    Environment Variables:");
-
-                foreach (var environmentVariable in job.Environment.EnvironmentVariables)
-                {
-                    Console.WriteLine($"      {environmentVariable.Key}={environmentVariable.Value}");
-                }
-            }
-        }
-
-        if (jobs.Count == 0)
-        {
-            Console.WriteLine("  (no jobs)");
+            baseFeatureIndex++;
         }
 
         // ---- SUMMARY ----
         Console.WriteLine();
         Console.WriteLine("[Execution.Summary]");
 
-        var runtimesSummary = string.Join(", ", jobs.Select(j => $"{j.Environment.Runtime} ({j.Environment.Runtime!.MsBuildMoniker})"));
+        var runtimesSummary = string.Join(", ", baseJobs.Select(job => $"{job.Environment.Runtime} ({job.Environment.Runtime!.MsBuildMoniker})"));
         var baseFeaturesSummary = baseFeatures.ToString();
+        var selectedBenchmarkTypeCount = benchmarkExecutionGroups.Sum(g => g.BenchmarkTypeCount);
+        var selectedBenchmarkCaseCount = benchmarkExecutionGroups.Sum(g => g.BenchmarkTypePlans.Sum(p => p.BenchmarkCaseCount));
 
         Console.WriteLine($"  Runtimes:         {runtimesSummary}");
         Console.WriteLine($"  Features.Base:    {baseFeaturesSummary}");
-        Console.WriteLine($"  Benchmarks.Total: {benchmarks.Count}");
+        Console.WriteLine($"  BenchmarkTypes.Total:             {benchmarkTypes.Count,2}");
+        Console.WriteLine($"  BenchmarkTypes.Selected.Total:    {selectedBenchmarkTypeCount,2}");
+        Console.WriteLine($"  BenchmarkCases.Selected.Total:    {selectedBenchmarkCaseCount,2}");
 
         // ---- GROUPS ----
         Console.WriteLine();
         Console.WriteLine("[Execution.Groups]");
-        Console.WriteLine($"  Groups.Total:             {benchmarksBySignature.Count}");
-        Console.WriteLine($"  Groups.Benchmarks.Total:  {benchmarksBySignature.Sum(g => g.Value.Count)}");
+        Console.WriteLine($"  Groups.Total:                     {benchmarkExecutionGroups.Count,2}");
+        Console.WriteLine($"  Groups.BenchmarkTypes.Total:      {benchmarkExecutionGroups.Sum(g => g.BenchmarkTypeCount),2}");
+        Console.WriteLine($"  Groups.BenchmarkCases.Total:      {benchmarkExecutionGroups.Sum(g => g.BenchmarkCaseCount),2}");
 
-        i = 0;
+        var benchmarkExecutionGroupIndex = 0;
 
-        foreach (var group in benchmarksBySignature)
+        foreach (var benchmarkExecutionGroup in benchmarkExecutionGroups)
         {
-            var signature = group.Key;
+            var benchmarkExecutionGroupKey = benchmarkExecutionGroup.BenchmarkExecutionGroupKey;
+            var effectiveJobs = benchmarkExecutionGroup.BenchmarkTypePlans[0].EffectiveJobs;
+            var hasConfigAttribute = benchmarkExecutionGroup.BenchmarkTypePlans.Any(p => HasConfigAttribute(p.BenchmarkType));
+            var hasEffectiveMemoryFeature = HasMemoryFeature(benchmarkExecutionGroupKey.EffectiveFeatures);
+            var hasEffectiveDisassemblyFeature = HasDisassemblyFeature(benchmarkExecutionGroupKey.EffectiveFeatures);
+            var hasEffectivePlottingFeature = HasPlottingFeature(benchmarkExecutionGroupKey.EffectiveFeatures);
+            var exporterDefinitions = BuildEffectiveExporterDefinitions(benchmarkExecutionGroupKey);
 
-            var hasEffectiveMemoryFeature = HasMemoryFeature(signature.EffectiveFeatures);
-            var hasEffectiveDisassemblyFeature = HasDisassemblyFeature(signature.EffectiveFeatures);
+            Console.WriteLine($"  [{benchmarkExecutionGroupIndex + 1}]");
+            Console.WriteLine($"    {nameof(ConfigAttribute)}:        {(hasConfigAttribute ? "defined" : "-")}");
+            Console.WriteLine($"    Features.Effective:     {benchmarkExecutionGroupKey.EffectiveFeatures}");
+            Console.WriteLine($"    Exporters.Effective:    {(exporterDefinitions.Count > 0 ? string.Join(", ", exporterDefinitions.Select(e => e.Name)) : "-")}");
+            Console.WriteLine($"    Jobs.Effective:");
 
-            Console.WriteLine($"  [{i + 1}]");
-            Console.WriteLine($"    Features.Effective:         {signature.EffectiveFeatures}");
-            Console.WriteLine($"    ConfigIdentity:             {signature.ConfigIdentity}{(HasConfigAttribute(group.Value[0]) ? $" (has '{nameof(ConfigAttribute)}' defined)" : "")}");
-            Console.WriteLine($"    Groups.Benchmarks.Subtotal: {group.Value.Count}");
-
-            int j = 0;
-
-            foreach (var benchmark in group.Value)
+            for (var effectiveJobIndex = 0; effectiveJobIndex < effectiveJobs.Count; effectiveJobIndex++)
             {
-                //Console.WriteLine($"    [{i + 1}.{j + 1}] {benchmark.Name} (in {benchmark.Namespace})");
-                Console.Write($"    [{i + 1}.{j + 1}] ");
-                ConsoleHelper.Write(benchmark.Name, ConsoleColor.DarkCyan);
-                Console.WriteLine($" (in {benchmark.Namespace})");
+                var effectiveJob = effectiveJobs[effectiveJobIndex];
+
+                Console.WriteLine($"      [{effectiveJobIndex}]");
+                Console.WriteLine($"        Runtime:    {effectiveJob.Environment.Runtime} ({effectiveJob.Environment.Runtime!.MsBuildMoniker})");
+                Console.WriteLine($"        Baseline:   {effectiveJob.Meta.Baseline}");
+                Console.WriteLine($"        Warmup:     {effectiveJob.Run?.WarmupCount.ToString() ?? "(default)"}");
+                Console.WriteLine($"        Iteration:  {effectiveJob.Run?.IterationCount.ToString() ?? "(default)"}");
+
+                if (effectiveJob.Environment?.EnvironmentVariables?.Count > 0)
+                {
+                    Console.WriteLine($"        Environment Variables:");
+
+                    foreach (var environmentVariable in effectiveJob.Environment.EnvironmentVariables)
+                    {
+                        Console.WriteLine($"          {environmentVariable.Key}={environmentVariable.Value}");
+                    }
+                }
+            }
+
+            Console.WriteLine($"    Group[{benchmarkExecutionGroupIndex + 1}].BenchmarkTypes.Subtotal:      {benchmarkExecutionGroup.BenchmarkTypeCount,2}");
+            Console.WriteLine($"    Group[{benchmarkExecutionGroupIndex + 1}].BenchmarkCases.Subtotal:      {benchmarkExecutionGroup.BenchmarkCaseCount,2}");
+
+            var benchmarkTypePlanIndex = 0;
+
+            foreach (var benchmarkTypePlan in benchmarkExecutionGroup.BenchmarkTypePlans)
+            {
+                var benchmarkType = benchmarkTypePlan.BenchmarkType;
+
+                Console.Write($"    [{benchmarkExecutionGroupIndex + 1}.{benchmarkTypePlanIndex + 1}] ");
+                ConsoleHelper.Write(benchmarkType.Name, ConsoleColor.DarkCyan);
+                Console.WriteLine($" (in {benchmarkType.Namespace})");
+                Console.WriteLine($"      BenchmarkCases.Selected: {benchmarkTypePlan.BenchmarkCaseCount}");
 
                 if (hasEffectiveMemoryFeature &&
                     !HasMemoryFeature(baseFeatures))
                 {
-                    var attributeName = HasMemoryDiagnoserAttribute(benchmark) ?
+                    var attributeName = HasMemoryDiagnoserAttribute(benchmarkType) ?
                                         nameof(MemoryDiagnoserAttribute) :
                                         nameof(BenchmarkFeaturesAttribute);
 
@@ -734,22 +941,60 @@ public class BenchmarkExecutor
                 if (hasEffectiveDisassemblyFeature &&
                     !HasDisassemblyFeature(baseFeatures))
                 {
-                    var attributeName = HasDisassemblyDiagnoserAttribute(benchmark) ?
+                    var attributeName = HasDisassemblyDiagnoserAttribute(benchmarkType) ?
                                         nameof(DisassemblyDiagnoserAttribute) :
                                         nameof(BenchmarkFeaturesAttribute);
 
                     Console.WriteLine($"      '{attributeName}' overrides disabled Disassembly base feature.");
                 }
 
-                j++;
+                if (hasEffectivePlottingFeature &&
+                    !HasPlottingFeature(baseFeatures))
+                {
+                    Console.WriteLine($"      '{nameof(BenchmarkFeaturesAttribute)}' overrides disabled Plotting base feature.");
+                }
+
+                var benchmarkCaseIndex = 0;
+
+                foreach (var benchmarkCaseDisplayInfo in benchmarkTypePlan.BenchmarkCaseDisplayInfos)
+                {
+                    Console.Write($"      [{benchmarkExecutionGroupIndex + 1}.{benchmarkTypePlanIndex + 1}.{benchmarkCaseIndex + 1}] ");
+                    Console.WriteLine(benchmarkCaseDisplayInfo);
+
+                    benchmarkCaseIndex++;
+                }
+
+                benchmarkTypePlanIndex++;
             }
 
-            i++;
+            benchmarkExecutionGroupIndex++;
         }
 
         Console.WriteLine();
         Console.WriteLine("============================================================");
         Console.WriteLine();
+    }
+
+    private static void ExecuteBenchmarks(
+        IConfig baseConfig,
+        BenchmarkCaseSelection benchmarkCaseSelection,
+        List<BenchmarkExecutionGroup> benchmarkExecutionGroups)
+    {
+        foreach (var benchmarkExecutionGroup in benchmarkExecutionGroups)
+        {
+            var benchmarkTypes =
+                benchmarkExecutionGroup.BenchmarkTypePlans
+                                       .Select(p => p.BenchmarkType)
+                                       .ToArray();
+
+            var config = BuildConfig(
+                baseConfig,
+                benchmarkExecutionGroup.BenchmarkTypePlans[0].EffectiveJobs,
+                benchmarkCaseSelection,
+                benchmarkExecutionGroup.BenchmarkExecutionGroupKey);
+
+            BenchmarkRunner.Run(benchmarkTypes, config);
+        }
     }
 
     private static bool IsPreviewMode(string[] args)
@@ -777,65 +1022,36 @@ public class BenchmarkExecutor
         return (features & BenchmarkFeatures.Stable) != 0;
     }
 
-    public static bool IsBenchmarkType(Type benchmark)
+    public static bool HasPlottingFeature(BenchmarkFeatures features)
     {
-        return benchmark.GetMethods().Any(m => m.HasAttribute<BenchmarkAttribute>());
+        return (features & BenchmarkFeatures.Plotting) != 0;
     }
 
-    public static bool HasConfigAttribute(Type benchmark)
+    public static bool IsBenchmarkType(Type benchmarkType)
     {
-        return benchmark.HasAttribute<ConfigAttribute>();
+        return benchmarkType.GetMethods().Any(m => m.HasAttribute<BenchmarkAttribute>());
     }
 
-    public static bool HasBenchmarkFeaturesAttribute(Type benchmark)
+    public static bool HasConfigAttribute(Type benchmarkType)
     {
-        return benchmark.HasAttribute<BenchmarkFeaturesAttribute>();
+        return benchmarkType.HasAttribute<ConfigAttribute>();
     }
 
-    public static bool HasMemoryDiagnoserAttribute(Type benchmark)
+    public static bool HasBenchmarkFeaturesAttribute(Type benchmarkType)
     {
-        return benchmark.HasAttribute<MemoryDiagnoserAttribute>();
+        return benchmarkType.HasAttribute<BenchmarkFeaturesAttribute>();
     }
 
-    public static bool HasDisassemblyDiagnoserAttribute(Type benchmark)
+    public static bool HasMemoryDiagnoserAttribute(Type benchmarkType)
     {
-        return benchmark.HasAttribute<DisassemblyDiagnoserAttribute>();
+        return benchmarkType.HasAttribute<MemoryDiagnoserAttribute>();
     }
-}
 
-[Flags]
-public enum BenchmarkFeatures
-{
-    None = 0,
-    Memory = 1 << 0,
-    Disassembly = 1 << 1,
-    LongRun = 1 << 2,
-    Stable = 1 << 3
-}
-
-[AttributeUsage(AttributeTargets.Class)]
-public sealed class BenchmarkFeaturesAttribute : Attribute
-{
-    public BenchmarkFeatures Enable { get; }
-
-    public BenchmarkFeatures Disable { get; }
-
-    public BenchmarkFeaturesAttribute(
-        BenchmarkFeatures enable = BenchmarkFeatures.None,
-        BenchmarkFeatures disable = BenchmarkFeatures.None)
+    public static bool HasDisassemblyDiagnoserAttribute(Type benchmarkType)
     {
-        Enable = enable;
-        Disable = disable;
+        return benchmarkType.HasAttribute<DisassemblyDiagnoserAttribute>();
     }
 }
-
-internal sealed record RuntimeJob(
-    string RuntimeTfm,
-    Func<Job> JobBuilder);
-
-internal sealed record ExecutionSignature(
-    BenchmarkFeatures EffectiveFeatures,
-    int ConfigIdentity);
 
 
 
@@ -896,8 +1112,15 @@ internal static class StringExtensions
 #endif
 
     public static string[] SplitBySemicolon(this string str) =>
-        str.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        [
+            .. str.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                  .Select(s => s.Trim())
+                  .Where(s => s.Length != 0)
+        ];
+}
 
+internal static class StringArgsExtensions
+{
     public static bool HasArg(this string[] args, params string[] names)
     {
         foreach (var arg in args)
@@ -916,22 +1139,103 @@ internal static class StringExtensions
 
     public static string? GetArgValue(this string[] args, string name)
     {
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             var arg = args[i];
 
             if (arg.StartsWith(name + "=", StringComparison.Ordinal))
             {
-                return arg.Split('=', 2)[1];
+                var value = arg.Split('=', 2)[1];
+
+                if (value.Length == 0)
+                {
+                    throw new ArgumentException($"Missing value for '{name}'.");
+                }
+
+                return value;
             }
 
-            if (arg == name && i + 1 < args.Length)
+            if (arg == name)
             {
+                if (i + 1 >= args.Length ||
+                    args[i + 1].StartsWith("--", StringComparison.Ordinal))
+                {
+                    throw new ArgumentException($"Missing value for '{name}'.");
+                }
+
                 return args[i + 1];
             }
         }
 
         return null;
+    }
+
+    public static string[] GetArgValues(this string[] args, params string[] names)
+    {
+        var values = new List<string>();
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            var arg = args[i];
+
+            var matchedName = names.FirstOrDefault(name =>
+                arg.Equals(name, StringComparison.Ordinal) ||
+                arg.StartsWith(name + "=", StringComparison.Ordinal));
+
+            if (matchedName is null)
+            {
+                continue;
+            }
+
+            if (arg.StartsWith(matchedName + "=", StringComparison.Ordinal))
+            {
+                var value = arg[(matchedName.Length + 1)..];
+
+                AddListValue(values, value);
+
+                continue;
+            }
+
+            var hasValue = false;
+
+            for (int j = i + 1; j < args.Length; j++)
+            {
+                var value = args[j];
+
+                if (value.StartsWith("--", StringComparison.Ordinal))
+                {
+                    break;
+                }
+
+                AddListValue(values, value);
+
+                hasValue = true;
+            }
+
+            if (!hasValue)
+            {
+                throw new ArgumentException($"Missing value for '{matchedName}'.");
+            }
+        }
+
+        return [.. values.Distinct(StringComparer.Ordinal)];
+    }
+
+    private static void AddListValue(List<string> values, string value)
+    {
+        var splitValues = value.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var splitValue in splitValues)
+        {
+            var normalizedValue = splitValue.Trim();
+
+            if (normalizedValue.Length == 0)
+            {
+                continue;
+            }
+
+            values.Add(normalizedValue);
+        }
     }
 }
 
