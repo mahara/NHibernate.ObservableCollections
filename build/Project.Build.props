@@ -40,8 +40,7 @@
     <EnablePreviewFeatures Condition="'$(EnablePreviewFeatures)' == ''">false</EnablePreviewFeatures>
 
     <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">false</TreatWarningsAsErrors>
-    <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>CS1591</NoWarn>
 
     <BuildVersion Condition="'$(BuildVersion)' == ''">0.0.0</BuildVersion>
     <BuildVersion Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</BuildVersion>

@@ -8,11 +8,11 @@
     https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <AssemblyName>NHibernate.ObservableCollections.Tests</AssemblyName>
-    <RootNamespace>Iesi.Collections.Generic.Tests</RootNamespace>
+    <AssemblyName>Iesi.ObservableCollections.Tests</AssemblyName>
+    <RootNamespace>Iesi.Collections.Tests</RootNamespace>
 
-    <Title>NHibernate.ObservableCollections.Tests</Title>
-    <Description>NHibernate.ObservableCollections.Tests</Description>
+    <Title>Iesi.ObservableCollections.Tests</Title>
+    <Description>Iesi.ObservableCollections.Tests</Description>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
+    <ProjectReference Include="..\Iesi.ObservableCollections\Iesi.ObservableCollections.csproj" />
   </ItemGroup>
 
 </Project>

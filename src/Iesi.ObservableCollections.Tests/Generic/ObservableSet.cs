@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Iesi.Collections.Generic.Tests
+namespace Iesi.Collections.Tests.Generic
 {
     public class TestObservableSet<T> : ObservableSet<T>
     {
