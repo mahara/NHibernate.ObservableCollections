@@ -22,7 +22,7 @@ namespace Iesi.Collections.Generic.Tests
 
         public List<PropertyChangedEventArgs> PropertyChangedEventArgsList { get; } = [];
 
-        public void ResetAllArgsLists()
+        public void ResetAllEventArgsLists()
         {
             CollectionChangedEventArgsList.Clear();
 
@@ -33,7 +33,7 @@ namespace Iesi.Collections.Generic.Tests
         {
             base.OnCollectionChanged(e);
 
-            if (!EventNotificationIsDeferred)
+            if (!EventNotificationsAreDeferred)
             {
                 CollectionChangedEventArgsList.Add(e);
             }
@@ -43,7 +43,7 @@ namespace Iesi.Collections.Generic.Tests
         {
             base.OnPropertyChanged(e);
 
-            if (!EventNotificationIsDeferred)
+            if (!EventNotificationsAreDeferred)
             {
                 PropertyChangedEventArgsList.Add(e);
             }
@@ -61,7 +61,7 @@ namespace Iesi.Collections.Generic.Tests
 
         public List<PropertyChangedEventArgs> PropertyChangedEventArgsList { get; } = [];
 
-        public void ResetAllArgsLists()
+        public void ResetAllEventArgsLists()
         {
             CollectionChangedEventArgsList.Clear();
 
