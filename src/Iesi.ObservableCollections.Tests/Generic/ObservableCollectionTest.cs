@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Iesi.Collections.Generic.Tests
+namespace Iesi.Collections.Tests.Generic
 {
     [TestFixture(EventNotificationOrderMode.Strict)]
     [TestFixture(EventNotificationOrderMode.Relaxed)]

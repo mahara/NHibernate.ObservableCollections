@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
-using Iesi.Collections.Generic.Properties;
+using Iesi.Collections.Properties;
 
 namespace Iesi.Collections.Generic
 {

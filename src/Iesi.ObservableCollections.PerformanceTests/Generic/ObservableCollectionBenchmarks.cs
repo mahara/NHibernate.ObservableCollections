@@ -1,4 +1,4 @@
-namespace Iesi.Collections.Generic.PerformanceTests
+namespace Iesi.Collections.PerformanceTests.Generic
 {
     [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class ObservableCollection_Benchmarks
