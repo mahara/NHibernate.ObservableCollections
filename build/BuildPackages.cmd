@@ -42,7 +42,7 @@ REM ================
 REM 0  = Build operations completed successfully.
 REM 1  = Missing required build infrastructure.
 REM 2  = Invalid command-line argument.
-REM 3  = Build unit build parameters are not defined.
+REM 3  = Build units or build unit's build parameters are not defined.
 REM 4  = Build input file name is not defined, or file path resolution failed.
 REM 5  = Build frameworks are not defined.
 REM 6  = dotnet build failed.
@@ -204,13 +204,24 @@ IF DEFINED ARGUMENT___ENABLE_SOURCE_LINK (
 )
 
 
-:INVOKE_BUILD_UNITS
+:VALIDATE_BUILD_UNITS_PARAMETERS
 
 IF NOT DEFINED BUILD_UNITS (
     ECHO Build units must be defined.
     ECHO.
-    EXIT /B 1
+    EXIT /B 3
 )
+
+FOR %%U IN (%BUILD_UNITS%) DO (
+    IF NOT DEFINED BUILD_UNIT___%%~U___BUILD_PARAMETERS (
+        ECHO Build unit "%%~U" is invalid because no build parameters are defined.
+        ECHO.
+        EXIT /B 3
+    )
+)
+
+
+:INVOKE_BUILD_UNITS
 
 FOR %%U IN (%BUILD_UNITS%) DO (
     SET "BUILD_UNIT=%%~U"
@@ -229,6 +240,7 @@ FOR %%U IN (%BUILD_UNITS%) DO (
     CALL :UNINITIALIZE_BUILD_UNIT_PARAMETERS "!BUILD_UNIT!"
     IF ERRORLEVEL 1 EXIT /B !ERRORLEVEL!
 )
+
 
 EXIT /B 0
 
@@ -269,12 +281,6 @@ CALL SET BUILD_PARAMETERS=%%BUILD_UNIT___!BUILD_UNIT!___BUILD_PARAMETERS%%
 CALL SET TEST_PARAMETERS=%%BUILD_UNIT___!BUILD_UNIT!___TEST_PARAMETERS%%
 CALL SET PACKAGE_PARAMETERS=%%BUILD_UNIT___!BUILD_UNIT!___PACKAGE_PARAMETERS%%
 CALL SET PACKAGE_NEV_PARAMETERS=%%BUILD_UNIT___!BUILD_UNIT!___PACKAGE_NEV_PARAMETERS%%
-
-IF NOT DEFINED BUILD_PARAMETERS (
-    ECHO Build unit "!BUILD_UNIT!" is invalid because no build parameters are defined.
-    ECHO.
-    EXIT /B 3
-)
 
 EXIT /B 0
 

@@ -30,7 +30,7 @@
 # 0  = Build operations completed successfully.
 # 1  = Missing required build infrastructure.
 # 2  = Invalid command-line argument.
-# 3  = Build unit build parameters are not defined.
+# 3  = Build units or build unit's build parameters are not defined.
 # 4  = Build input file name is not defined, or file path resolution failed.
 # 5  = Build frameworks are not defined.
 # 6  = dotnet build failed.
@@ -209,30 +209,52 @@ function Initialize-Parameters {
     }
 }
 
-function Resolve-BuildUnitParameterSpecification {
+function Validate-BuildUnitsParameters {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseApprovedVerbs',
+        '',
+        Justification = 'Validate accurately describes validating build units'' parameters from configuration before execution; Test and Assert do not convey the same semantic intent.'
+    )]
+
+    param()
+
+    if ($null -eq $BUILD_UNITS -or
+        @($BUILD_UNITS).Count -eq 0) {
+
+        Write-Host 'Build units must be defined.'
+        Write-Host
+        exit 3
+    }
+
+    foreach ($buildUnit in $BUILD_UNITS) {
+        if ($null -eq $BUILD_UNIT_PARAMETERS -or
+            -not $BUILD_UNIT_PARAMETERS.ContainsKey($buildUnit)) {
+
+            Write-Host "Build unit `"$buildUnit`" is invalid because no build unit's parameter is defined."
+            Write-Host
+            exit 3
+        }
+
+        $buildUnitParameterSpecification = Get-BuildUnitParameterSpecification $buildUnit
+
+        if ($null -eq $buildUnitParameterSpecification.BUILD_PARAMETERS -or
+            @($buildUnitParameterSpecification.BUILD_PARAMETERS).Count -eq 0) {
+
+            Write-Host "Build unit `"$buildUnit`" is invalid because no build parameters are defined."
+            Write-Host
+            exit 3
+        }
+    }
+}
+
+function Get-BuildUnitParameterSpecification {
     param(
         [Parameter(Mandatory)]
         [ValidateNotNullOrWhiteSpace()]
         [string] $BuildUnit
     )
 
-    if ($null -eq $BUILD_UNIT_PARAMETERS -or
-        -not $BUILD_UNIT_PARAMETERS.ContainsKey($BuildUnit)) {
-        Write-Host "Build unit `"$BuildUnit`" is invalid because no build unit parameter is defined."
-        Write-Host
-        exit 3
-    }
-
-    $buildUnitParameterSpecification = $BUILD_UNIT_PARAMETERS[$BuildUnit]
-
-    if ($null -eq $buildUnitParameterSpecification.BUILD_PARAMETERS -or
-        @($buildUnitParameterSpecification.BUILD_PARAMETERS).Count -eq 0) {
-        Write-Host "Build unit `"$BuildUnit`" is invalid because no build parameters are defined."
-        Write-Host
-        exit 3
-    }
-
-    return $buildUnitParameterSpecification
+    return $BUILD_UNIT_PARAMETERS[$BuildUnit]
 }
 
 # Build Unit and Build Unit Parameter Specification Data Model
@@ -342,9 +364,7 @@ function Resolve-BuildUnitParameterSpecification {
 #
 # Conversion:
 #     No conversion required.
-#
-# The value is already a normalized string collection and can be passed
-# directly to package dependency version update operations.
+#     Only normalization of string collection is performed through Normalize-StringCollection.
 #
 #
 # BuildParameterSpecification and BuildParameter
@@ -355,7 +375,7 @@ function Resolve-BuildUnitParameterSpecification {
 #   string collections and must not be converted through BuildParameter logic.
 #
 # The conversion boundary is Invoke-BuildUnit:
-#     Build unit parameter specifications (BuildUnitParameterSpecification[])
+#     Build Unit Parameter Specifications (BuildUnitParameterSpecification[])
 #             |
 #             +-- BUILD_PARAMETERS
 #             |       ConvertTo-BuildParameters
@@ -367,7 +387,7 @@ function Resolve-BuildUnitParameterSpecification {
 #             |       ConvertTo-BuildParameters
 #             |
 #             +-- PACKAGE_NEV_PARAMETERS
-#                     Pass through
+#                     Normalize-StringCollection
 #
 # Execution phases consume converted values only:
 #     Invoke-Build
@@ -1157,12 +1177,7 @@ Initialize-Arguments $RemainingArguments
 
 Initialize-Parameters
 
-if ($null -eq $BUILD_UNITS -or
-    @($BUILD_UNITS).Count -eq 0) {
-    Write-Host 'Build units must be defined.'
-    Write-Host
-    exit 1
-}
+Validate-BuildUnitsParameters
 
 foreach ($script:BUILD_UNIT in $BUILD_UNITS) {
     Write-Host '================================================================================================'
@@ -1170,7 +1185,7 @@ foreach ($script:BUILD_UNIT in $BUILD_UNITS) {
     Write-Host '================================================================================================'
     Write-Host
 
-    Invoke-BuildUnit (Resolve-BuildUnitParameterSpecification $script:BUILD_UNIT)
+    Invoke-BuildUnit (Get-BuildUnitParameterSpecification $script:BUILD_UNIT)
 }
 
 
