@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Iesi.Collections.Generic.PerformanceTests;
+namespace Iesi.Collections.PerformanceTests;
 
 public class BenchmarkExecutor
 {
