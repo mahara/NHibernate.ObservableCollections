@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{7E507A42-984B-470D-8A0C-648B9AF8E1DC}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
+		BuildPackages.cmd = BuildPackages.cmd
+		CHANGELOG.md = CHANGELOG.md
+		CleanPackages.cmd = CleanPackages.cmd
+		CONTRIBUTING.md = CONTRIBUTING.md
+		LICENSE = LICENSE
+		Read Me.txt = Read Me.txt
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildScripts", "buildscripts\BuildScripts.csproj", "{E5D79315-9F28-4B23-BB2B-0BA5B080B52A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections", "src\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj", "{74E68B0D-2E27-4360-8AEB-75D389533DD3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.Helpers", "src\NHibernate.ObservableCollections.Helpers\NHibernate.ObservableCollections.Helpers.csproj", "{F4BDCE2B-9911-48C9-9D5C-93CB14992966}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NHibernate.ObservableCollections.DemoApp", "src\NHibernate.ObservableCollections.DemoApp\NHibernate.ObservableCollections.DemoApp.csproj", "{44A08D9D-5348-4A65-8929-FDC67F0F5DDB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E5D79315-9F28-4B23-BB2B-0BA5B080B52A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D79315-9F28-4B23-BB2B-0BA5B080B52A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D79315-9F28-4B23-BB2B-0BA5B080B52A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D79315-9F28-4B23-BB2B-0BA5B080B52A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74E68B0D-2E27-4360-8AEB-75D389533DD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74E68B0D-2E27-4360-8AEB-75D389533DD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74E68B0D-2E27-4360-8AEB-75D389533DD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74E68B0D-2E27-4360-8AEB-75D389533DD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44A08D9D-5348-4A65-8929-FDC67F0F5DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44A08D9D-5348-4A65-8929-FDC67F0F5DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44A08D9D-5348-4A65-8929-FDC67F0F5DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44A08D9D-5348-4A65-8929-FDC67F0F5DDB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E5D79315-9F28-4B23-BB2B-0BA5B080B52A} = {7E507A42-984B-470D-8A0C-648B9AF8E1DC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {533C1EB4-B488-47CC-AB26-AD9C1A24E5CF}
+	EndGlobalSection
+EndGlobal

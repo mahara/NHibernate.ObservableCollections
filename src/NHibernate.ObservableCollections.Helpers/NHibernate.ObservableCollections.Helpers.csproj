@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <Import Project="..\..\buildscripts\common.props"></Import>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>NHibernate.ObservableCollections.Helpers</PackageId>
+    <Title>NHibernate.ObservableCollections.Helpers</Title>
+    <Description>NHibernate.ObservableCollections.Helpers</Description>
+    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);NU5125</NoWarn> <!-- remove once tools are truly ready for NuGet's new 'license' element -->
+    <AssemblyName>NHibernate.ObservableCollections.Helpers</AssemblyName>
+    <RootNamespace>NHibernate.ObservableCollections.Helpers</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\buildscripts\CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+  </ItemGroup>
+
+</Project>

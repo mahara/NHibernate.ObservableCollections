@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <Import Project="..\..\buildscripts\common.props"></Import>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>NHibernate.ObservableCollections</PackageId>
+    <Title>NHibernate.ObservableCollections</Title>
+    <Description>NHibernate.ObservableCollections</Description>
+    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);NU5125</NoWarn> <!-- remove once tools are truly ready for NuGet's new 'license' element -->
+    <AssemblyName>NHibernate.ObservableCollections</AssemblyName>
+    <RootNamespace>NHibernate.Collection.Generic</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\buildscripts\CommonAssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Iesi.Collections" Version="4.0.4" />
+    <PackageReference Include="NHibernate" Version="5.2.5" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+</Project>

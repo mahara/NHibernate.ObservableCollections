@@ -1,0 +1,26 @@
+﻿extensions: designer.cs generated.cs
+extensions: .cs .cpp .h
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="%FileName%" company="NHibernate">
+//   © 2020 NHibernate.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+extensions: .aspx .ascx
+<%--
+Copyright © 2020 NHibernate.
+--%>
+
+extensions: .vb
+' --------------------------------------------------------------------------------------------------------------------
+' <copyright file="%FileName%" company="NHibernate">
+'   © 2020 NHibernate.
+' </copyright>
+' --------------------------------------------------------------------------------------------------------------------
+
+extensions:  .xml .config .xsd
+<!--
+    <copyright file="%FileName%" company="NHibernate">
+      © 2020 NHibernate.
+    </copyright>
+-->

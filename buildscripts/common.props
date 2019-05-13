@@ -1,0 +1,48 @@
+<Project>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <BuildVersion>0.0.0</BuildVersion>
+    <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)'!=''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
+    <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
+    <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyOriginatorKeyFile>../../buildscripts/NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
+    <VersionPrefix>$(BuildVersion)</VersionPrefix>
+    <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
+    <AssemblyTitle>NHibernate.ObservableCollections</AssemblyTitle>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <PackageLicenseUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageOutputPath>../../build/</PackageOutputPath>
+    <PackageVersion>$(BuildVersion)</PackageVersion>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>false</IncludeSource>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright 2004-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+    <ContentTargetFolders>.</ContentTargetFolders>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\CHANGELOG.md" />
+    <Content Include="..\..\LICENSE">
+      <PackagePath></PackagePath>
+    </Content>
+  </ItemGroup>
+
+</Project>

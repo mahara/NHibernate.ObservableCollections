@@ -1,0 +1,19 @@
+# User-specific files
+.vs/
+lib/packages/
+packages/
+*.suo
+*.user
+_ReSharper*/
+*.csproj.ReSharper
+*.cache
+* Thumbs.db
+
+
+# Build output
+build/
+bin/
+obj/
+
+
+

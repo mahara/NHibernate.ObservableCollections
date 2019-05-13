@@ -1,0 +1,10 @@
+@ECHO OFF
+
+SET PACKAGES_DIRECTORY=build
+
+dotnet clean -c Debug
+dotnet clean -c Release
+IF EXIST %PACKAGES_DIRECTORY% RMDIR %PACKAGES_DIRECTORY% /S /Q
+
+
+

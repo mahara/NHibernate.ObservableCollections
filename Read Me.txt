@@ -1,0 +1,13 @@
+﻿bin     =   Binaries
+build   =   Build
+buildscripts = Build scripts
+db      =   Database
+doc     =   Documentation
+lib     =   Libraries
+res     =   Resources
+src     =   Source codes
+temp    =   Temporary
+tools   =   Tools
+
+
+

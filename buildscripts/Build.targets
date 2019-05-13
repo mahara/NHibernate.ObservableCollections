@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <SolutionDir>..</SolutionDir>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)\buildscripts\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+        <UseCommonOutputDirectory>False</UseCommonOutputDirectory>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <OutputPath>$(SolutionDir)\bin\$(Configuration)\$(MSBuildProjectName)</OutputPath>
+        <OutDir>$(OutputPath)</OutDir>
+        <BaseIntermediateOutputPath>$(SolutionDir)\temp\obj\$(Configuration)\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+        <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+        <!-- <DocumentationFile>$(SolutionDir)\bin\$(Configuration)\$(MSBuildProjectName)\$(MSBuildProjectName).xml</DocumentationFile> -->
+    </PropertyGroup>
+
+    <Target Name="DeepCleanProjectAfterClean"
+            AfterTargets="Clean">
+        <Message Text="Deep cleaning project $(MSBuildProjectName) on cleaning..." />
+
+        <!--
+        https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
+    -->
+        <RemoveDir Directories="$(TargetDir)" /> <!-- bin -->
+        <RemoveDir Directories="$(ProjectDir)$(BaseIntermediateOutputPath)" /> <!-- obj -->
+        <!-- <RemoveDir Directories="$(SolutionDir).vs" /> --> <!-- .vs -->
+
+    </Target>
+</Project>
