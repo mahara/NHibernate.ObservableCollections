@@ -1,4 +1,0 @@
-# NHibernate.ObservableCollections - Contributing
-
-
-
