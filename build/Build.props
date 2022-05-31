@@ -69,10 +69,10 @@
     <ContentTargetFolders>.</ContentTargetFolders>
   </PropertyGroup>
 
+  <!--
+    https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
+  -->
   <ItemGroup>
-    <!--
-      https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
-    -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
   </ItemGroup>
 
