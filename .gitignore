@@ -1,0 +1,21 @@
+## https://github.com/github/gitignore
+
+
+.vs/
+.idea/
+artifacts/
+bin/
+obj/
+packages/
+testresults/
+log/
+/data/
+
+*.suo
+*.user
+*.log
+*.binlog
+*.cache
+*.dbmdl
+*.dbconfig
+Thumbs.db
