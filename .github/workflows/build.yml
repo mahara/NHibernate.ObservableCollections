@@ -1,0 +1,55 @@
+# https://github.com/actions/checkout
+# https://github.com/actions/setup-dotnet
+# https://github.com/actions/upload-artifact
+
+
+name: Build
+
+on: [ push, pull_request ]
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_ROLL_FORWARD: Major
+
+jobs:
+
+  Build_Test:
+    name: Build and Test
+
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      # --------
+      # Build
+      # --------
+
+      - name: Build All Target Frameworks
+        run: |
+          dotnet build "NHibernate.ObservableCollections.sln" --configuration Release --property:GeneratePackageOnBuild=false
+
+      # --------
+      # Test
+      # --------
+
+      - name: Run .NET (net6.0) Unit Tests
+        run: |
+          dotnet test "NHibernate.ObservableCollections.sln" --configuration Release --framework net6.0 --no-build --logger "console;verbosity=detailed"
+
+      - name: Run .NET Framework (net48) Unit Tests (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: |
+          dotnet test "NHibernate.ObservableCollections.sln" --configuration Release --framework net48 --no-build --logger "console;verbosity=detailed"
