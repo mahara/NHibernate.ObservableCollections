@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+    TARGETS
+  -->
+
+  <!--
+    Project Output Folders Cleanup
+    https://stackoverflow.com/questions/1088593/how-to-fully-clean-bin-and-obj-folders-within-visual-studio
+    https://stackoverflow.com/questions/755382/i-want-to-delete-all-bin-and-obj-folders-to-force-all-projects-to-rebuild-everyt
+  -->
+  <Target Name="Project_ProjectOutputFoldersCleanup_AfterClean" AfterTargets="AfterClean">
+    <Message Text="$(MSBuildProjectName): Starting project output folders cleanup..." Importance="high" />
+
+    <!-- bin -->
+    <RemoveDir Directories="$(OutputFolderPath)" ContinueOnError="true" />
+
+    <!-- obj -->
+    <RemoveDir Directories="$(IntermediateOutputFolderPath)" ContinueOnError="true" />
+
+    <Message Text="$(MSBuildProjectName): Finished project output folders cleanup." Importance="high" />
+  </Target>
+
+</Project>
