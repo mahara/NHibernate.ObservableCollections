@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\build\Build.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-windows;net48</TargetFrameworks>
+
+    <UseWPF>true</UseWPF>
+
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!--
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <AssemblyName>NHibernate.ObservableCollections.Helpers</AssemblyName>
+    <RootNamespace>NHibernate.ObservableCollections.Helpers</RootNamespace>
+
+    <Title>NHibernate.ObservableCollections.Helpers</Title>
+    <Description>NHibernate.ObservableCollections.Helpers</Description>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+  </ItemGroup>
+
+</Project>
