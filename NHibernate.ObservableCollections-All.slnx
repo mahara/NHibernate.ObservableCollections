@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="CHANGELOG.md" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/build/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="build/AssemblyInfo.Global.cs" />
+    <File Path="build/Build.props" />
+    <File Path="build/Build.targets" />
+    <File Path="build/BuildPackages.cmd" />
+    <File Path="build/Read Me.txt" />
+    <File Path="BuildPackages.cmd" />
+    <File Path="CleanPackages.cmd" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Folder Name="/Solution Items/build/GitHub Actions/">
+    <File Path=".github/workflows/build.yml" />
+  </Folder>
+  <Project Path="src/NHibernate.ObservableCollections.DemoApp/NHibernate.ObservableCollections.DemoApp.csproj" />
+  <Project Path="src/NHibernate.ObservableCollections.Helpers/NHibernate.ObservableCollections.Helpers.csproj" />
+  <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
+  <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
+</Solution>
