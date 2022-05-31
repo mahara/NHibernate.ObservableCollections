@@ -1,0 +1,25 @@
+## https://github.com/github/gitignore
+
+src/*/bin/
+src/*/obj/
+lib/packages/
+bin/
+log/
+obj/
+temp/
+.vs/
+
+
+*.suo
+*.user
+*.sln.docstates
+*.mdf
+*.ldf
+*.dbmdl
+*.dbconfig
+*.log
+StyleCop.Cache
+Thumbs.db
+
+
+

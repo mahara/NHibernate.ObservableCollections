@@ -1,0 +1,66 @@
+## https://github.com/alexkaratarakis/gitattributes
+
+# Set default behavior to automatically normalize line endings.
+# Auto detect text files and perform LF normalization
+*           text=auto
+
+# Set the merge driver for project and solution files
+# Files that will always have CRLF line endings on checkout.
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.proj      text eol=crlf
+*.config    text eol=crlf
+*.cs        text eol=crlf
+*.xml       text eol=crlf
+*.xaml      text eol=crlf
+*.html      text eol=crlf
+*.js        text eol=crlf
+*.map       text eol=crlf
+*.css       text eol=crlf
+*.less      text eol=crlf
+*.resx      text eol=crlf
+*.manifest  text eol=crlf
+*.txt       text eol=crlf
+*.cpp       text eol=crlf
+*.c         text eol=crlf
+*.h         text eol=crlf
+SOURCES     text eol=crlf
+MAKEFILE    text eol=crlf
+
+# Binary files that should not be modified.
+*.exe       binary
+*.dll       binary
+*.pdb       binary
+*.xap       binary
+*.snk       binary
+*.png       binary
+*.ico       binary
+*.jpg       binary
+*.gif       binary
+*.bmp       binary
+*.cur       binary
+*.sys       binary
+
+# Custom for Visual Studio
+*.cs        diff=csharp
+*.js        diff=astextplain
+*.sln       merge=union
+*.csproj    merge=union
+*.vbproj    merge=union
+*.fsproj    merge=union
+*.dbproj    merge=union
+
+# Standard to msysgit
+*.doc       diff=astextplain
+*.DOC       diff=astextplain
+*.docx      diff=astextplain
+*.DOCX      diff=astextplain
+*.dot       diff=astextplain
+*.DOT       diff=astextplain
+*.pdf       diff=astextplain
+*.PDF       diff=astextplain
+*.rtf       diff=astextplain
+*.RTF       diff=astextplain
+
+
+

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="NHibernate.ObservableCollections.DemoApp"
+                   namespace="NHibernate.ObservableCollections.DemoApp">
+
+  <class name="SampleItem">
+    <id name="Id"
+        type="Int32">
+      <generator class="native" />
+    </id>
+    <property name="Name"
+              not-null="true" />
+    <many-to-one name="ParentSetContainer"
+                 cascade="save-update"
+                 column="SetContainerId" />
+  </class>
+
+  <class name="SampleSetContainer">
+    <id name="Id"
+        type="Int32">
+      <generator class="native" />
+    </id>
+    <set name="SampleSet"
+         inverse="true"
+         collection-type="NHibernate.Collection.Generic.ObservableSetType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
+      <key column="SetContainerID" />
+      <one-to-many class="SampleItem" />
+    </set>
+  </class>
+
+  <class name="SampleListContainer">
+    <id name="Id"
+        type="Int32">
+      <generator class="native" />
+    </id>
+    <list name="SampleList"
+          table="Item_List"
+          cascade="save-update"
+          collection-type="NHibernate.Collection.Generic.ObservableListType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
+      <key column="ListContainerId" />
+      <index column="PositionNumber" />
+      <many-to-many column="ItemId"
+                    class="SampleItem" />
+    </list>
+  </class>
+
+</hibernate-mapping>

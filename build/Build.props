@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2022
+  https://github.com/castleproject/Core/pull/616
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!--
+      https://github.com/dotnet/sdk/issues/867
+      https://github.com/dotnet/msbuild/issues/3244
+      https://github.com/dotnet/msbuild/issues/3497
+      https://github.com/dotnet/msbuild/issues/4881
+      https://github.com/OmniSharp/omnisharp-vscode/issues/4787
+    -->
+    <BuildConfigurationFolder>build</BuildConfigurationFolder>
+    <OutputFolder>bin</OutputFolder>
+    <TemporaryOutputFolder>obj</TemporaryOutputFolder>
+    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
+    <IntermediateOutputFolderPath>$(SolutionDir)$(TemporaryOutputFolder)</IntermediateOutputFolderPath>
+    <IntermediateOutputPath>$(IntermediateOutputFolderPath)\$(Configuration)</IntermediateOutputPath>
+    <OutputFolderPath>$(SolutionDir)$(OutputFolder)</OutputFolderPath>
+    <OutputPath>$(OutputFolderPath)\$(Configuration)\$(TargetFramework)</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>10.0</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS3014;CS3003;CS3001;CS3021</NoWarn>
+    <!-- TODO: Remove this line once [Obsolete] members have been dealt with. -->
+    <NoWarn>$(NoWarn);CS0612;CS0618</NoWarn>
+    <BuildVersion>0.0.0</BuildVersion>
+    <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)'!=''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
+    <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
+    <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
+    <!--
+      https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=msvc-170
+    -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://dotnet.microsoft.com/en-us/</RepositoryUrl>
+  </PropertyGroup>
+
+  <!--
+    https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Title>NHibernate.ObservableCollections</Title>
+    <Description>NHibernate.ObservableCollections</Description>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <VersionPrefix>$(BuildVersion)</VersionPrefix>
+    <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
+    <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
+    <AssemblyConfiguration>$(TargetFramework)-$(Configuration)</AssemblyConfiguration>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) $(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageOutputPath>$(OutputFolderPath)\$(Configuration)</PackageOutputPath>
+    <PackageVersion>$(BuildVersion)</PackageVersion>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>false</IncludeSource>
+    <ContentTargetFolders>.</ContentTargetFolders>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
+    -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!--
+    https://github.com/dotnet/runtime/issues/59163
+    https://github.com/dotnet/sdk/issues/19521
+  -->
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
+    <NetConstants>TRACE</NetConstants>
+    <NetFrameworkConstants>TRACE;FEATURE_APPDOMAIN;FEATURE_ASSEMBLYBUILDER_SAVE;FEATURE_SERIALIZATION;FEATURE_SYSTEM_CONFIGURATION</NetFrameworkConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)'=='net48|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetFrameworkConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)'=='net48|Release'">
+    <DefineConstants>$(NetFrameworkConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\CHANGELOG.md" />
+    <Content Include="..\..\LICENSE" />
+  </ItemGroup>
+
+  <Target Name="DeepCleanProjectAfterClean"
+          AfterTargets="Clean">
+    <Message Text="Deep cleaning project $(MSBuildProjectName) on cleaning..." />
+    <!--
+      https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
+    -->
+    <!-- bin -->
+    <RemoveDir Directories="$(OutputFolderPath)"
+               ContinueOnError="true" />
+    <!-- obj -->
+    <RemoveDir Directories="$(IntermediateOutputFolderPath)"
+               ContinueOnError="true" />
+    <!-- .vs -->
+    <!-- <RemoveDir Directories="$(SolutionDir)\.vs"
+               ContinueOnError="true" /> -->
+  </Target>
+
+</Project>
