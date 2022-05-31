@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+    TARGETS
+  -->
+
+  <Target Name="Project_ProjectDeepCleanup_AfterClean" AfterTargets="AfterClean">
+    <Message Text="$(MSBuildProjectName): Starting project deep cleanup..." Importance="high" />
+
+    <!--
+      https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
+      https://stackoverflow.com/questions/755382/i-want-to-delete-all-bin-and-obj-folders-to-force-all-projects-to-rebuild-everyt
+    -->
+
+    <!-- bin -->
+    <RemoveDir Directories="$(OutputFolderPath)" ContinueOnError="true" />
+
+    <!-- obj -->
+    <RemoveDir Directories="$(IntermediateOutputFolderPath)" ContinueOnError="true" />
+
+    <Message Text="$(MSBuildProjectName): Finished project deep cleanup." Importance="high" />
+  </Target>
+
+</Project>
