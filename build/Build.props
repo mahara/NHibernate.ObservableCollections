@@ -1,0 +1,164 @@
+<Project>
+
+  <!--
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-your-build
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-properties
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-reserved-and-well-known-properties
+    https://learn.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties
+    https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props
+    https://learn.microsoft.com/en-us/dotnet/standard/frameworks
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/property-functions
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+    https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices
+    https://github.com/castleproject/Core/pull/616
+  -->
+
+  <!--
+    PROPERTIES
+  -->
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+
+      NOTE:   How to specify OutputPath, OutDir, and IntermediateOutputPath manually,
+              to move them out of project folder.
+              https://github.com/dotnet/sdk/issues/867
+                https://github.com/dotnet/msbuild/issues/3497
+                https://github.com/dotnet/msbuild/issues/4881
+              https://github.com/dotnet/msbuild/issues/87
+                https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
+              https://github.com/OmniSharp/omnisharp-vscode/issues/4787
+              https://github.com/dotnet/project-system/issues/4737
+                https://github.com/dotnet/project-system/pull/5773
+              https://github.com/dotnet/msbuild/issues/1603
+                https://github.com/NuGet/NuGet.Client/pull/2131
+                https://github.com/dotnet/msbuild/pull/3059
+              https://github.com/dotnet/msbuild/issues/3244
+              https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+                https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
+              https://github.com/NuGet/Home/issues/4463
+              https://github.com/NuGet/Home/issues/6734
+              https://github.com/dotnet/wpf/issues/5679
+
+      NOTE:   OutputPath vs OutDir
+              https://github.com/dotnet/msbuild/issues/87
+                https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
+
+    -->
+    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
+
+    <BuildConfigurationFolder>build</BuildConfigurationFolder>
+    <OutputFolder>bin</OutputFolder>
+    <TemporaryOutputFolder>obj</TemporaryOutputFolder>
+
+    <IntermediateOutputFolderPath>$(SolutionDir)$(TemporaryOutputFolder)\</IntermediateOutputFolderPath>
+    <IntermediateOutputPath>$(IntermediateOutputFolderPath)$(Configuration)\</IntermediateOutputPath>
+
+    <OutputFolderPath>$(SolutionDir)$(OutputFolder)\</OutputFolderPath>
+    <OutputPath>$(OutputFolderPath)$(Configuration)\$(TargetFramework)\</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+
+    <PackageOutputPath>$(OutputFolderPath)$(Configuration)\</PackageOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <BuildVersion Condition="'$(BuildVersion)' == ''">0.0.0</BuildVersion>
+    <BuildVersion Condition="'$(PACKAGE_VERSION)' != ''">$(PACKAGE_VERSION)</BuildVersion>
+    <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
+    <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
+
+    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!--
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Title>$(Product)</Title>
+    <Description>$(Product)</Description>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
+    <VersionPrefix>$(BuildVersion)</VersionPrefix>
+    <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
+    <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
+
+    <PackageVersion>$(BuildVersion)</PackageVersion>
+    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>false</IncludeSource>
+    <ContentTargetFolders>.</ContentTargetFolders>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
+    <NetConstants>TRACE</NetConstants>
+    <NetFrameworkConstants>TRACE</NetFrameworkConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Release'">
+    <DefineConstants>$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetFrameworkConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Release'">
+    <DefineConstants>$(NetFrameworkConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NETStandard.Library" Version="2.0.3" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <!--
+      https://github.com/dotnet/sdk/issues/19521
+      https://github.com/dotnet/runtime/issues/59163
+    -->
+    <Reference Include="System.Transactions" />
+
+    <PackageReference Include="IndexRange" Version="1.0.3" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <!--
+      https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
+      https://github.com/Microsoft/dotnet/tree/main/releases/reference-assemblies
+    -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SolutionDir)$(BuildConfigurationFolder)\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir)README.md" Link="Properties\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(SolutionDir)CHANGELOG.md" Link="Properties\CHANGELOG.md" Pack="true" PackagePath="\" />
+    <None Include="$(SolutionDir)LICENSE" Link="Properties\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
