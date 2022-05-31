@@ -1,0 +1,73 @@
+<Window x:Class="NHibernate.ObservableCollections.DemoApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        Title="NHibernate.ObservableCollections (Demo App)"
+        WindowStartupLocation="CenterScreen"
+        Width="800" Height="540"
+        Loaded="MainWindow_Loaded">
+
+    <DockPanel>
+        <Grid DockPanel.Dock="Bottom"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Name="EditItemBox"
+                     Margin="10,0,10,10" />
+            <WrapPanel Grid.Row="1">
+                <Button Name="AddItemButton"
+                        Content="Insert New"
+                        Margin="10,0,10,10" Padding="5,2"
+                        Click="AddButton_Click" />
+                <Button Name="UpdateItemButton"
+                        Content="Update"
+                        Margin="0,0,10,10" Padding="5,2"
+                        Click="UpdateButton_Click" />
+                <Button Name="DeleteItemButton"
+                        Content="Delete"
+                        Margin="0,0,10,10" Padding="5,2"
+                        Click="DeleteButton_Click" />
+                <Button Name="CopyItemToButton"
+                        Content="Copy To -&gt;"
+                        Margin="0,0,10,10" Padding="5,2"
+                        Click="CopyToButton_Click" />
+            </WrapPanel>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <DockPanel>
+                <Label Name="SampleSetLabel"
+                       DockPanel.Dock="Top"
+                       Content="Sample Set"
+                       HorizontalContentAlignment="Center"
+                       FontWeight="Bold" />
+                <ListBox Name="SampleSetBox"
+                         Margin="20,0,20,10"
+                         DisplayMemberPath="Name"
+                         SelectionChanged="ItemSelectionChanged" />
+            </DockPanel>
+            <DockPanel Grid.Column="1">
+                <Label Name="SampleListLabel"
+                       DockPanel.Dock="Top"
+                       Content="Sample List"
+                       HorizontalContentAlignment="Center"
+                       FontWeight="Bold" />
+                <ListBox Name="SampleListBox"
+                         Margin="20,0,20,10"
+                         DisplayMemberPath="Name"
+                         SelectionChanged="ItemSelectionChanged" />
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+
+</Window>
