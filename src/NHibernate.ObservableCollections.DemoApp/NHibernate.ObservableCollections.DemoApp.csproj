@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\build\Build.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-windows</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <!--
+    https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <RootNamespace>NHibernate.ObservableCollections.DemoApp</RootNamespace>
+    <AssemblyName>NHibernate.ObservableCollections.DemoApp</AssemblyName>
+    <Title>NHibernate.ObservableCollections.DemoApp</Title>
+    <Description>NHibernate.ObservableCollections.DemoApp</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+    <PackageReference Include="NHibernate" Version="5.3.12" />
+    <PackageReference Include="Remotion.Linq" Version="2.2.0" />
+    <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
+    <ProjectReference Include="..\NHibernate.ObservableCollections.Helpers\NHibernate.ObservableCollections.Helpers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="hibernate.cfg.xml" />
+    <Content Include="hibernate.cfg.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="DataAccess\Mapping.hbm.xml" />
+  </ItemGroup>
+
+</Project>
