@@ -1,0 +1,10 @@
+bin     =   Binaries
+build   =   Build
+db      =   Database
+doc     =   Documentation
+lib     =   Libraries
+log		=	Log files
+res     =   Resources
+src     =   Source codes
+temp    =   Temporary files
+tools   =   Tools

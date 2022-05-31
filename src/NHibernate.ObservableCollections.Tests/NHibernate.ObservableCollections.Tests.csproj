@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\build\Build.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net48</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Program</StartupObject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!--
+    https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <RootNamespace>NHibernate.ObservableCollections.Tests</RootNamespace>
+    <AssemblyName>NHibernate.ObservableCollections.Tests</AssemblyName>
+    <Title>NHibernate.ObservableCollections.Tests</Title>
+    <Description>NHibernate.ObservableCollections.Tests</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="System.Security.Permissions" Version="6.0.0" />
+    <PackageReference Include="coverlet.collector" Version="3.1.2" />
+    <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="NUnitLite" Version="3.13.3" />
+    <PackageReference Include="NunitXml.TestLogger" Version="3.0.117" />
+    <PackageReference Include="PublicApiGenerator" Version="10.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  </ItemGroup>
+
+  <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETCoreApp'">
+    <None Include="config\net\App.config" />
+    <None Remove="config\netfx\App.config" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETFramework'">
+    <None Remove="config\net\App.config" />
+    <None Include="config\netfx\App.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+</Project>
