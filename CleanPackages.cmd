@@ -2,7 +2,9 @@
 
 
 SET OUTPUT_FOLDER=bin
+SET TEMPORARY_OUTPUT_FOLDER=obj
 
 dotnet clean --configuration Debug
 dotnet clean --configuration Release
 IF EXIST %OUTPUT_FOLDER% RMDIR %OUTPUT_FOLDER% /S /Q
+IF EXIST %TEMPORARY_OUTPUT_FOLDER% RMDIR %TEMPORARY_OUTPUT_FOLDER% /S /Q

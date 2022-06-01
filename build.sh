@@ -15,7 +15,7 @@ if [ -f "$DOCKERPATH" ]; then
 else
 	MONOPATH=$(which mono)
 	if [ ! -f "$MONOPATH" ]; then
-		echo "Please install either Docker, or Xamarin/Mono from https://www.mono-project.com/docs/getting-started/install/"
+		echo "Please install either Docker or Xamarin/Mono from https://www.mono-project.com/docs/getting-started/install/"
 		exit 1
 	fi
 fi
@@ -32,32 +32,33 @@ echo ----------------------------
 echo Running .NET (net6.0) Tests
 echo ----------------------------
 
-dotnet ./src/Framework.Tests/bin/Release/net6.0/Framework.Tests.dll --result=FrameworkNetTestResults.xml;format=nunit3
+dotnet test ./src/NHibernate.ObservableCollections.Tests --configuration Release --framework net6.0 --no-build --output bin/Release/net6.0 --results-directory bin/Release --logger "nunit;LogFileName=NHibernate.ObservableCollections-Net-TestResults.xml" || exit 1
+#dotnet ./src/NHibernate.ObservableCollections.Tests/bin/Release/net6.0/NHibernate.ObservableCollections.Tests.dll --result=NHibernate.ObservableCollections-Net-TestResults.xml;format=nunit3 || exit 1
 
 echo ------------------------------------
 echo Running .NET Framework (net48) Tests
 echo ------------------------------------
 
-mono ./src/Framework.Tests/bin/Release/net48/Framework.Tests.exe --result=FrameworkNetFrameworkTestResults.xml;format=nunit3
+mono ./src/NHibernate.ObservableCollections.Tests/bin/Release/net48/NHibernate.ObservableCollections.Tests.exe --result=NHibernate.ObservableCollections-NetFramework-TestResults.xml;format=nunit3 || exit 1
 
 # Ensure that all test runs produced protocol files.
-if [[ !( -f FrameworkNetTestResults.xml &&
-         -f FrameworkNetFrameworkTestResults.xml ) ]]; then
+if [[ !( -f NHibernate.ObservableCollections-Net-TestResults.xml &&
+         -f NHibernate.ObservableCollections-NetFramework-TestResults.xml ) ]]; then
     echo "Incomplete test results. Some test runs might not have terminated properly. Failing the build."
     exit 1
 fi
 
-# Unit test failure.
-NET_FAILCOUNT=$(grep -F "One or more child tests had errors" FrameworkNetTestResults.xml | wc -l)
+# Test Failures
+NET_FAILCOUNT=$(grep -F "One or more child tests had errors." NHibernate.ObservableCollections-Net-TestResults.xml | wc -l)
 if [ $NET_FAILCOUNT -ne 0 ]
 then
-    echo ".NET (net6.0) Tests have failed, failing the build"
+    echo ".NET (net6.0) tests have failed, failing the build."
     exit 1
 fi
 
-NETFRAMEWORK_FAILCOUNT=$(grep -F "One or more child tests had errors" FrameworkNetFrameworkTestResults.xml | wc -l)
+NETFRAMEWORK_FAILCOUNT=$(grep -F "One or more child tests had errors." NHibernate.ObservableCollections-NetFramework-TestResults.xml | wc -l)
 if [ $NETFRAMEWORK_FAILCOUNT -ne 0 ]
 then
-    echo ".NET Framework (net48) Tests have failed, failing the build"
+    echo ".NET Framework (net48) tests have failed, failing the build."
     exit 1
 fi
