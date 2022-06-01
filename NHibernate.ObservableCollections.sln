@@ -4,11 +4,37 @@ VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E507A42-984B-470D-8A0C-648B9AF8E1DC}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
 		CHANGELOG.md = CHANGELOG.md
 		CONTRIBUTING.md = CONTRIBUTING.md
 		LICENSE = LICENSE
 		Read Me.txt = Read Me.txt
 		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79-C382-439C-AFD9-5505D414680D}"
+	ProjectSection(SolutionItems) = preProject
+		BuildPackages.cmd = BuildPackages.cmd
+		CleanPackages.cmd = CleanPackages.cmd
+		Read Me.txt = Read Me.txt
+		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
+		build.sh = build.sh
+		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
+		build\Build.props = build\Build.props
+		build\Build.targets = build\Build.targets
+		build\BuildPackages.cmd = build\BuildPackages.cmd
+		build\Read Me.txt = build\Read Me.txt
+		build\build.cmd = build\build.cmd
+		build\docker-run-mono.sh = build\docker-run-mono.sh
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections", "src\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj", "{74E68B0D-2E27-4360-8AEB-75D389533DD3}"
@@ -18,35 +44,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.Helpers", "src\NHibernate.ObservableCollections.Helpers\NHibernate.ObservableCollections.Helpers.csproj", "{F4BDCE2B-9911-48C9-9D5C-93CB14992966}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.DemoApp", "src\NHibernate.ObservableCollections.DemoApp\NHibernate.ObservableCollections.DemoApp.csproj", "{E97AE325-7B6F-4C7F-AF03-643877DC8C52}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79-C382-439C-AFD9-5505D414680D}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		.gitattributes = .gitattributes
-		.gitignore = .gitignore
-		appveyor.yml = appveyor.yml
-		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
-		build.cmd = build.cmd
-		build\build.cmd = build\build.cmd
-		build\Build.props = build\Build.props
-		build.sh = build.sh
-		build\Build.targets = build\Build.targets
-		BuildPackages.cmd = BuildPackages.cmd
-		build\BuildPackages.cmd = build\BuildPackages.cmd
-		CHANGELOG.md = CHANGELOG.md
-		CleanPackages.cmd = CleanPackages.cmd
-		build\docker-run-mono.sh = build\docker-run-mono.sh
-		LICENSE = LICENSE
-		nuget.config = nuget.config
-		Read Me.txt = Read Me.txt
-		build\Read Me.txt = build\Read Me.txt
-		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE}"
-	ProjectSection(SolutionItems) = preProject
-		.github\workflows\build.yml = .github\workflows\build.yml
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
