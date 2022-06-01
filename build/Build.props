@@ -40,7 +40,7 @@
     <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://dotnet.microsoft.com/en-us/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
   </PropertyGroup>
 
   <!--
