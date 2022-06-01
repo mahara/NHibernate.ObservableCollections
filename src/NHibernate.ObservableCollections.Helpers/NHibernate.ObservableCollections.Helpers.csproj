@@ -19,11 +19,14 @@
     <Description>NHibernate.ObservableCollections.Helpers</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Iesi.Collections" Version="4.0.4" />
+    <PackageReference Include="NHibernate" Version="5.3.12" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net48'">
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
+    <PackageReference Include="IndexRange" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>

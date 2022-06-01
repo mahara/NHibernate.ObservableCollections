@@ -11,6 +11,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <StartupObject>NHibernate.ObservableCollections.DemoApp.App</StartupObject>
   </PropertyGroup>
 
   <!--
@@ -28,6 +29,11 @@
     <PackageReference Include="NHibernate" Version="5.3.12" />
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <PackageReference Include="IndexRange" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>

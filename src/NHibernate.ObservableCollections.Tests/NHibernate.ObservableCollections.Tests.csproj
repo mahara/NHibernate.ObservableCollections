@@ -37,10 +37,10 @@
     <PackageReference Include="NunitXml.TestLogger" Version="3.0.117" />
     <PackageReference Include="PublicApiGenerator" Version="10.3.0" />
   </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <PackageReference Include="IndexRange" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETCoreApp'">
