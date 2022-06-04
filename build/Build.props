@@ -62,7 +62,6 @@
     <VersionPrefix>$(BuildVersion)</VersionPrefix>
     <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
     <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
-    <AssemblyConfiguration>$(TargetFramework)-$(Configuration)</AssemblyConfiguration>
 
     <PackageVersion>$(BuildVersion)</PackageVersion>
     <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
@@ -108,6 +107,11 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="IndexRange" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
   </ItemGroup>
 
 </Project>
