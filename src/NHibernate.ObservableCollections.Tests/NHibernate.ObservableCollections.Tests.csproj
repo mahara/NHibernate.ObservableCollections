@@ -20,6 +20,7 @@
   <PropertyGroup>
     <RootNamespace>NHibernate.ObservableCollections.Tests</RootNamespace>
     <AssemblyName>NHibernate.ObservableCollections.Tests</AssemblyName>
+
     <Title>NHibernate.ObservableCollections.Tests</Title>
     <Description>NHibernate.ObservableCollections.Tests</Description>
   </PropertyGroup>
@@ -40,21 +41,20 @@
   <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net48'">
-    <PackageReference Include="IndexRange" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETCoreApp'">
-    <None Include="config\net\App.config" />
+    <None Include="config\net\App.config" Link="App.config" />
     <None Remove="config\netfx\App.config" />
   </ItemGroup>
 
   <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETFramework'">
     <None Remove="config\net\App.config" />
-    <None Include="config\netfx\App.config" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+    <None Include="config\netfx\App.config" Link="App.config" />
   </ItemGroup>
 
 </Project>

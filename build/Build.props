@@ -5,8 +5,13 @@
   https://github.com/castleproject/Core/pull/616
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    PROPERTIES
+  -->
+
   <PropertyGroup>
     <!--
+      https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=msvc-170
       https://github.com/dotnet/sdk/issues/867
       https://github.com/dotnet/msbuild/issues/3244
       https://github.com/dotnet/msbuild/issues/3497
@@ -16,6 +21,7 @@
     <BuildConfigurationFolder>build</BuildConfigurationFolder>
     <OutputFolder>bin</OutputFolder>
     <TemporaryOutputFolder>obj</TemporaryOutputFolder>
+
     <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
     <IntermediateOutputFolderPath>$(SolutionDir)$(TemporaryOutputFolder)</IntermediateOutputFolderPath>
     <IntermediateOutputPath>$(IntermediateOutputFolderPath)\$(Configuration)</IntermediateOutputPath>
@@ -29,16 +35,16 @@
     <NoWarn>$(NoWarn);CS1591;CS3014;CS3003;CS3001;CS3021</NoWarn>
     <!-- TODO: Remove this line once [Obsolete] members have been dealt with. -->
     <NoWarn>$(NoWarn);CS0612;CS0618</NoWarn>
+
     <BuildVersion>0.0.0</BuildVersion>
     <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)'!=''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
-    <!--
-      https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=msvc-170
-    -->
+
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
   </PropertyGroup>
@@ -51,12 +57,13 @@
     <Title>NHibernate.ObservableCollections</Title>
     <Description>NHibernate.ObservableCollections</Description>
     <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) $(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
     <VersionPrefix>$(BuildVersion)</VersionPrefix>
     <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
     <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
-    <AssemblyConfiguration>$(TargetFramework)-$(Configuration)</AssemblyConfiguration>
-    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
-    <Copyright>Copyright (c) $(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
     <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
     <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -68,21 +75,6 @@
     <IncludeSource>false</IncludeSource>
     <ContentTargetFolders>.</ContentTargetFolders>
   </PropertyGroup>
-
-  <!--
-    https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
-  -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
-  </ItemGroup>
-
-  <!--
-    https://github.com/dotnet/runtime/issues/59163
-    https://github.com/dotnet/sdk/issues/19521
-  -->
-  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
   <PropertyGroup>
     <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
@@ -99,9 +91,31 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\..\CHANGELOG.md" />
-    <Content Include="..\..\LICENSE" />
+    <!--
+      https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
+    -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <!--
+      https://github.com/dotnet/runtime/issues/59163
+      https://github.com/dotnet/sdk/issues/19521
+    -->
+    <Reference Include="System.Net.Http" />
+
+    <PackageReference Include="IndexRange" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+
+  <!--
+    TARGETS
+  -->
 
   <Target Name="DeepCleanProjectAfterClean"
           AfterTargets="Clean">
