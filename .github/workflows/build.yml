@@ -21,7 +21,7 @@ jobs:
     steps:
 
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Several .NET Core versions will be used during the test run.
       # The lowest version gets installed first in order to prevent
