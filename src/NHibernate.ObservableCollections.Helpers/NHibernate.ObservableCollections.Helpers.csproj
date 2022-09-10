@@ -1,18 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\build\Build.props" />
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net48</TargetFrameworks>
+    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
     <!--
         https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1100
     -->
     <EnableWindowsTargeting Condition="!$([MSBuild]::IsOSPlatform('Windows'))">true</EnableWindowsTargeting>
 
     <UseWPF>true</UseWPF>
-
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!--
