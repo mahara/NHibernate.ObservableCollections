@@ -5,11 +5,29 @@
   https://github.com/castleproject/Core/pull/616
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
   <!--
     PROPERTIES
   -->
 
   <PropertyGroup>
+    <ExeTargetFrameworks>net6.0-windows;net48</ExeTargetFrameworks>
+    <LibTargetFrameworks>net6.0;net48</LibTargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+
+      NOTE:   How to Specify OutputPath and IntermediateOutputPath manually to move them out of source codes folder (src).
+              https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+              https://github.com/dotnet/msbuild/issues/1603
+
+    -->
+    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
+
     <!--
       https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties?view=msvc-170
       https://github.com/dotnet/sdk/issues/867
@@ -22,22 +40,71 @@
     <OutputFolder>bin</OutputFolder>
     <TemporaryOutputFolder>obj</TemporaryOutputFolder>
 
-    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
-    <IntermediateOutputFolderPath>$(SolutionDir)$(TemporaryOutputFolder)</IntermediateOutputFolderPath>
-    <IntermediateOutputPath>$(IntermediateOutputFolderPath)\$(Configuration)</IntermediateOutputPath>
-    <OutputFolderPath>$(SolutionDir)$(OutputFolder)</OutputFolderPath>
-    <OutputPath>$(OutputFolderPath)\$(Configuration)\$(TargetFramework)</OutputPath>
+    <OutputBaseFolderPath>$(SolutionDir)$(OutputFolder)\</OutputBaseFolderPath>
+    <OutputPath>$(OutputBaseFolderPath)$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)\</OutputPath>
     <OutDir>$(OutputPath)</OutDir>
+
+    <!--
+
+      NOTE:   IntermediateOutputPath has a certain folder structure
+              where TargetFramework folder cannot be specified before MSBuildProjectName folder within the path.
+              TargetFramework folder will be created automatically after IntermediateOutputPath.
+              In short, TargetFramework folder cannot be specified within IntermediateOutputPath.
+              This is different than OutputPath where TargetFramework can be defined anywhere within the path.
+              The default folder structure of IntermediateOutputPath is as the following:
+
+              $(MSBuildProjectName)\$(Configuration)\$(TargetFramework)
+
+      NOTE:   NuGet messed up with the need to set both MSBuildProjectExtensionsPath and BaseIntermediateOutputPath.
+
+      - IntermediateOutputPath is scoped per project configuration (Debug/Release).
+        It is used by MSBuild as temporary output folder.
+        When overriden, project configuration folder (Configuration) MUST BE MANUALLY specified within the path,
+        along with project name (MSBuildProjectName).
+
+        <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
+
+      - MSBuildProjectExtensionsPath is scoped per project.
+        It is used by NuGet as RestoreOutputPath.
+        https://github.com/NuGet/NuGet.Client/blob/deab84db30cbd8cc738cd46ad694aebdbb43a1cf/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L592
+        - https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+        MSBuildProjectExtensionsPath consists of the following files:
+        - project.assets.json
+        - project.nuget.cache
+        - [ProjectName].csproj.nuget.dgspec.json
+        - [ProjectName].csproj.nuget.g.props
+        - [ProjectName].csproj.nuget.g.targets
+
+        <MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
+
+        NOTE:   There seems to be an known issue with .NET Framework 4.8 WPF project when overriding this property.
+                https://github.com/dotnet/wpf/issues/5679
+
+      - BaseIntermediateOutputPath is scoped per project configuration (Debug/Release).
+        It is used by NuGet as temporary folder for NuGet specification files (.nuspec) for the NuGet package created.
+        When overriden, project configuration folder (Configuration) will be AUTOMATICALLY created,
+        so there is no need to include it within the path.
+        The project name (MSBuildProjectName) however must be explicitly specified.
+        BaseIntermediateOutputPath consists of the following files:
+        - [ProjectName/PackageName].[PackageVersion].nuspec
+        - [ProjectName/PackageName].[PackageVersion].symbols.nuspec
+
+        <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+
+    -->
+    <IntermediateOutputBaseFolderPath>$(SolutionDir)$(TemporaryOutputFolder)\</IntermediateOutputBaseFolderPath>
+    <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
+    <!--<MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>-->
+    <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>10.0</LangVersion>
     <NoWarn>$(NoWarn);CS1591;CS3014;CS3003;CS3001;CS3021</NoWarn>
     <!-- TODO: Remove this line once [Obsolete] members have been dealt with. -->
     <NoWarn>$(NoWarn);CS0612;CS0618</NoWarn>
 
     <BuildVersion>0.0.0</BuildVersion>
-    <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)'!=''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
+    <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)' != ''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
@@ -69,7 +136,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageOutputPath>$(OutputFolderPath)\$(Configuration)</PackageOutputPath>
+    <PackageOutputPath>$(OutputBaseFolderPath)$(Configuration)\</PackageOutputPath>
     <PackageVersion>$(BuildVersion)</PackageVersion>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
@@ -82,11 +149,11 @@
     <NetFrameworkConstants>TRACE;FEATURE_APPDOMAIN;FEATURE_ASSEMBLYBUILDER_SAVE;FEATURE_SERIALIZATION;FEATURE_SYSTEM_CONFIGURATION</NetFrameworkConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)'=='net48|Debug'">
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)'=='net48|Release'">
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Release'">
     <DefineConstants>$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
 
@@ -94,11 +161,11 @@
     <!--
       https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
     -->
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <!--
       https://github.com/dotnet/runtime/issues/59163
       https://github.com/dotnet/sdk/issues/19521
@@ -111,27 +178,5 @@
   <ItemGroup>
     <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
   </ItemGroup>
-
-
-  <!--
-    TARGETS
-  -->
-
-  <Target Name="DeepCleanProjectAfterClean"
-          AfterTargets="Clean">
-    <Message Text="Deep cleaning project $(MSBuildProjectName) on cleaning..." />
-    <!--
-      https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
-    -->
-    <!-- bin -->
-    <RemoveDir Directories="$(OutputFolderPath)"
-               ContinueOnError="true" />
-    <!-- obj -->
-    <RemoveDir Directories="$(IntermediateOutputFolderPath)"
-               ContinueOnError="true" />
-    <!-- .vs -->
-    <!-- <RemoveDir Directories="$(SolutionDir)\.vs"
-               ContinueOnError="true" /> -->
-  </Target>
 
 </Project>

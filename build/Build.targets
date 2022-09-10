@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    TARGETS
+  -->
+
+  <Target Name="DeepCleanProjectAfterClean" AfterTargets="Clean">
+    <Message Text="Deep cleaning project $(MSBuildProjectName) on cleaning..." />
+
+    <!--
+      https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
+    -->
+    <!-- bin -->
+    <RemoveDir Directories="$(OutputBaseFolderPath)$(Configuration)\" ContinueOnError="true" />
+
+    <!-- obj -->
+    <RemoveDir Directories="$(IntermediateOutputBaseFolderPath)" ContinueOnError="true" />
+
+  </Target>
+
 </Project>
