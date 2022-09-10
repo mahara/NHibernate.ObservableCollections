@@ -1,0 +1,9 @@
+<Project>
+
+  <!--
+    PROPERTIES
+  -->
+
+  <Import Project="..\build\Build.props" />
+
+</Project>
