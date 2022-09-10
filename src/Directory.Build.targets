@@ -1,0 +1,9 @@
+<Project>
+
+  <!--
+    TARGETS
+  -->
+
+  <Import Project="..\build\Build.targets" />
+
+</Project>
