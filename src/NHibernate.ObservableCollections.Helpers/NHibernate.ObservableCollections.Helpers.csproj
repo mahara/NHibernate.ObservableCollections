@@ -1,14 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\build\Build.props" />
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net48</TargetFrameworks>
+    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
 
     <UseWPF>true</UseWPF>
-
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!--
