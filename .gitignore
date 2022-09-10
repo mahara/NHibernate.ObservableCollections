@@ -12,13 +12,10 @@ temp/
 
 *.suo
 *.user
-*.sln.docstates
-*.mdf
-*.ldf
 *.dbmdl
 *.dbconfig
 *.log
-StyleCop.Cache
+*.cache
 Thumbs.db
 
 

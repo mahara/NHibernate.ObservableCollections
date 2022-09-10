@@ -1,35 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\build\Build.props" />
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net48</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <StartupObject>Program</StartupObject>
-    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <!--
     https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <RootNamespace>NHibernate.ObservableCollections.Tests</RootNamespace>
     <AssemblyName>NHibernate.ObservableCollections.Tests</AssemblyName>
+    <RootNamespace>NHibernate.ObservableCollections.Tests</RootNamespace>
 
     <Title>NHibernate.ObservableCollections.Tests</Title>
     <Description>NHibernate.ObservableCollections.Tests</Description>
+
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
-    <PackageReference Include="System.Security.Permissions" Version="6.0.0" />
     <PackageReference Include="coverlet.collector" Version="3.1.2" />
     <PackageReference Include="FluentAssertions" Version="6.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
@@ -37,24 +34,30 @@
     <PackageReference Include="NUnitLite" Version="3.13.3" />
     <PackageReference Include="NunitXml.TestLogger" Version="3.0.117" />
     <PackageReference Include="PublicApiGenerator" Version="10.3.0" />
+    <PackageReference Include="System.Security.Permissions" Version="6.0.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETCoreApp'">
-    <None Include="config\net\App.config" Link="App.config" />
-    <None Remove="config\netfx\App.config" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier(&quot;$(TargetFramework)&quot;))' == '.NETFramework'">
-    <None Remove="config\net\App.config" />
-    <None Include="config\netfx\App.config" Link="App.config" />
-  </ItemGroup>
+
+  <!--
+    https://stackoverflow.com/questions/55541912/using-an-app-config-file-with-nunit3-in-a-net-core-console-app
+  -->
+  <Target Name="CopyConfigurationFiles" AfterTargets="AfterBuild">
+
+    <!-- Command Line (dotnet test) -->
+    <Copy SourceFiles="App.config" DestinationFiles="$(OutDir)\testhost.dll.config" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+
+    <!-- Visual Studio Test Explorer -->
+    <Copy SourceFiles="App.config" DestinationFiles="$(OutDir)\testhost.x86.dll.config" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+
+  </Target>
 
 </Project>

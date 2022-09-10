@@ -1,4 +1,20 @@
-﻿namespace Explicit.NuGet.Versions
+#region License
+// Copyright 2004-2022 Castle Project - https://www.castleproject.org/
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#endregion
+
+namespace Explicit.NuGet.Versions
 {
     using System;
     using System.Collections.Generic;
@@ -9,9 +25,9 @@
 
     using Ionic.Zip;
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var packageDiscoveryDirectory = Path.Combine(Environment.CurrentDirectory, args[0]);
             var packageDiscoverDirectoryInfo = new DirectoryInfo(packageDiscoveryDirectory);
@@ -25,24 +41,20 @@
             var packageNuspecDictionary = new Dictionary<string, NuspecContentEntry>();
             foreach (var packageFilePath in packageDiscoverDirectoryInfo.GetFiles("*.nupkg", SearchOption.AllDirectories))
             {
-                using (var zipFile = ZipFile.Read(packageFilePath.FullName))
+                using var zipFile = ZipFile.Read(packageFilePath.FullName);
+                foreach (var zipEntry in zipFile.Entries)
                 {
-                    foreach (var zipEntry in zipFile.Entries)
+                    if (zipEntry.FileName.ToLowerInvariant().EndsWith(".nuspec"))
                     {
-                        if (zipEntry.FileName.ToLowerInvariant().EndsWith(".nuspec"))
+                        using var zipEntryReader = new StreamReader(zipEntry.OpenReader());
+                        var nuspecXml = zipEntryReader.ReadToEnd();
+                        packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
                         {
-                            using (var zipEntryReader = new StreamReader(zipEntry.OpenReader()))
-                            {
-                                var nuspecXml = zipEntryReader.ReadToEnd();
-                                packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
-                                {
-                                    EntryName = zipEntry.FileName,
-                                    Contents = nuspecXml
-                                };
+                            EntryName = zipEntry.FileName,
+                            Contents = nuspecXml
+                        };
 
-                                break;
-                            }
-                        }
+                        break;
                     }
                 }
             }
@@ -75,7 +87,9 @@
         {
             WalkDocumentNodes(nuspecXmlDocument.ChildNodes, node =>
             {
-                if (node.Name.ToLowerInvariant() == "dependency" && !string.IsNullOrEmpty(node.Attributes["id"].Value) && node.Attributes["id"].Value.StartsWith(nugetIdFilter, StringComparison.InvariantCultureIgnoreCase))
+                if (node.Name.ToLowerInvariant() == "dependency"
+                    && !string.IsNullOrEmpty(node.Attributes["id"].Value)
+                    && node.Attributes["id"].Value.StartsWith(nugetIdFilter, StringComparison.InvariantCultureIgnoreCase))
                 {
                     var currentVersion = node.Attributes["version"].Value;
                     if (!node.Attributes["version"].Value.StartsWith("[") && !node.Attributes["version"].Value.EndsWith("]"))
@@ -99,11 +113,9 @@
         {
             foreach (var packageFile in packageMetaData.ToList())
             {
-                using (var zipFile = ZipFile.Read(packageFile.Key))
-                {
-                    zipFile.UpdateEntry(packageFile.Value.EntryName, packageFile.Value.Contents);
-                    zipFile.Save();
-                }
+                using var zipFile = ZipFile.Read(packageFile.Key);
+                zipFile.UpdateEntry(packageFile.Value.EntryName, packageFile.Value.Contents);
+                zipFile.Save();
             }
         }
 
@@ -124,9 +136,7 @@
             _encoding = encoding;
         }
 
-        public override Encoding Encoding
-        {
-            get { return _encoding; }
-        }
+        public override Encoding Encoding =>
+            _encoding;
     }
 }

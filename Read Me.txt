@@ -1,12 +1,13 @@
-bin     =   Binaries
+bin     =   Output folder
 build   =   Build
 db      =   Database
 doc     =   Documentation
 lib     =   Libraries
-log		=	Log files
+log     =   Log
+obj     =   Temporary output folder
 res     =   Resources
 src     =   Source codes
-temp    =   Temporary files
+temp    =   Temporary folder
 tools   =   Tools
 
 
