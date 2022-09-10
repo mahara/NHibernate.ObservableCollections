@@ -1,40 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\build\Build.props" />
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <StartupObject>NHibernate.ObservableCollections.DemoApp.App</StartupObject>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <!--
     https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <RootNamespace>NHibernate.ObservableCollections.DemoApp</RootNamespace>
     <AssemblyName>NHibernate.ObservableCollections.DemoApp</AssemblyName>
+    <RootNamespace>NHibernate.ObservableCollections.DemoApp</RootNamespace>
 
     <Title>NHibernate.ObservableCollections.DemoApp</Title>
     <Description>NHibernate.ObservableCollections.DemoApp</Description>
+
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
-    <PackageReference Include="NHibernate" Version="5.3.12" />
+    <PackageReference Include="NHibernate" Version="5.3.13" />
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>
 
   <ItemGroup>
