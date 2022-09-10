@@ -1,12 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\build\Build.props" />
-
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net48</TargetFrameworks>
-
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
   <!--
