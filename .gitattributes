@@ -8,8 +8,11 @@
 # Files that will always have CRLF line endings on checkout.
 *.sln       text eol=crlf
 *.csproj    text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
 *.proj      text eol=crlf
 *.config    text eol=crlf
+*.json      text eol=crlf
 *.cs        text eol=crlf
 *.xml       text eol=crlf
 *.xaml      text eol=crlf
@@ -36,10 +39,13 @@ MAKEFILE    text eol=crlf
 *.png       binary
 *.ico       binary
 *.jpg       binary
+*.jpeg      binary
 *.gif       binary
 *.bmp       binary
+*.webp      binary
 *.cur       binary
 *.sys       binary
+*.chm       binary
 
 # Custom for Visual Studio
 *.cs        diff=csharp
