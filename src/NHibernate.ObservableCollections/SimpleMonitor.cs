@@ -1,7 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System;
-
     /// <summary>
     ///     A simple monitor that helps preventing reentrant calls.
     /// </summary>

@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+    <TargetFrameworks>$(WinExeTargetFrameworks)</TargetFrameworks>
 
-  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+
     <OutputType>WinExe</OutputType>
     <StartupObject>NHibernate.ObservableCollections.DemoApp.App</StartupObject>
   </PropertyGroup>
@@ -29,7 +28,7 @@
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>

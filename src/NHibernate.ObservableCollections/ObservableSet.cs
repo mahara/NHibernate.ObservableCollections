@@ -1,9 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Diagnostics.Contracts;
@@ -17,8 +13,8 @@ namespace Iesi.Collections.Generic
     ///     The type of items in the set.
     /// </typeparam>
     /// <author>Adrian Alexander</author>
-    /// <author>Maximilian Haru Raditya</author>
     /// <author>Microsoft Corporation</author>
+    /// <author>Maximilian Haru Raditya</author>
     /// <remarks>
     ///     <see href="http://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
     /// </remarks>
