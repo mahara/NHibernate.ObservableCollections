@@ -1,5 +1,3 @@
-using System.Collections;
-
 using Iesi.Collections.Generic;
 
 using NHibernate.Engine;
