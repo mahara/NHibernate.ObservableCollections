@@ -31,7 +31,7 @@ namespace Iesi.Collections.Generic
         private readonly SimpleMonitor _monitor = new();
 
         [NonSerialized]
-        private object _syncRoot;
+        private object _syncRoot = null!;
 
         public ObservableList()
         {
@@ -52,8 +52,7 @@ namespace Iesi.Collections.Generic
 
         protected IList<T> InnerList { get; } = new List<T>();
 
-        bool ICollection.IsSynchronized =>
-            false;
+        bool ICollection.IsSynchronized => false;
 
         object ICollection.SyncRoot
         {
@@ -67,7 +66,7 @@ namespace Iesi.Collections.Generic
                     }
                     else
                     {
-                        Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
+                        Interlocked.CompareExchange<object>(ref _syncRoot!, new object(), null!);
                     }
                 }
 
@@ -75,10 +74,9 @@ namespace Iesi.Collections.Generic
             }
         }
 
-        bool IList.IsFixedSize =>
-            ((IList) InnerList).IsFixedSize;
+        bool IList.IsFixedSize => ((IList) InnerList).IsFixedSize;
 
-        object IList.this[int index]
+        object? IList.this[int index]
         {
             get => this[index];
             set
@@ -87,11 +85,11 @@ namespace Iesi.Collections.Generic
 
                 try
                 {
-                    this[index] = (T) value;
+                    this[index] = (T) value!;
                 }
                 catch (InvalidCastException)
                 {
-                    ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                    ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
                 }
             }
         }
@@ -101,69 +99,67 @@ namespace Iesi.Collections.Generic
             ((ICollection) InnerList).CopyTo(array, index);
         }
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
 
             try
             {
-                Add((T) value);
+                Add((T) value!);
             }
             catch (InvalidCastException)
             {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
             }
 
             return Count - 1;
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
             ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
 
             try
             {
-                Insert(index, (T) value);
+                Insert(index, (T) value!);
             }
             catch (InvalidCastException)
             {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
             }
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
-            if (IsCompatibleObject(value))
+            if (IsCompatibleObject(value!))
             {
-                Remove((T) value);
+                Remove((T) value!);
             }
         }
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
-            if (IsCompatibleObject(value))
+            if (IsCompatibleObject(value!))
             {
-                return Contains((T) value);
+                return Contains((T) value!);
             }
 
             return false;
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
-            if (IsCompatibleObject(value))
+            if (IsCompatibleObject(value!))
             {
-                return IndexOf((T) value);
+                return IndexOf((T) value!);
             }
 
             return -1;
         }
 
-        public int Count =>
-            InnerList.Count;
+        public int Count => InnerList.Count;
 
-        public bool IsReadOnly =>
-            InnerList.IsReadOnly;
+        public bool IsReadOnly => InnerList.IsReadOnly;
 
         public T this[int index]
         {
@@ -179,17 +175,17 @@ namespace Iesi.Collections.Generic
             }
         }
 
-        public virtual void Add(T item)
+        public virtual void Add(T? item)
         {
             CheckReentrancy();
 
-            InnerList.Add(item);
+            InnerList.Add(item!);
 
             var index = InnerList.Count - 1;
 
             OnPropertyChanged(CountPropertyName);
             OnPropertyChanged(IndexerName);
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item!, index);
         }
 
         public virtual bool Remove(T item)
@@ -204,7 +200,7 @@ namespace Iesi.Collections.Generic
 
                 OnPropertyChanged(CountPropertyName);
                 OnPropertyChanged(IndexerName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
+                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item!, index);
             }
 
             return isRemoved;
@@ -236,7 +232,7 @@ namespace Iesi.Collections.Generic
             return InnerList.GetEnumerator();
         }
 
-        public virtual void Insert(int index, T item)
+        public virtual void Insert(int index, T? item)
         {
             if (index < 0 || index > InnerList.Count)
             {
@@ -245,11 +241,11 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            InnerList.Insert(index, item);
+            InnerList.Insert(index, item!);
 
             OnPropertyChanged(CountPropertyName);
             OnPropertyChanged(IndexerName);
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item!, index);
         }
 
         public virtual void RemoveAt(int index)
@@ -261,7 +257,7 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var removedItem = InnerList[index];
+            var removedItem = InnerList[index]!;
 
             InnerList.RemoveAt(index);
 
@@ -287,12 +283,12 @@ namespace Iesi.Collections.Generic
         ///     see <seealso cref="INotifyCollectionChanged" />
         /// </remarks>
         [field: NonSerialized]
-        public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
         /// </summary>
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
@@ -302,7 +298,7 @@ namespace Iesi.Collections.Generic
         ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
         /// </summary>
         [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
+        protected event PropertyChangedEventHandler? PropertyChanged;
 
         public virtual void AddRange(IEnumerable<T> items)
         {
@@ -384,7 +380,7 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var movedItem = this[oldIndex];
+            var movedItem = this[oldIndex]!;
 
             InnerList.RemoveAt(oldIndex);
             InnerList.Insert(newIndex, movedItem);
@@ -404,11 +400,11 @@ namespace Iesi.Collections.Generic
         {
             CheckReentrancy();
 
-            var originalItem = this[index];
+            var originalItem = this[index]!;
             InnerList[index] = value;
 
             OnPropertyChanged(IndexerName);
-            OnCollectionChanged(NotifyCollectionChangedAction.Replace, originalItem, value, index);
+            OnCollectionChanged(NotifyCollectionChangedAction.Replace, originalItem, value!, index);
         }
 
         /// <summary>

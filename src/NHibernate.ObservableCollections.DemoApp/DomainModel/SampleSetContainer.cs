@@ -18,7 +18,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             {
                 _sampleSet = value;
                 ((INotifyCollectionChanged) _sampleSet).CollectionChanged +=
-                    new OneToManyAssocSync(this, "ParentSetContainer").UpdateManySide;
+                    new OneToManyAssociationSync(this, "ParentSetContainer").UpdateManySide;
             }
         }
     }
