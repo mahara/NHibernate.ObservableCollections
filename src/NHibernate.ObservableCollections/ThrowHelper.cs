@@ -34,7 +34,7 @@ namespace Iesi.Collections.Generic
         //
         // Allow nulls for reference types and Nullable<U>, but not for value types.
         //
-        internal static void IfNullAndNullsAreIllegalThenThrow<T>(object value, ExceptionArgument argName)
+        internal static void IfNullAndNullsAreIllegalThenThrow<T>(object? value, ExceptionArgument argName)
         {
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
             if (value == null && default(T) != null)

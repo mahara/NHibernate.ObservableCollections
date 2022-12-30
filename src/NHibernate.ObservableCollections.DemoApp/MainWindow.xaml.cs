@@ -23,9 +23,11 @@ namespace NHibernate.ObservableCollections.DemoApp
                 using var dbManager = new NHibernateDatabaseManager();
 
                 _sampleSetContainer = dbManager.Get<SampleSetContainer>(1);
+                NHibernateUtil.Initialize(_sampleSetContainer.SampleSet);
                 SampleSetBox.ItemsSource = _sampleSetContainer.SampleSet;
 
                 _sampleListContainer = dbManager.Get<SampleListContainer>(2);
+                NHibernateUtil.Initialize(_sampleListContainer.SampleList);
                 SampleListBox.ItemsSource = _sampleListContainer.SampleList;
             }
             catch (Exception ex)
@@ -141,7 +143,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             dbManager.Update(_sampleListContainer);
         }
 
-        private bool TryGetSelection(out object selectedContainer, out SampleItem selectedItem)
+        private bool TryGetSelection(out object? selectedContainer, out SampleItem? selectedItem)
         {
             if (SampleSetBox.SelectedItem != null)
             {
