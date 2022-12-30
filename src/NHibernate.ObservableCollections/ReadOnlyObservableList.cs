@@ -1,5 +1,3 @@
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Iesi.Collections.Generic

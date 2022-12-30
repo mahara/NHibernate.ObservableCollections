@@ -1,7 +1,3 @@
-using System.Collections.Specialized;
-
-using Iesi.Collections.Generic;
-
 namespace NHibernate.ObservableCollections.DemoApp
 {
     /// <summary>
