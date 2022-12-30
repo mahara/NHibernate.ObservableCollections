@@ -22,8 +22,8 @@ namespace Iesi.Collections.Generic
         /// <param name="session">
         ///     The session.
         /// </param>
-        public PersistentObservableSet(ISessionImplementor session)
-            : base(session)
+        public PersistentObservableSet(ISessionImplementor session) :
+            base(session)
         {
         }
 
@@ -36,8 +36,8 @@ namespace Iesi.Collections.Generic
         /// <param name="collection">
         ///     The collection.
         /// </param>
-        public PersistentObservableSet(ISessionImplementor session, ISet<T> collection)
-            : base(session, collection)
+        public PersistentObservableSet(ISessionImplementor session, ISet<T> collection) :
+            base(session, collection)
         {
             if (collection != null)
             {
@@ -49,7 +49,7 @@ namespace Iesi.Collections.Generic
         ///     Occurs when the collection changes.
         /// </summary>
         /// <inheritdoc />
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Before the initialize.
@@ -76,7 +76,7 @@ namespace Iesi.Collections.Generic
         /// <param name="args">
         ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
         /// </param>
-        protected void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
         {
             CollectionChanged?.Invoke(this, args);
         }

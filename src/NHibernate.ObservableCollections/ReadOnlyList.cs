@@ -10,7 +10,7 @@ namespace Iesi.Collections.Generic
     public class ReadOnlyList<T> : IList<T>, IList, IReadOnlyList<T>
     {
         [NonSerialized]
-        private object _syncRoot;
+        private object _syncRoot = null!;
 
         public ReadOnlyList(IList<T> list)
         {
@@ -19,13 +19,12 @@ namespace Iesi.Collections.Generic
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.list);
             }
 
-            InnerList = list;
+            InnerList = list!;
         }
 
         protected IList<T> InnerList { get; }
 
-        bool ICollection.IsSynchronized =>
-            false;
+        bool ICollection.IsSynchronized => false;
 
         object ICollection.SyncRoot
         {
@@ -39,7 +38,7 @@ namespace Iesi.Collections.Generic
                     }
                     else
                     {
-                        Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
+                        Interlocked.CompareExchange<object>(ref _syncRoot!, new object(), null!);
                     }
                 }
 
@@ -47,13 +46,11 @@ namespace Iesi.Collections.Generic
             }
         }
 
-        bool IList.IsReadOnly =>
-            true;
+        bool IList.IsReadOnly => true;
 
-        bool IList.IsFixedSize =>
-            true;
+        bool IList.IsFixedSize => true;
 
-        object IList.this[int index]
+        object? IList.this[int index]
         {
             get => InnerList[index];
             set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
@@ -64,19 +61,19 @@ namespace Iesi.Collections.Generic
             ((ICollection) InnerList).CopyTo(array, index);
         }
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
             return -1;
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
@@ -91,31 +88,29 @@ namespace Iesi.Collections.Generic
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
-            if (IsCompatibleObject(value))
+            if (IsCompatibleObject(value!))
             {
-                return Contains((T) value);
+                return Contains((T) value!);
             }
 
             return false;
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
-            if (IsCompatibleObject(value))
+            if (IsCompatibleObject(value!))
             {
-                return IndexOf((T) value);
+                return IndexOf((T) value!);
             }
 
             return -1;
         }
 
-        public int Count =>
-            InnerList.Count;
+        public int Count => InnerList.Count;
 
-        bool ICollection<T>.IsReadOnly =>
-            true;
+        bool ICollection<T>.IsReadOnly => true;
 
         T IList<T>.this[int index]
         {
@@ -175,12 +170,11 @@ namespace Iesi.Collections.Generic
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        public T this[int index] =>
-            InnerList[index];
+        public T this[int index] => InnerList[index];
 
         private static bool IsCompatibleObject(object value)
         {
-            // Non-null values are fine.  Only accept nulls if T is a class or Nullable<U>.
+            // Non-null values are fine. Only accept nulls if T is a class or Nullable<U>.
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
             return value is T || (value == null && default(T) == null);
         }

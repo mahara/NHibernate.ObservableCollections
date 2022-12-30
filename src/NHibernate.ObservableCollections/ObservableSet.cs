@@ -54,23 +54,27 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         /// <inheritdoc />
         [field: NonSerialized]
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     PropertyChanged event (per <see cref="T:System.ComponentModel.INotifyPropertyChanged" />).
         /// </summary>
         /// <inheritdoc />
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
         }
 
-        public int Count =>
-            InnerSet.Count;
+        /// <summary>
+        ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+        /// </summary>
+        [field: NonSerialized]
+        protected event PropertyChangedEventHandler? PropertyChanged;
 
-        public bool IsReadOnly =>
-            InnerSet.IsReadOnly;
+        public int Count => InnerSet.Count;
+
+        public bool IsReadOnly => InnerSet.IsReadOnly;
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -93,7 +97,7 @@ namespace Iesi.Collections.Generic
                 var index = InnerSet.Count - 1;
 
                 OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+                OnCollectionChanged(NotifyCollectionChangedAction.Add, item!, index);
             }
 
             return isAdded;
@@ -186,12 +190,6 @@ namespace Iesi.Collections.Generic
         {
             return ((IEnumerable) InnerSet).GetEnumerator();
         }
-
-        /// <summary>
-        ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-        /// </summary>
-        [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
 
         public virtual void AddRange(IEnumerable<T> items)
         {
@@ -287,7 +285,7 @@ namespace Iesi.Collections.Generic
                 EnsureConsistency();
 
                 OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
+                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item!, index);
             }
 
             return isRemoved;

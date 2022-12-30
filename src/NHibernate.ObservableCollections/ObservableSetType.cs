@@ -25,7 +25,7 @@ namespace Iesi.Collections.Generic
         ///     The entity.
         /// </param>
         /// <returns>
-        ///     The contains.
+        ///     Whether the collection contains the entity.
         /// </returns>
         /// <inheritdoc />
         public bool Contains(object collection, object entity)
@@ -34,8 +34,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Return an <see cref="T:System.Collections.IEnumerable" /> over the elements of this collection - the passed collection
-        ///     instance may or may not be a wrapper
+        ///     Return an <see cref="T:System.Collections.IEnumerable" /> over the elements of this collection -
+        ///     the passed collection instance may or may not be a wrapper.
         /// </summary>
         /// <param name="collection">
         ///     The collection.
@@ -59,7 +59,7 @@ namespace Iesi.Collections.Generic
         ///     The entity.
         /// </param>
         /// <returns>
-        ///     The index of.
+        ///     The index of the entity in the collection.
         /// </returns>
         /// <inheritdoc />
         public object IndexOf(object collection, object entity)
@@ -152,22 +152,12 @@ namespace Iesi.Collections.Generic
         ///     The collection.
         /// </param>
         /// <returns>
-        ///     The persistent collection.
+        ///     The <see cref="IPersistentCollection" />.
         /// </returns>
         /// <inheritdoc />
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
             return new PersistentObservableSet<T>(session, (ObservableSet<T>) collection);
-        }
-
-        IPersistentCollection IUserCollectionType.Instantiate(ISessionImplementor session, ICollectionPersister persister)
-        {
-            throw new NotImplementedException();
-        }
-
-        IPersistentCollection IUserCollectionType.Wrap(ISessionImplementor session, object collection)
-        {
-            throw new NotImplementedException();
         }
     }
 }

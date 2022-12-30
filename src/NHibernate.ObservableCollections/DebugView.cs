@@ -2,8 +2,6 @@ namespace Iesi.Collections.Generic
 {
     using System.Diagnostics;
 
-    using static ThrowHelper;
-
     /// <summary>
     ///     VS IDE can't differentiate between types with the same name from different assembly.
     ///     So we need to use different names for collection debug view
@@ -17,12 +15,7 @@ namespace Iesi.Collections.Generic
 
         public Mscorlib_CollectionDebugView(ICollection<T> collection)
         {
-            if (collection == null)
-            {
-                ThrowArgumentNullException(ExceptionArgument.collection);
-            }
-
-            _collection = collection;
+            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
@@ -41,16 +34,12 @@ namespace Iesi.Collections.Generic
 
     internal sealed class Mscorlib_DictionaryKeyCollectionDebugView<TKey, TValue>
     {
+
         private readonly ICollection<TKey> _collection;
 
         public Mscorlib_DictionaryKeyCollectionDebugView(ICollection<TKey> collection)
         {
-            if (collection == null)
-            {
-                ThrowArgumentNullException(ExceptionArgument.collection);
-            }
-
-            _collection = collection;
+            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
@@ -73,12 +62,7 @@ namespace Iesi.Collections.Generic
 
         public Mscorlib_DictionaryValueCollectionDebugView(ICollection<TValue> collection)
         {
-            if (collection == null)
-            {
-                ThrowArgumentNullException(ExceptionArgument.collection);
-            }
-
-            _collection = collection;
+            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
@@ -97,16 +81,11 @@ namespace Iesi.Collections.Generic
 
     internal sealed class Mscorlib_DictionaryDebugView<K, V>
     {
-        private readonly IDictionary<K, V> _dict;
+        private readonly IDictionary<K, V> _dictionary;
 
         public Mscorlib_DictionaryDebugView(IDictionary<K, V> dictionary)
         {
-            if (dictionary == null)
-            {
-                ThrowArgumentNullException(ExceptionArgument.dictionary);
-            }
-
-            _dict = dictionary;
+            _dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
@@ -114,32 +93,32 @@ namespace Iesi.Collections.Generic
         {
             get
             {
-                var items = new KeyValuePair<K, V>[_dict.Count];
+                var items = new KeyValuePair<K, V>[_dictionary.Count];
 
-                _dict.CopyTo(items, 0);
+                _dictionary.CopyTo(items, 0);
 
                 return items;
             }
         }
     }
 
-    internal sealed class Mscorlib_KeyedCollectionDebugView<K, T>
+    internal sealed class Mscorlib_KeyedCollectionDebugView<TKey, TValue> where TKey : notnull
     {
-        private readonly KeyedCollection<K, T> _kc;
+        private readonly KeyedCollection<TKey, TValue> _keyedCollection;
 
-        public Mscorlib_KeyedCollectionDebugView(KeyedCollection<K, T> keyedCollection)
+        public Mscorlib_KeyedCollectionDebugView(KeyedCollection<TKey, TValue> keyedCollection)
         {
-            _kc = keyedCollection ?? throw new ArgumentNullException(nameof(keyedCollection));
+            _keyedCollection = keyedCollection ?? throw new ArgumentNullException(nameof(keyedCollection));
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public T[] Items
+        public TValue[] Items
         {
             get
             {
-                var items = new T[_kc.Count];
+                var items = new TValue[_keyedCollection.Count];
 
-                _kc.CopyTo(items, 0);
+                _keyedCollection.CopyTo(items, 0);
 
                 return items;
             }
