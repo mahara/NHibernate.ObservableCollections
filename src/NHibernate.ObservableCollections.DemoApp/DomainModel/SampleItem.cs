@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
 
 namespace NHibernate.ObservableCollections.DemoApp
