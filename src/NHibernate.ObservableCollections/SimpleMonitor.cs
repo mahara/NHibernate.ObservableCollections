@@ -1,4 +1,4 @@
-﻿namespace Iesi.Collections.Generic
+namespace Iesi.Collections.Generic
 {
     using System;
 

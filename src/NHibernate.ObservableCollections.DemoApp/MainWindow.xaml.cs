@@ -1,4 +1,4 @@
-﻿namespace NHibernate.ObservableCollections.DemoApp
+namespace NHibernate.ObservableCollections.DemoApp
 {
     using System.Windows;
     using System.Windows.Controls;
