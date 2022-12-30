@@ -8,7 +8,7 @@ log/
 obj/
 temp/
 .vs/
-
+.idea/
 
 *.suo
 *.user
