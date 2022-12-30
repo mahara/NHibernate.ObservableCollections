@@ -1,13 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
-  </PropertyGroup>
+    <TargetFrameworks>$(ExeTestTargetFrameworks)</TargetFrameworks>
 
-  <PropertyGroup>
     <OutputType>Exe</OutputType>
     <StartupObject>Program</StartupObject>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <!--
@@ -15,7 +12,7 @@
   -->
   <PropertyGroup>
     <AssemblyName>NHibernate.ObservableCollections.Tests</AssemblyName>
-    <RootNamespace>NHibernate.ObservableCollections.Tests</RootNamespace>
+    <RootNamespace>Iesi.Collections.Generic.Tests</RootNamespace>
 
     <Title>NHibernate.ObservableCollections.Tests</Title>
     <Description>NHibernate.ObservableCollections.Tests</Description>
@@ -37,13 +34,18 @@
     <PackageReference Include="PublicApiGenerator" Version="10.3.0" />
     <PackageReference Include="System.Security.Permissions" Version="6.0.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 

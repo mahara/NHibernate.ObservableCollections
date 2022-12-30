@@ -13,8 +13,8 @@
 
     <Title>NHibernate.ObservableCollections</Title>
     <Description>NHibernate.ObservableCollections</Description>
-    <PackageId>NHibernate.ObservableCollections</PackageId>
 
+    <PackageId>NHibernate.ObservableCollections</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -22,7 +22,7 @@
     <PackageReference Include="Iesi.Collections" Version="4.0.4" />
     <PackageReference Include="NHibernate" Version="5.3.13" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>

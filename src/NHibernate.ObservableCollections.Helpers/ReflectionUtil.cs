@@ -1,18 +1,16 @@
 namespace NHibernate.ObservableCollections.Helpers
 {
-    using System;
-    using System.Collections.Generic;
     using System.Reflection;
 
     public static class ReflectionUtil
     {
-        private static MethodInfo isInitialized;
+        private static MethodInfo? isInitialized;
 
         public static bool IsInitialized<T>(ICollection<T> newCollection)
         {
             if (isInitialized == null)
             {
-                var t = Type.GetType("NHibernate.NHibernateUtil, NHibernate");
+                var t = System.Type.GetType("NHibernate.NHibernateUtil, NHibernate");
                 if (t != null)
                 {
                     isInitialized = t.GetMethod("IsInitialized", BindingFlags.Static | BindingFlags.Public);

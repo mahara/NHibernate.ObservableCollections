@@ -1,8 +1,5 @@
-namespace NHibernate.Collection.Generic
+namespace Iesi.Collections.Generic
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.Diagnostics;
 
     using NHibernate.DebugHelpers;
@@ -77,7 +74,7 @@ namespace NHibernate.Collection.Generic
         ///     The sender.
         /// </param>
         /// <param name="args">
-        ///     The <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs" /> instance containing the event data.
+        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
         /// </param>
         protected void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
         {
