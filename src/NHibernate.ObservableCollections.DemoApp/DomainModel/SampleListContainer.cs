@@ -20,7 +20,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             }
         }
 
-        private void OnSampleListCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnSampleListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
