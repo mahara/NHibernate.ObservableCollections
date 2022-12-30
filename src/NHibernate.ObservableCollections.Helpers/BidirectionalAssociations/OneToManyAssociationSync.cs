@@ -18,7 +18,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private readonly string _manyToOnePropertyName;
 
-        private PropertyInfo _manyToOneProperty;
+        private PropertyInfo? _manyToOneProperty;
 
         /// <summary>
         ///    Initializes a new instance of the <see cref="OneToManyAssociationSync" /> class.
@@ -34,9 +34,9 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         /// <summary>
         ///     Responds to a many-side entity's parent one-side property being set to a new value.
         /// </summary>
-        public static void UpdateOneSide<T>(T thisManySide, object oldOneSide, object newOneSide, string oneToManyPropertyName)
+        public static void UpdateOneSide<T>(T thisManySide, object? oldOneSide, object? newOneSide, string oneToManyPropertyName)
         {
-            if (oldOneSide != null && oldOneSide != newOneSide)
+            if (oldOneSide is not null && oldOneSide != newOneSide)
             {
                 var oldCollection = ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
                 if (oldCollection.Contains(thisManySide))
@@ -54,7 +54,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
                 }
             }
 
-            if (newOneSide != null)
+            if (newOneSide is not null)
             {
                 var newCollection = ReflectionUtil.NavigateToManySide<T>(newOneSide, oneToManyPropertyName);
                 if (ReflectionUtil.IsInitialized(newCollection) && !newCollection.Contains(thisManySide))
@@ -76,14 +76,14 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         /// <summary>
         ///     Responds to add/remove events raised by the one-side's collection.
         /// </summary>
-        public void UpdateManySide(object sender, NotifyCollectionChangedEventArgs e)
+        public void UpdateManySide(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 // addingToManySide: the item that was just added to this one-side's collection
-                foreach (var addingToManySide in e.NewItems)
+                foreach (var addingToManySide in e.NewItems!)
                 {
-                    if (addingToManySide != null && NavigateManyToOne(addingToManySide) != _thisOneSide)
+                    if (addingToManySide is not null && NavigateManyToOne(addingToManySide) != _thisOneSide)
                     {
                         SetManyToOne(addingToManySide, _thisOneSide);
                     }
@@ -92,7 +92,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 // removingFromManySide: the item that was just removed from this one-side's collection
-                foreach (var removingFromManySide in e.OldItems)
+                foreach (var removingFromManySide in e.OldItems!)
                 {
                     if (NavigateManyToOne(removingFromManySide) == _thisOneSide)
                     {
@@ -104,23 +104,23 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private PropertyInfo GetManyToOneProperty(System.Type manySideType)
         {
-            if (_manyToOneProperty == null)
+            if (_manyToOneProperty is null)
             {
-                var property = manySideType.GetProperty(_manyToOnePropertyName);
-                _manyToOneProperty = property.DeclaringType.GetProperty(_manyToOnePropertyName);
+                var property = manySideType.GetProperty(_manyToOnePropertyName)!;
+                _manyToOneProperty = property.DeclaringType!.GetProperty(_manyToOnePropertyName)!;
             }
 
             return _manyToOneProperty;
         }
 
-        private object NavigateManyToOne(object manySide)
+        private object NavigateManyToOne(object? manySide)
         {
-            return GetManyToOneProperty(manySide.GetType()).GetValue(manySide, null);
+            return GetManyToOneProperty(manySide!.GetType()).GetValue(manySide, null)!;
         }
 
-        private void SetManyToOne(object manySide, object newValue)
+        private void SetManyToOne(object? manySide, object? newValue)
         {
-            GetManyToOneProperty(manySide.GetType()).SetValue(manySide, newValue, null);
+            GetManyToOneProperty(manySide!.GetType()).SetValue(manySide, newValue, null);
         }
     }
 }
