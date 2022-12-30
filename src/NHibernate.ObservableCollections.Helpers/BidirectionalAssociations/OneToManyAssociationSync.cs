@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Specialized;
 using System.Reflection;
 
 namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
