@@ -1,4 +1,4 @@
-﻿using NUnit.Common;
+using NUnit.Common;
 
 using NUnitLite;
 
