@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(WinLibTargetFrameworks)</TargetFrameworks>
     <!--
         https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1100
     -->
@@ -25,7 +25,7 @@
 
   <ItemGroup>
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
   </ItemGroup>
