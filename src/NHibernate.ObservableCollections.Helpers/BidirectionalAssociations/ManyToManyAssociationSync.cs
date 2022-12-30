@@ -18,7 +18,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private readonly string _otherSidePropertyName;
 
-        private PropertyInfo _otherSideProperty;
+        private PropertyInfo? _otherSideProperty;
 
         public ManyToManyAssociationSync(T thisSide, string otherSideToThisSidePropertyName)
         {
@@ -29,18 +29,19 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         /// <summary>
         ///     Responds to add/remove events raised by this side's collection.
         /// </summary>
-        public void UpdateOtherSide(object sender, NotifyCollectionChangedEventArgs e)
+        public void UpdateOtherSide(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 // addingToOtherSide: the item that was just added to this side's collection
-                foreach (var addingToOtherSide in e.NewItems)
+                foreach (var addingToOtherSide in e.NewItems!)
                 {
                     Console.WriteLine("new item added to set");
 
                     var otherSidesCollection = GetOtherSidesCollection(addingToOtherSide);
 
-                    if (ReflectionUtil.IsInitialized(otherSidesCollection) &&
+                    if (otherSidesCollection is not null &&
+                        ReflectionUtil.IsInitialized(otherSidesCollection) &&
                         !otherSidesCollection.Contains(_thisSide))
                     {
                         if (otherSidesCollection is IList &&
@@ -57,13 +58,14 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 // removingFromOtherSide: the item that was just removed from this side's collection
-                foreach (var removingFromOtherSide in e.OldItems)
+                foreach (var removingFromOtherSide in e.OldItems!)
                 {
                     Console.WriteLine("old item removed from set");
 
                     var otherSidesCollection = GetOtherSidesCollection(removingFromOtherSide);
 
-                    if (ReflectionUtil.IsInitialized(otherSidesCollection) &&
+                    if (otherSidesCollection is not null &&
+                        ReflectionUtil.IsInitialized(otherSidesCollection) &&
                         otherSidesCollection.Contains(_thisSide))
                     {
                         otherSidesCollection.Remove(_thisSide);
@@ -79,14 +81,14 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             }
         }
 
-        private ICollection<T> GetOtherSidesCollection(object otherSide)
+        private ICollection<T>? GetOtherSidesCollection(object otherSide)
         {
             _otherSideProperty ??= otherSide.GetType().GetProperty(_otherSidePropertyName);
 
             var otherSideProperty = _otherSideProperty;
-            if (otherSideProperty != null)
+            if (otherSideProperty is not null)
             {
-                return (ICollection<T>) otherSideProperty.GetValue(otherSide, null);
+                return (ICollection<T>?) otherSideProperty.GetValue(otherSide, null);
             }
 
             return null;
