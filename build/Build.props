@@ -19,8 +19,11 @@
   -->
 
   <PropertyGroup>
-    <ExeTargetFrameworks>net6.0-windows;net48</ExeTargetFrameworks>
-    <LibTargetFrameworks>net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net7.0-windows</WinExeTargetFrameworks>
+    <WinLibTargetFrameworks>net7.0-windows;net6.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net7.0</ExeTargetFrameworks>
+    <ExeTestTargetFrameworks>net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <LibTargetFrameworks>net7.0;net6.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>

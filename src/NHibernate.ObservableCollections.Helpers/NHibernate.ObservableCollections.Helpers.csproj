@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(ExeTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(WinLibTargetFrameworks)</TargetFrameworks>
 
     <UseWPF>true</UseWPF>
   </PropertyGroup>

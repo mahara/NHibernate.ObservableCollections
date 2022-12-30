@@ -4,7 +4,7 @@
 ## 4.0.0 (2022-xx-xx)
 
 Improvements:
-- Added **`.NET 6.0`** support.
+- Added **`.NET 7.0`** and **`.NET 6.0`** supports.
 
 Breaking Changes:
 - Updated **`NHibernate`** version to 5.3.0.
