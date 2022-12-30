@@ -1,7 +1,3 @@
-using System.Collections;
-
-using Iesi.Collections.Generic;
-
 using NHibernate.Engine;
 using NHibernate.Persister.Collection;
 using NHibernate.UserTypes;
