@@ -1,7 +1,5 @@
 namespace NHibernate.ObservableCollections.Helpers
 {
-    using System.Collections.Generic;
-
     public static class CollectionsUtil
     {
         public static bool ContainsAll<T>(ICollection<T> collection, ICollection<T> values)

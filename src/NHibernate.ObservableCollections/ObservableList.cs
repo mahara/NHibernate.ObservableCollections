@@ -1,14 +1,8 @@
 namespace Iesi.Collections.Generic
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Threading;
 
     /// <summary>
     ///     A generic list that fires events
@@ -17,8 +11,8 @@ namespace Iesi.Collections.Generic
     /// <typeparam name="T">
     ///     The type of items in the list.
     /// </typeparam>
-    /// <author>Maximilian Haru Raditya</author>
     /// <author>Microsoft Corporation</author>
+    /// <author>Maximilian Haru Raditya</author>
     /// <remarks>
     ///     <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
     ///     <see href="https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
@@ -403,7 +397,7 @@ namespace Iesi.Collections.Generic
         {
             // Non-null values are fine.  Only accept nulls if T is a class or Nullable<U>.
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
-            return value is T || value == null && default(T) == null;
+            return value is T || (value == null && default(T) == null);
         }
 
         protected virtual void SetItem(int index, T value)

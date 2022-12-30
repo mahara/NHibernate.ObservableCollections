@@ -1,8 +1,5 @@
 namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Specialized;
     using System.Reflection;
 
     /// <summary>
@@ -93,7 +90,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             }
         }
 
-        private PropertyInfo GetManyToOneProperty(Type manySideType)
+        private PropertyInfo GetManyToOneProperty(System.Type manySideType)
         {
             if (_manyToOneProperty == null)
             {
@@ -109,7 +106,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             return GetManyToOneProperty(manySide.GetType()).GetValue(manySide, null);
         }
 
-        private void SetManyToOne(object manySide, object newValue)
+        private void SetManyToOne(object manySide, object? newValue)
         {
             GetManyToOneProperty(manySide.GetType()).SetValue(manySide, newValue, null);
         }

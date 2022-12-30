@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Example"
-        Height="425.6"
-        Width="650"
+        Width="650" Height="425.6"
         Background="LightGray"
         Loaded="MainWindow_Loaded"
         WindowStartupLocation="CenterScreen">

@@ -1,4 +1,4 @@
-namespace NHibernate.ObservableCollections.Tests
+namespace Iesi.Collections.Generic.Tests
 {
     public class Tests
     {

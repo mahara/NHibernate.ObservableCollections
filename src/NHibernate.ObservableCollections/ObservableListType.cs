@@ -1,10 +1,6 @@
-namespace NHibernate.Collection.Generic
+namespace Iesi.Collections.Generic
 {
-    using System.Collections;
-    using System.Collections.Generic;
-
-    using Iesi.Collections.Generic;
-
+    using NHibernate.Collection;
     using NHibernate.Engine;
     using NHibernate.Persister.Collection;
     using NHibernate.UserTypes;
@@ -164,6 +160,16 @@ namespace NHibernate.Collection.Generic
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
             return new PersistentObservableList<T>(session, (ObservableList<T>) collection);
+        }
+
+        IPersistentCollection IUserCollectionType.Instantiate(ISessionImplementor session, ICollectionPersister persister)
+        {
+            throw new NotImplementedException();
+        }
+
+        IPersistentCollection IUserCollectionType.Wrap(ISessionImplementor session, object collection)
+        {
+            throw new NotImplementedException();
         }
     }
 }

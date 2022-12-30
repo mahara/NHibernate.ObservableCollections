@@ -1,11 +1,5 @@
 namespace NHibernate.ObservableCollections.DemoApp
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
-
-    using Iesi.Collections.Generic;
-
     /// <summary>
     ///     A parent class that contains a list of child <see cref="SampleItem" /> objects.
     /// </summary>

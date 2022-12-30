@@ -1,7 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System;
-    using System.Collections.Specialized;
     using System.ComponentModel;
 
     /// <summary>
