@@ -1,7 +1,5 @@
-using System.Collections.Specialized;
 using System.Diagnostics;
 
-using NHibernate.Collection.Generic;
 using NHibernate.DebugHelpers;
 using NHibernate.Engine;
 using NHibernate.Persister.Collection;
