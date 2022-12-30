@@ -1,19 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 
   <!--
     TARGETS
   -->
 
   <Target Name="DeepCleanProjectAfterClean" AfterTargets="Clean">
-    <Message Text="Deep cleaning project $(MSBuildProjectName) on cleaning..." />
+    <Message Text="Deep cleaning project '$(MSBuildProjectName)'..." />
 
     <!--
       https://stackoverflow.com/questions/1088593/how-to-clean-visual-studio-bin-and-obj-folders
+      https://stackoverflow.com/questions/755382/i-want-to-delete-all-bin-and-obj-folders-to-force-all-projects-to-rebuild-everyt
     -->
     <!-- bin -->
-    <RemoveDir Directories="$(OutputBaseFolderPath)$(Configuration)\" ContinueOnError="true" />
+    <RemoveDir Directories="$(OutputBaseFolderPath)" ContinueOnError="true" />
 
     <!-- obj -->
     <RemoveDir Directories="$(IntermediateOutputBaseFolderPath)" ContinueOnError="true" />
