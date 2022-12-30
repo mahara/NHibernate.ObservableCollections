@@ -7,7 +7,7 @@ namespace NHibernate.ObservableCollections.DemoApp.DataAccess
     /// </summary>
     public class NHibernateDatabaseManager : IDisposable
     {
-        private static ISessionFactory _sessionFactory;
+        private static ISessionFactory? _sessionFactory;
 
         private readonly ISession _session;
 
