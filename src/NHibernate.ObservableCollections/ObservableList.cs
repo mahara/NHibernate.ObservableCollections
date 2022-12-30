@@ -43,7 +43,7 @@ namespace Iesi.Collections.Generic
         private readonly SimpleMonitor _monitor = new();
 
         [NonSerialized]
-        private object _syncRoot;
+        private object _syncRoot = null!;
 
         public ObservableList()
         {
@@ -51,7 +51,7 @@ namespace Iesi.Collections.Generic
 
         public ObservableList(IEnumerable<T> collection)
         {
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -66,18 +66,18 @@ namespace Iesi.Collections.Generic
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
         [field: NonSerialized]
-        public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+        public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
+        protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
@@ -103,7 +103,7 @@ namespace Iesi.Collections.Generic
             }
         }
 
-        object IList.this[int index]
+        object? IList.this[int index]
         {
             get => this[index];
             set
@@ -112,11 +112,11 @@ namespace Iesi.Collections.Generic
 
                 try
                 {
-                    this[index] = (T) value;
+                    this[index] = (T) value!;
                 }
                 catch (InvalidCastException)
                 {
-                    ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                    ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace Iesi.Collections.Generic
         {
             get
             {
-                if (_syncRoot == null)
+                if (_syncRoot is null)
                 {
                     if (InnerList is ICollection c)
                     {
@@ -133,7 +133,7 @@ namespace Iesi.Collections.Generic
                     }
                     else
                     {
-                        Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
+                        Interlocked.CompareExchange<object>(ref _syncRoot!, new object(), null!);
                     }
                 }
 
@@ -160,11 +160,11 @@ namespace Iesi.Collections.Generic
             return InnerList.Contains(item);
         }
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
             if (IsCompatibleObject(value))
             {
-                return Contains((T) value);
+                return Contains((T) value!);
             }
 
             return false;
@@ -175,11 +175,11 @@ namespace Iesi.Collections.Generic
             return InnerList.IndexOf(item);
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
             if (IsCompatibleObject(value))
             {
-                return IndexOf((T) value);
+                return IndexOf((T) value!);
             }
 
             return -1;
@@ -189,7 +189,7 @@ namespace Iesi.Collections.Generic
         {
             CheckReentrancy();
 
-            var oldItem = this[index];
+            var oldItem = this[index]!;
 
             InnerList[index] = item;
 
@@ -210,17 +210,17 @@ namespace Iesi.Collections.Generic
             OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
         }
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
 
             try
             {
-                Add((T) value);
+                Add((T) value!);
             }
             catch (InvalidCastException)
             {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
             }
 
             return Count - 1;
@@ -242,17 +242,17 @@ namespace Iesi.Collections.Generic
             OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
             ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
 
             try
             {
-                Insert(index, (T) value);
+                Insert(index, (T) value!);
             }
             catch (InvalidCastException)
             {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value, typeof(T));
+                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
             }
         }
 
@@ -275,11 +275,11 @@ namespace Iesi.Collections.Generic
             return isRemoved;
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
             if (IsCompatibleObject(value))
             {
-                Remove((T) value);
+                Remove((T) value!);
             }
         }
 
@@ -315,13 +315,13 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var movedItem = this[oldIndex];
+            var movedItem = this[oldIndex]!;
 
             InnerList.RemoveAt(oldIndex);
             InnerList.Insert(newIndex, movedItem);
 
             OnPropertyChanged(IndexerName);
-            OnCollectionChanged(movedItem, newIndex, oldIndex);
+            OnCollectionChanged(movedItem, oldIndex, newIndex);
         }
 
         public virtual void Clear()
@@ -350,7 +350,7 @@ namespace Iesi.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(startingIndex));
             }
 
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -370,7 +370,7 @@ namespace Iesi.Collections.Generic
 
         public virtual void RemoveRange(IEnumerable<T> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -401,11 +401,11 @@ namespace Iesi.Collections.Generic
             ((ICollection) InnerList).CopyTo(array, index);
         }
 
-        private static bool IsCompatibleObject(object value)
+        private static bool IsCompatibleObject(object? value)
         {
             // Non-null values are fine.  Only accept nulls if T is a class or Nullable<U>.
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
-            return value is T || (value == null && default(T) == null);
+            return value is T || (value is null && default(T) is null);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace Iesi.Collections.Generic
                 // The problem only arises if reentrant changes make the original event args invalid for later listeners.
                 // This keeps existing code working (e.g. Selector.SelectedItems).
                 var handler = CollectionChanged;
-                if (handler != null &&
+                if (handler is not null &&
                     handler.GetInvocationList().Length > 1)
                 {
                     throw new InvalidOperationException("Cannot change ObservableList during a CollectionChanged event.");
@@ -473,7 +473,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
-        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object item, int index)
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item, index));
         }
@@ -481,7 +481,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Replace" />) event to any listeners.
         /// </summary>
-        protected void OnCollectionChanged(object oldItem, object newItem, int index)
+        protected void OnCollectionChanged(object? oldItem, object? newItem, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, oldItem, index));
         }
@@ -489,7 +489,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
         /// </summary>
-        protected void OnCollectionChanged(object item, int oldIndex, int newIndex)
+        protected void OnCollectionChanged(object? item, int oldIndex, int newIndex)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, item, newIndex, oldIndex));
         }
@@ -514,7 +514,7 @@ namespace Iesi.Collections.Generic
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             var handler = CollectionChanged;
-            if (handler != null)
+            if (handler is not null)
             {
                 using (BlockReentrancy())
                 {

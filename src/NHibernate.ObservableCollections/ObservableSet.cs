@@ -38,7 +38,7 @@ namespace Iesi.Collections.Generic
 
         public ObservableSet(IEnumerable<T> collection)
         {
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -50,18 +50,18 @@ namespace Iesi.Collections.Generic
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
         [field: NonSerialized]
-        public virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+        public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
+        protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
@@ -186,7 +186,7 @@ namespace Iesi.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(startingIndex));
             }
 
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -219,7 +219,7 @@ namespace Iesi.Collections.Generic
 
         public virtual void RemoveRange(IEnumerable<T> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -369,7 +369,7 @@ namespace Iesi.Collections.Generic
                 // The problem only arises if reentrant changes make the original event args invalid for later listeners.
                 // This keeps existing code working (e.g. Selector.SelectedItems).
                 var handler = CollectionChanged;
-                if (handler != null &&
+                if (handler is not null &&
                     handler.GetInvocationList().Length > 1)
                 {
                     throw new InvalidOperationException($"Cannot change {nameof(ObservableSet<T>)} during a {nameof(CollectionChanged)} event.");
@@ -414,7 +414,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
-        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object item, int index)
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item, int index)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item, index));
         }
@@ -439,7 +439,7 @@ namespace Iesi.Collections.Generic
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             var handler = CollectionChanged;
-            if (handler != null)
+            if (handler is not null)
             {
                 using (BlockReentrancy())
                 {
