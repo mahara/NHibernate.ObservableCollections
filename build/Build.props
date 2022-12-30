@@ -19,8 +19,11 @@
   -->
 
   <PropertyGroup>
-    <ExeTargetFrameworks>net6.0-windows;net48</ExeTargetFrameworks>
-    <LibTargetFrameworks>net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net7.0-windows</WinExeTargetFrameworks>
+    <WinLibTargetFrameworks>net7.0-windows;net6.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net7.0</ExeTargetFrameworks>
+    <ExeTestTargetFrameworks>net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <LibTargetFrameworks>net7.0;net6.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -168,6 +171,14 @@
     <NetFrameworkConstants>TRACE</NetFrameworkConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Release'">
+    <DefineConstants>$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
   </PropertyGroup>
@@ -187,7 +198,7 @@
   <ItemGroup>
     <PackageReference Include="NETStandard.Library" Version="2.0.3" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <!--

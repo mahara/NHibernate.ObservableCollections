@@ -47,13 +47,19 @@ REM https://github.com/Microsoft/vstest-docs/blob/main/docs/report.md
 REM https://github.com/spekt/nunit.testlogger/issues/56
 
 ECHO ------------------------------------
+ECHO Running .NET (net7.0) Unit Tests
+ECHO ------------------------------------
+
+dotnet test "bin\%BUILD_CONFIGURATION%\net7.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net7.0_TestResults.xml;format=nunit3"
+
+ECHO ------------------------------------
 ECHO Running .NET (net6.0) Unit Tests
 ECHO ------------------------------------
 
-dotnet test "bin\%BUILD_CONFIGURATION%\net6.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections.Tests-Net-TestResults.xml;format=nunit3"
+dotnet test "bin\%BUILD_CONFIGURATION%\net6.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net6.0_TestResults.xml;format=nunit3"
 
 ECHO --------------------------------------------
 ECHO Running .NET Framework (net48) Unit Tests
 ECHO --------------------------------------------
 
-dotnet test "bin\%BUILD_CONFIGURATION%\net48\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.exe" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections.Tests-NetFramework-TestResults.xml;format=nunit3"
+dotnet test "bin\%BUILD_CONFIGURATION%\net48\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.exe" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net48_TestResults.xml;format=nunit3"
