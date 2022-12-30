@@ -31,7 +31,7 @@ namespace NHibernate.ObservableCollections.DemoApp
                 Console.WriteLine("setting sample item's parent set container");
                 var oldParentSetContainer = _parentSetContainer;
                 _parentSetContainer = value;
-                OneToManyAssocSync.UpdateOneSide(this, oldParentSetContainer, _parentSetContainer, "SampleSet");
+                OneToManyAssociationSync.UpdateOneSide(this, oldParentSetContainer!, _parentSetContainer!, "SampleSet");
             }
         }
 

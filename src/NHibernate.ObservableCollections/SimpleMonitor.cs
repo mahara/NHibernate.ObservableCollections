@@ -13,8 +13,7 @@ namespace Iesi.Collections.Generic
     {
         private int _busyCount;
 
-        public bool Busy =>
-            _busyCount > 0;
+        public bool Busy => _busyCount > 0;
 
         public void Dispose()
         {

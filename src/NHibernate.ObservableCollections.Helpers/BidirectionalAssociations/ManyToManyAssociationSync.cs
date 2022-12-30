@@ -6,15 +6,15 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
     ///     Keeps both sides of a bidirectional many-to-many association in sync with each other.
     /// </summary>
     /// <author>Adrian Alexander</author>
-    public sealed class ManyToManyAssocSync<T>
+    public sealed class ManyToManyAssociationSync<T>
     {
-        private readonly string _otherSidePropertyName;
-
         private readonly T _thisSide;
 
-        private PropertyInfo _otherSideProperty;
+        private readonly string _otherSidePropertyName;
 
-        public ManyToManyAssocSync(T thisSide, string otherSideToThisSidePropertyName)
+        private PropertyInfo? _otherSideProperty;
+
+        public ManyToManyAssociationSync(T thisSide, string otherSideToThisSidePropertyName)
         {
             _thisSide = thisSide;
             _otherSidePropertyName = otherSideToThisSidePropertyName;
@@ -27,12 +27,16 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                //addingToOtherSide: the item that was just added to this side's collection
-                foreach (var addingToOtherSide in e.NewItems)
+                // addingToOtherSide: the item that was just added to this side's collection
+                foreach (var addingToOtherSide in e.NewItems!)
                 {
                     Console.WriteLine("new item added to set");
+
                     var otherSidesCollection = GetOtherSidesCollection(addingToOtherSide);
-                    if (ReflectionUtil.IsInitialized(otherSidesCollection) && !otherSidesCollection.Contains(_thisSide))
+
+                    if (otherSidesCollection is not null &&
+                        ReflectionUtil.IsInitialized(otherSidesCollection) &&
+                        !otherSidesCollection.Contains(_thisSide))
                     {
                         if (otherSidesCollection is IList && otherSidesCollection.Contains(_thisSide))
                         {
@@ -46,12 +50,16 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                //removingFromOtherSide: the item that was just removed from this side's collection
-                foreach (var removingFromOtherSide in e.OldItems)
+                // removingFromOtherSide: the item that was just removed from this side's collection
+                foreach (var removingFromOtherSide in e.OldItems!)
                 {
                     Console.WriteLine("old item removed from set");
+
                     var otherSidesCollection = GetOtherSidesCollection(removingFromOtherSide);
-                    if (ReflectionUtil.IsInitialized(otherSidesCollection) && otherSidesCollection.Contains(_thisSide))
+
+                    if (otherSidesCollection is not null &&
+                        ReflectionUtil.IsInitialized(otherSidesCollection) &&
+                        otherSidesCollection.Contains(_thisSide))
                     {
                         otherSidesCollection.Remove(_thisSide);
                         if (otherSidesCollection is IList && otherSidesCollection.Contains(_thisSide))
@@ -64,7 +72,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             }
         }
 
-        private ICollection<T> GetOtherSidesCollection(object otherSide)
+        private ICollection<T>? GetOtherSidesCollection(object otherSide)
         {
             if (_otherSideProperty == null)
             {
@@ -74,7 +82,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             var otherSideProperty = _otherSideProperty;
             if (otherSideProperty != null)
             {
-                return (ICollection<T>) otherSideProperty.GetValue(otherSide, null);
+                return (ICollection<T>?) otherSideProperty.GetValue(otherSide, null);
             }
 
             return null;

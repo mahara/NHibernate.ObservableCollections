@@ -23,7 +23,7 @@
     </id>
     <set name="SampleSet"
          inverse="true"
-         collection-type="NHibernate.Collection.Generic.ObservableSetType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
+         collection-type="Iesi.Collections.Generic.ObservableSetType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
       <key column="SetContainerID" />
       <one-to-many class="SampleItem" />
     </set>
@@ -37,7 +37,7 @@
     <list name="SampleList"
           table="Item_List"
           cascade="save-update"
-          collection-type="NHibernate.Collection.Generic.ObservableListType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
+          collection-type="Iesi.Collections.Generic.ObservableListType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
       <key column="ListContainerId" />
       <index column="PositionNumber" />
       <many-to-many column="ItemId"
