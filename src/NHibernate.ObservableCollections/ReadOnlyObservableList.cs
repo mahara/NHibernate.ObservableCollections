@@ -37,12 +37,12 @@ namespace Iesi.Collections.Generic
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+        protected virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
-        event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged
+        event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
         {
             add => CollectionChanged += value;
             remove => CollectionChanged -= value;
@@ -52,18 +52,18 @@ namespace Iesi.Collections.Generic
         ///     Occurs when a property value changes.
         /// </summary>
         [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
+        protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
         }
 
-        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnCollectionChanged(e);
         }
@@ -76,7 +76,7 @@ namespace Iesi.Collections.Generic
             CollectionChanged?.Invoke(this, args);
         }
 
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
         }
