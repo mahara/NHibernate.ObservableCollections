@@ -1,6 +1,5 @@
 namespace NHibernate.ObservableCollections.Helpers.Outlining
 {
-    using System.Collections.Generic;
     using System.Windows.Input;
 
     public record struct RelativePosition<T>
@@ -21,7 +20,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
         public T Parent;
 
         /// <summary>Name of the sub-items property.</summary>
-        public string SubItemsPropName;
+        public string? SubItemsPropName;
 
         public RelativePosition(ICommand command, T parent, IList<T> insertRelativeTo)
         {

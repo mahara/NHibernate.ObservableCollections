@@ -1,6 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System;
     using System.Diagnostics.Contracts;
     using System.Globalization;
 
@@ -32,7 +31,9 @@ namespace Iesi.Collections.Generic
             throw new ArgumentNullException(GetArgumentName(argument));
         }
 
+        //
         // Allow nulls for reference types and Nullable<U>, but not for value types.
+        //
         internal static void IfNullAndNullsAreIllegalThenThrow<T>(object value, ExceptionArgument argName)
         {
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.

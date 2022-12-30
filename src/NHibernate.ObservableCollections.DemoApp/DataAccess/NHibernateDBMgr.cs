@@ -1,7 +1,5 @@
 namespace NHibernate.ObservableCollections.DemoApp.DataAccess
 {
-    using System;
-
     using NHibernate.Cfg;
 
     /// <summary>

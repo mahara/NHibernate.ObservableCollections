@@ -1,7 +1,5 @@
 namespace NHibernate.ObservableCollections.Helpers.Outlining
 {
-    using System.Collections.Generic;
-
     /// <summary>
     ///     Provides utility methods for manipulating tree structures.
     /// </summary>
@@ -9,7 +7,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
     {
         public static string GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
         {
-            string result = null;
+            string? result = null;
             var isNameUnique = false;
 
             for (var i = 0; !isNameUnique; i++)
