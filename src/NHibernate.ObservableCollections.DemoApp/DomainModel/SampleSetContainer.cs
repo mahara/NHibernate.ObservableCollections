@@ -1,7 +1,3 @@
-using System.Collections.Specialized;
-
-using Iesi.Collections.Generic;
-
 using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
 
 namespace NHibernate.ObservableCollections.DemoApp
