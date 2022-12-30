@@ -4,7 +4,7 @@ namespace NHibernate.ObservableCollections.Helpers
 {
     public static class ReflectionUtil
     {
-        private static MethodInfo _isInitializedMethod;
+        private static MethodInfo? _isInitializedMethod;
 
         public static bool IsInitialized<T>(ICollection<T> collection)
         {
@@ -22,10 +22,10 @@ namespace NHibernate.ObservableCollections.Helpers
                 // true if the NHibernate assembly is present
                 return (bool) _isInitializedMethod.Invoke(
                     null,
-                    new object[]
+                    new object?[]
                     {
                         collection
-                    });
+                    })!;
             }
 
             return true;
@@ -34,15 +34,15 @@ namespace NHibernate.ObservableCollections.Helpers
         public static ICollection<T> NavigateToManySide<T>(object start, string propertyName)
         {
             var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            var property = start.GetType().GetProperty(propertyName, bindingFlags)
-                                .DeclaringType.GetProperty(propertyName, bindingFlags);
-            return (ICollection<T>) property.GetValue(start, null);
+            var property = start.GetType().GetProperty(propertyName, bindingFlags)!
+                                .DeclaringType!.GetProperty(propertyName, bindingFlags)!;
+            return (ICollection<T>) property.GetValue(start, null)!;
         }
 
         public static object NavigateToOneSide(object start, string propertyName)
         {
-            var property = start.GetType().GetProperty(propertyName);
-            return property.GetValue(start, null);
+            var property = start.GetType().GetProperty(propertyName)!;
+            return property.GetValue(start, null)!;
         }
     }
 }
