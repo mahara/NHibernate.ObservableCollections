@@ -31,7 +31,7 @@ namespace Iesi.Collections.Generic
         public PersistentObservableList(ISessionImplementor session, IList<T> collection) :
             base(session, collection)
         {
-            if (collection != null)
+            if (collection is not null)
             {
                 ((INotifyCollectionChanged) collection).CollectionChanged += OnCollectionChanged;
             }
@@ -40,7 +40,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
         /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <inheritdoc />
         public override void BeforeInitialize(ICollectionPersister persister, int anticipatedSize)
@@ -50,7 +50,7 @@ namespace Iesi.Collections.Generic
             ((INotifyCollectionChanged) WrappedList).CollectionChanged += OnCollectionChanged;
         }
 
-        protected void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
         {
             CollectionChanged?.Invoke(this, args);
         }
