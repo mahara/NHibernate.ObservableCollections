@@ -39,7 +39,7 @@ namespace NHibernate.ObservableCollections.Helpers
         /// </remarks>
         public static bool Equals<T>(ICollection<T> collectionA, ICollection<T> collectionB)
         {
-            if (collectionA == null || collectionB == null)
+            if (collectionA is null || collectionB is null)
             {
                 // Special case
                 return collectionA == collectionB;

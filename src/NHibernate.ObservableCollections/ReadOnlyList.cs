@@ -21,16 +21,16 @@ namespace Iesi.Collections.Generic
         IList<T>, IReadOnlyList<T>, IList
     {
         [NonSerialized]
-        private object _syncRoot;
+        private object _syncRoot = null!;
 
         public ReadOnlyList(IList<T> list)
         {
-            if (list == null)
+            if (list is null)
             {
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.list);
             }
 
-            InnerList = list;
+            InnerList = list!;
         }
 
         protected IList<T> InnerList { get; }
@@ -49,7 +49,7 @@ namespace Iesi.Collections.Generic
             set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        object IList.this[int index]
+        object? IList.this[int index]
         {
             get => InnerList[index];
             set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
@@ -59,7 +59,7 @@ namespace Iesi.Collections.Generic
         {
             get
             {
-                if (_syncRoot == null)
+                if (_syncRoot is null)
                 {
                     if (InnerList is ICollection c)
                     {
@@ -67,7 +67,7 @@ namespace Iesi.Collections.Generic
                     }
                     else
                     {
-                        Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
+                        Interlocked.CompareExchange<object>(ref _syncRoot!, new object(), null!);
                     }
                 }
 
@@ -94,11 +94,11 @@ namespace Iesi.Collections.Generic
             return InnerList.Contains(item);
         }
 
-        bool IList.Contains(object value)
+        bool IList.Contains(object? value)
         {
             if (IsCompatibleObject(value))
             {
-                return Contains((T) value);
+                return Contains((T) value!);
             }
 
             return false;
@@ -109,11 +109,11 @@ namespace Iesi.Collections.Generic
             return InnerList.IndexOf(item);
         }
 
-        int IList.IndexOf(object value)
+        int IList.IndexOf(object? value)
         {
             if (IsCompatibleObject(value))
             {
-                return IndexOf((T) value);
+                return IndexOf((T) value!);
             }
 
             return -1;
@@ -124,7 +124,7 @@ namespace Iesi.Collections.Generic
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        int IList.Add(object value)
+        int IList.Add(object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
@@ -136,7 +136,7 @@ namespace Iesi.Collections.Generic
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
 
-        void IList.Insert(int index, object value)
+        void IList.Insert(int index, object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
@@ -148,7 +148,7 @@ namespace Iesi.Collections.Generic
             return false;
         }
 
-        void IList.Remove(object value)
+        void IList.Remove(object? value)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
         }
@@ -183,11 +183,11 @@ namespace Iesi.Collections.Generic
             ((ICollection) InnerList).CopyTo(array, index);
         }
 
-        private static bool IsCompatibleObject(object value)
+        private static bool IsCompatibleObject(object? value)
         {
             // Non-null values are fine. Only accept nulls if T is a class or Nullable<U>.
             // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
-            return value is T || (value == null && default(T) == null);
+            return value is T || (value is null && default(T) is null);
         }
     }
 }
