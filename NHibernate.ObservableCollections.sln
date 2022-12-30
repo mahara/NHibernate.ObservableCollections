@@ -1,13 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.2.32519.379
+VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E507A42-984B-470D-8A0C-648B9AF8E1DC}"
 	ProjectSection(SolutionItems) = preProject
 		CHANGELOG.md = CHANGELOG.md
 		LICENSE = LICENSE
 		README.md = README.md
-		Read Me.txt = Read Me.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79-C382-439C-AFD9-5505D414680D}"
@@ -15,19 +14,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
-		appveyor.yml = appveyor.yml
 		BuildPackages.cmd = BuildPackages.cmd
-		build.cmd = build.cmd
-		build.sh = build.sh
 		CleanPackages.cmd = CleanPackages.cmd
 		nuget.config = nuget.config
-		Read Me.txt = Read Me.txt
 		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
 		build\Build.props = build\Build.props
 		build\Build.targets = build\Build.targets
 		build\BuildPackages.cmd = build\BuildPackages.cmd
-		build\build.cmd = build\build.cmd
-		build\docker-run-mono.sh = build\docker-run-mono.sh
 		build\Read Me.txt = build\Read Me.txt
 	EndProjectSection
 EndProject

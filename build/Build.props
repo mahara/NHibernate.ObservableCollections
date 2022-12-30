@@ -16,8 +16,11 @@
   -->
 
   <PropertyGroup>
-    <ExeTargetFrameworks>net6.0-windows;net48</ExeTargetFrameworks>
-    <LibTargetFrameworks>net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net7.0-windows</WinExeTargetFrameworks>
+    <WinLibTargetFrameworks>net7.0-windows;net6.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net7.0</ExeTargetFrameworks>
+    <ExeTestTargetFrameworks>net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <LibTargetFrameworks>net7.0;net6.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -99,7 +102,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CS1591;CS3014;CS3003;CS3001;CS3021</NoWarn>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <BuildVersion Condition="'$(BuildVersion)' == ''">0.0.0</BuildVersion>
     <BuildVersion Condition="'$(PACKAGE_VERSION)' != ''">$(PACKAGE_VERSION)</BuildVersion>
@@ -117,8 +120,8 @@
   -->
   <PropertyGroup>
     <Product>NHibernate.ObservableCollections</Product>
-    <Title>NHibernate.ObservableCollections</Title>
-    <Description>NHibernate.ObservableCollections</Description>
+    <Title>$(Product)</Title>
+    <Description>$(Product)</Description>
     <Authors>NHibernate.ObservableCollections Contributors</Authors>
     <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
     <Copyright>Copyright (c) $(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
@@ -146,6 +149,14 @@
     <NetFrameworkConstants>TRACE</NetFrameworkConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Release'">
+    <DefineConstants>$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
   </PropertyGroup>
@@ -168,14 +179,18 @@
     -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="IndexRange" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+    <Compile Include="$(SolutionDir)$(BuildConfigurationFolder)\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(SolutionDir)LICENSE" Link="Properties\LICENSE" Pack="true" />
   </ItemGroup>
 
 </Project>
