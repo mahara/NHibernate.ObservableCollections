@@ -1,21 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<!--
-  https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2022
-  https://github.com/castleproject/Core/pull/616
--->
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
+  <!--
+    https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2022
+    https://github.com/castleproject/Core/pull/616
+  -->
 
   <!--
     PROPERTIES
   -->
 
   <PropertyGroup>
-    <ExeTargetFrameworks>net6.0-windows;net48</ExeTargetFrameworks>
-    <LibTargetFrameworks>net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net7.0-windows</WinExeTargetFrameworks>
+    <!--<WinExeTargetFrameworks>net48</WinExeTargetFrameworks>-->
+    <WinLibTargetFrameworks>net7.0-windows;net6.0-windows;net48</WinLibTargetFrameworks>
+    <!--<WinLibTargetFrameworks>net48</WinLibTargetFrameworks>-->
+    <ExeTargetFrameworks>net7.0</ExeTargetFrameworks>
+    <LibTargetFrameworks>net7.0;net6.0;net48</LibTargetFrameworks>
+    <ExeTestTargetFrameworks>net7.0;net6.0;net48</ExeTestTargetFrameworks>
+
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -99,17 +103,18 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CS1591;CS3014;CS3003;CS3001;CS3021</NoWarn>
-    <!-- TODO: Remove this line once [Obsolete] members have been dealt with. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <NoWarn>$(NoWarn);CS0612;CS0618</NoWarn>
+    <!--<NoWarn>$(NoWarn);CS8618</NoWarn>-->
 
     <BuildVersion>0.0.0</BuildVersion>
     <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)' != ''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\mahara.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>false</SignAssembly>
+
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <RepositoryType>git</RepositoryType>
@@ -121,9 +126,9 @@
   -->
   <PropertyGroup>
     <Product>NHibernate.ObservableCollections</Product>
-    <Title>NHibernate.ObservableCollections</Title>
-    <Description>NHibernate.ObservableCollections</Description>
-    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <Title>$(Product)</Title>
+    <Description>$(Product)</Description>
+    <Authors>Maximilian Haru Raditya</Authors>
     <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
     <Copyright>Copyright (c) $(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
 
@@ -131,22 +136,26 @@
     <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
     <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
 
-    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
-    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageOutputPath>$(OutputBaseFolderPath)$(Configuration)\</PackageOutputPath>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+    <PackageTags>$(Product)</PackageTags>
     <PackageVersion>$(BuildVersion)</PackageVersion>
+    <PackageOutputPath>$(OutputBaseFolderPath)$(Configuration)\</PackageOutputPath>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
     <ContentTargetFolders>.</ContentTargetFolders>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="$(SolutionDir)LICENSE" Link="Properties\LICENSE" Pack="true" />
+  </ItemGroup>
+
   <PropertyGroup>
     <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
     <NetConstants>TRACE</NetConstants>
-    <NetFrameworkConstants>TRACE;FEATURE_APPDOMAIN;FEATURE_ASSEMBLYBUILDER_SAVE;FEATURE_SERIALIZATION;FEATURE_SYSTEM_CONFIGURATION</NetFrameworkConstants>
+    <NetFrameworkConstants>TRACE</NetFrameworkConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Debug'">
@@ -163,7 +172,7 @@
     -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <!--
@@ -176,7 +185,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\build\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+    <Compile Include="$(SolutionDir)$(BuildConfigurationFolder)\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
   </ItemGroup>
 
 </Project>
