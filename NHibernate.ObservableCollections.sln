@@ -16,20 +16,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79-C382-439C-AFD9-5505D414680D}"
 	ProjectSection(SolutionItems) = preProject
-		BuildPackages.cmd = BuildPackages.cmd
-		CleanPackages.cmd = CleanPackages.cmd
-		Read Me.txt = Read Me.txt
 		appveyor.yml = appveyor.yml
-		build.cmd = build.cmd
-		build.sh = build.sh
 		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
-		build\Build.props = build\Build.props
-		build\Build.targets = build\Build.targets
-		build\BuildPackages.cmd = build\BuildPackages.cmd
-		build\Read Me.txt = build\Read Me.txt
+		build.cmd = build.cmd
 		build\build.cmd = build\build.cmd
+		build\Build.props = build\Build.props
+		build.sh = build.sh
+		build\Build.targets = build\Build.targets
+		BuildPackages.cmd = BuildPackages.cmd
+		build\BuildPackages.cmd = build\BuildPackages.cmd
+		CleanPackages.cmd = CleanPackages.cmd
 		build\docker-run-mono.sh = build\docker-run-mono.sh
 		nuget.config = nuget.config
+		Read Me.txt = Read Me.txt
+		build\Read Me.txt = build\Read Me.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE}"
