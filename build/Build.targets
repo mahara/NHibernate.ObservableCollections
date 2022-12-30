@@ -13,10 +13,10 @@
     -->
 
     <!-- bin -->
-    <RemoveDir Directories="$(OutputBaseFolderPath)$(Configuration)\" ContinueOnError="true" />
+    <RemoveDir Directories="$(OutputBaseFolderPath)" ContinueOnError="true" />
 
     <!-- obj -->
-    <RemoveDir Directories="$(IntermediateOutputBaseFolderPath)$(Configuration)\" ContinueOnError="true" />
+    <RemoveDir Directories="$(IntermediateOutputBaseFolderPath)" ContinueOnError="true" />
 
     <Message Text="$(MSBuildProjectName): Finished project deep cleanup." Importance="high" />
   </Target>
