@@ -11,8 +11,6 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_ROLL_FORWARD: Major
 
-  MONO_TAG: "6.12.0.182"
-
 jobs:
 
   Build_Test:
@@ -21,9 +19,22 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+        project:
+          - 'NHibernate.ObservableCollections.sln'
+        configuration: [Release]
+        framework: [net7.0, net6.0, net48]
+        exclude:
+          - os: ubuntu-latest
+            framework: net48
+          - os: macos-latest
+            framework: net48
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
+
+    env:
+      trx_file_name: 'TestResults.trx'
+      md_file_name: 'TestResults.md' # Report file name for LiquidTestReports.Markdown
 
     steps:
 
@@ -31,32 +42,42 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
-      # --------
-      # Build
-      # --------
-
-      - name: Build All Target Frameworks
+        # https://www.jamescroft.co.uk/setting-github-actions-environment-variables-in-powershell/
+        # https://github.com/orgs/community/discussions/25713
+      - name: Setup Environment Variables
         run: |
-          dotnet build "NHibernate.ObservableCollections.sln" --configuration Release --property:GeneratePackageOnBuild=false
+          $working_directory = "$env:GITHUB_WORKSPACE"
+          $project_name = [System.IO.Path]::GetFileNameWithoutExtension("${{ matrix.project }}")
+          $test_results_artifact_name = "TestResults_${project_name}_${{ matrix.os }}_${{ matrix.configuration }}_${{ matrix.framework }}"
 
-      # --------
-      # Test
-      # --------
+          Write-Host "Project Name: $project_name"
+          Write-Host "Test Results Artifact Name: $test_results_artifact_name"
+          Write-Host "Working Directory: $working_directory"
 
-      - name: Run .NET (net6.0) Unit Tests
+          Write-Output "project_name=$project_name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "test_results_artifact_name=$test_results_artifact_name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # Set the Azure DevOps default working directory env variable, so our tests only need to deal with a single env variable
+          Write-Output "SYSTEM_DEFAULTWORKINGDIRECTORY=$working_directory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # Title for LiquidTestReports.Markdown
+          Write-Output "title=Test Run for $project_name - ${{ matrix.os }} - ${{ matrix.configuration }} - ${{ matrix.framework }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: Build
         run: |
-          dotnet test "NHibernate.ObservableCollections.sln" --configuration Release --framework net6.0 --no-build --logger "console;verbosity=detailed"
+          dotnet build ${{ matrix.project }} --configuration ${{ matrix.configuration }} --framework ${{ matrix.framework }} --property:GeneratePackageOnBuild=false
 
-      - name: Run .NET Framework (net48) Unit Tests (Windows only)
-        if: matrix.os == 'windows-latest'
+      - name: Test
         run: |
-          dotnet test "NHibernate.ObservableCollections.sln" --configuration Release --framework net48 --no-build --logger "console;verbosity=detailed"
+          dotnet test ${{ matrix.project }} --configuration ${{ matrix.configuration }} --framework ${{ matrix.framework }} --no-build --no-restore --blame-hang --blame-hang-dump-type mini --blame-hang-timeout 10minutes --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=${{ env.trx_file_name }}" --logger:"liquid.md;LogFileName=${{ env.md_file_name }};Title=${{ env.title }};" --results-directory:"${{ github.workspace }}/${{ env.test_results_artifact_name }}/${{ env.project_name }}"
 
-      - name: Run .NET Framework (net48) Unit Tests on Mono (Linux only)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          docker run --rm -v "$PWD":'/project' -w='/project' mono:$MONO_TAG bash -c 'mono ./bin/Release/net48/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.exe'
+      - name: Upload Test Results Artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: ${{ env.test_results_artifact_name }}
+          path: ${{ github.workspace }}/${{ env.test_results_artifact_name }}
+          if-no-files-found: warn
