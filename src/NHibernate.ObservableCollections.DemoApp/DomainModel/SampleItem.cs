@@ -6,9 +6,9 @@ namespace NHibernate.ObservableCollections.DemoApp
     {
         private string _name = string.Empty;
 
-        private SampleSetContainer _parentSetContainer;
+        private SampleSetContainer? _parentSetContainer;
 
-        public virtual event PropertyChangedEventHandler PropertyChanged;
+        public virtual event PropertyChangedEventHandler? PropertyChanged;
 
         public virtual int Id { get; protected set; }
 
@@ -23,7 +23,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             }
         }
 
-        public virtual SampleSetContainer ParentSetContainer
+        public virtual SampleSetContainer? ParentSetContainer
         {
             get => _parentSetContainer;
             set
@@ -36,9 +36,9 @@ namespace NHibernate.ObservableCollections.DemoApp
             }
         }
 
-        public virtual bool Equals(SampleItem other)
+        public virtual bool Equals(SampleItem? other)
         {
-            if (other == null)
+            if (other is null)
             {
                 return false;
             }
@@ -52,7 +52,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             return Name == other.Name;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as SampleItem);
         }
