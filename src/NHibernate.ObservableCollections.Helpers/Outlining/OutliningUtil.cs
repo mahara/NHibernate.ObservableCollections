@@ -5,9 +5,9 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
     /// </summary>
     public static class OutliningUtil
     {
-        public static string GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
+        public static string? GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
         {
-            string result = null;
+            string? result = default;
 
             var isNameUnique = false;
             for (var i = 0; !isNameUnique; i++)
@@ -17,7 +17,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
                 isNameUnique = true;
                 foreach (var existingItem in parentCollection)
                 {
-                    if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem, nameProperty)))
+                    if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem!, nameProperty)))
                     {
                         isNameUnique = false;
                     }
@@ -34,7 +34,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
         /// <param name="relativePosition"></param>
         public static void Insert<T>(T newItem, RelativePosition<T> relativePosition)
         {
-            var subItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePosition.Parent, relativePosition.SubItemsPropertyName);
+            var subItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePosition.Parent!, relativePosition.SubItemsPropertyName!);
             var newIndex = -1;
 
             if (relativePosition.Command == OutliningCommands.NewSiblingBefore)
@@ -62,7 +62,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
             {
                 // Insert the new item at the same position where the first selected item was located
                 newIndex = MinimumIndex(subItems, relativePosition.InsertRelativeTo);
-                var newSubItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem, relativePosition.SubItemsPropertyName);
+                var newSubItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem!, relativePosition.SubItemsPropertyName!);
                 foreach (var item in relativePosition.InsertRelativeTo)
                 {
                     // Loop thru selected items
