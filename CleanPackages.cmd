@@ -1,15 +1,12 @@
 @ECHO OFF
 
 
-ECHO ============================
-ECHO Clean Solution Output Files
-ECHO ============================
 ECHO.
 
-SET "OUTPUT_FOLDER_PATH=.\bin"
-SET "TEMPORARY_OUTPUT_FOLDER_PATH=.\obj"
-SET "NEV_BIN_FOLDER_PATH=.\tools\Explicit.NuGet.Versions\bin"
-SET "NEV_OBJ_FOLDER_PATH=.\tools\Explicit.NuGet.Versions\obj"
+SET "OUTPUT_FOLDER_PATH=bin"
+SET "TEMPORARY_OUTPUT_FOLDER_PATH=obj"
+SET "NEV_BIN_FOLDER_PATH=tools\Explicit.NuGet.Versions\bin"
+SET "NEV_OBJ_FOLDER_PATH=tools\Explicit.NuGet.Versions\obj"
 
 REM dotnet clean %1 --configuration Debug
 REM dotnet clean %1 --configuration Release
