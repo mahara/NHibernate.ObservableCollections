@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(WinExeTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>net48</TargetFrameworks>
 
     <UseWPF>true</UseWPF>
 
@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageReference Include="NHibernate" Version="5.4.0" />
+    <PackageReference Include="NHibernate" Version="5.3.14" />
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
   </ItemGroup>

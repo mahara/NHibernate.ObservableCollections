@@ -6,17 +6,17 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
     ///     Keeps both sides of a bidirectional one-to-many association in sync with each other.
     /// </summary>
     /// <author>Adrian Alexander</author>
-    public sealed class OneToManyAssocSync
+    public sealed class OneToManyAssociationSync
     {
-        private readonly string _manyToOnePropertyName;
-
         private readonly object _thisOneSide;
 
-        private PropertyInfo _manyToOneProperty;
+        private readonly string _manyToOnePropertyName;
+
+        private PropertyInfo? _manyToOneProperty;
 
         /// <param name="thisOneSide">The entity participating in the association which has a multiplicity of one</param>
         /// <param name="manyToOnePropertyName"></param>
-        public OneToManyAssocSync(object thisOneSide, string manyToOnePropertyName)
+        public OneToManyAssociationSync(object thisOneSide, string manyToOnePropertyName)
         {
             _thisOneSide = thisOneSide;
             _manyToOnePropertyName = manyToOnePropertyName;
@@ -29,12 +29,13 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         {
             if (oldOneSide != null && oldOneSide != newOneSide)
             {
-                var oldCollection =
-                    ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
+                var oldCollection = ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
                 if (oldCollection.Contains(thisManySide))
                 {
                     Console.WriteLine("\tremoving from old parent collection");
+
                     oldCollection.Remove(thisManySide);
+
                     if (oldCollection is IList && oldCollection.Contains(thisManySide))
                     {
                         // true if there was more than one
@@ -50,6 +51,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
                 if (ReflectionUtil.IsInitialized(newCollection) && !newCollection.Contains(thisManySide))
                 {
                     Console.WriteLine("\tadding to new parent collection");
+
                     if (newCollection is IList && newCollection.Contains(thisManySide))
                     {
                         // true if add will cause duplicates
@@ -68,8 +70,8 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                //addingToManySide: the item that was just added to this one-side's collection
-                foreach (var addingToManySide in e.NewItems)
+                // addingToManySide: the item that was just added to this one-side's collection
+                foreach (var addingToManySide in e.NewItems!)
                 {
                     if (addingToManySide != null && NavigateManyToOne(addingToManySide) != _thisOneSide)
                     {
@@ -79,8 +81,8 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                //removingFromManySide: the item that was just removed from this one-side's collection
-                foreach (var removingFromManySide in e.OldItems)
+                // removingFromManySide: the item that was just removed from this one-side's collection
+                foreach (var removingFromManySide in e.OldItems!)
                 {
                     if (NavigateManyToOne(removingFromManySide) == _thisOneSide)
                     {
@@ -94,8 +96,8 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         {
             if (_manyToOneProperty == null)
             {
-                var pi = manySideType.GetProperty(_manyToOnePropertyName);
-                _manyToOneProperty = pi.DeclaringType.GetProperty(_manyToOnePropertyName);
+                var pi = manySideType.GetProperty(_manyToOnePropertyName)!;
+                _manyToOneProperty = pi.DeclaringType!.GetProperty(_manyToOnePropertyName)!;
             }
 
             return _manyToOneProperty;
@@ -103,7 +105,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private object NavigateManyToOne(object manySide)
         {
-            return GetManyToOneProperty(manySide.GetType()).GetValue(manySide, null);
+            return GetManyToOneProperty(manySide.GetType()).GetValue(manySide, null)!;
         }
 
         private void SetManyToOne(object manySide, object? newValue)

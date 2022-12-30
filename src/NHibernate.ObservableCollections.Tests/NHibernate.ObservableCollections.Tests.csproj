@@ -48,6 +48,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="App.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

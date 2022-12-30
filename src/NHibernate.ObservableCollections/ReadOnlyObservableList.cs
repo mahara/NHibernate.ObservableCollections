@@ -9,8 +9,8 @@ namespace Iesi.Collections.Generic
     [Serializable]
     public class ReadOnlyObservableList<T> : ReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        public ReadOnlyObservableList(ObservableList<T> list)
-            : base(list)
+        public ReadOnlyObservableList(ObservableList<T> list) :
+            base(list)
         {
             ((INotifyCollectionChanged) InnerList).CollectionChanged += OnCollectionChanged;
             ((INotifyPropertyChanged) InnerList).PropertyChanged += OnPropertyChanged;
@@ -19,46 +19,46 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     CollectionChanged event (per <see cref="INotifyCollectionChanged" />).
         /// </summary>
-        event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged
+        event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
         {
             add => CollectionChanged += value;
             remove => CollectionChanged -= value;
         }
 
+        [field: NonSerialized]
+        protected event NotifyCollectionChangedEventHandler? CollectionChanged;
+
         /// <summary>
         ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
         /// </summary>
         /// <inheritdoc />
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
         }
 
         [field: NonSerialized]
-        protected virtual event NotifyCollectionChangedEventHandler CollectionChanged;
+        protected event PropertyChangedEventHandler? PropertyChanged;
 
-        [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler PropertyChanged;
+        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnCollectionChanged(e);
+        }
 
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
         {
             CollectionChanged?.Invoke(this, args);
         }
 
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(e);
+        }
+
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
         {
             PropertyChanged?.Invoke(this, args);
-        }
-
-        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnCollectionChanged(e);
-        }
-
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnPropertyChanged(e);
         }
     }
 }

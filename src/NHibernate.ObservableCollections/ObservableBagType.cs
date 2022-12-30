@@ -34,8 +34,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Return an <see cref="T:System.Collections.IEnumerable" /> over the elements of this collection - the passed collection
-        ///     instance may or may not be a wrapper
+        ///     Return an <see cref="T:System.Collections.IEnumerable" /> over the elements of this collection -
+        ///     the passed collection instance may or may not be a wrapper.
         /// </summary>
         /// <param name="collection">
         ///     The collection.
@@ -59,7 +59,7 @@ namespace Iesi.Collections.Generic
         ///     The entity.
         /// </param>
         /// <returns>
-        ///     The index of.
+        ///     The index of the entity in the collection.
         /// </returns>
         /// <inheritdoc />
         public object IndexOf(object collection, object entity)
@@ -69,17 +69,15 @@ namespace Iesi.Collections.Generic
 
         /// <summary>
         ///     Instantiate an empty instance of the "underlying" collection (not a wrapper),
-        ///     but with the given anticipated size (i.e. accounting for initial size
-        ///     and perhaps load factor).
+        ///     but with the given anticipated size (i.e. accounting for initial size and perhaps load factor).
         /// </summary>
         /// <param name="anticipatedSize">
-        ///     The anticipated size of the instantiated collection
-        ///     after we are done populating it.  Note, may be negative to indicate that
-        ///     we not yet know anything about the anticipated size (i.e., when initializing
-        ///     from a result set row by row).
+        ///     The anticipated size of the instantiated collection after we are done populating it.
+        ///     Note, may be negative to indicate that we not yet know anything about the anticipated size
+        ///     (i.e., when initializing from a result set row by row).
         /// </param>
         /// <returns>
-        ///     The instantiate.
+        ///     The instantiated collection.
         /// </returns>
         /// <inheritdoc />
         public object Instantiate(int anticipatedSize)
@@ -127,7 +125,7 @@ namespace Iesi.Collections.Generic
         ///     The session.
         /// </param>
         /// <returns>
-        ///     The replace elements.
+        ///     The replaced elements.
         /// </returns>
         /// <inheritdoc />
         public object ReplaceElements(object original, object target, ICollectionPersister persister, object owner, IDictionary copyCache, ISessionImplementor session)
@@ -145,7 +143,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Wrap an instance of a collection
+        ///     Wrap an instance of a collection.
         /// </summary>
         /// <param name="session">
         ///     The session.
@@ -160,21 +158,6 @@ namespace Iesi.Collections.Generic
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
             return new PersistentObservableBag<T>(session, (ObservableList<T>) collection);
-        }
-
-        IEnumerable IUserCollectionType.GetElements(object collection)
-        {
-            throw new NotImplementedException();
-        }
-
-        IPersistentCollection IUserCollectionType.Instantiate(ISessionImplementor session, ICollectionPersister persister)
-        {
-            throw new NotImplementedException();
-        }
-
-        IPersistentCollection IUserCollectionType.Wrap(ISessionImplementor session, object collection)
-        {
-            throw new NotImplementedException();
         }
     }
 }
