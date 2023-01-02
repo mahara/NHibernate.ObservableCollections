@@ -5,7 +5,7 @@ namespace NHibernate.ObservableCollections.DemoApp
     /// </summary>
     public class SampleListContainer
     {
-        private IList<SampleItem> _sampleList = new ObservableList<SampleItem>();
+        private IList<SampleItem> _sampleList = new ObservableCollection<SampleItem>();
 
         public virtual int Id { get; protected set; }
 
