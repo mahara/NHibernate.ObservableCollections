@@ -21,16 +21,23 @@ namespace Iesi.Collections.Generic
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
     public class ReadOnlyObservableList<T> :
         ReadOnlyList<T>,
         INotifyCollectionChanged, INotifyPropertyChanged
     {
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ReadOnlyObservableList{T}" /> class
+        ///     that serves as a wrapper around the specified <see cref="ObservableList{T}" />.
+        /// </summary>
+        /// <param name="list">
+        ///     The <see cref="ObservableList{T}" /> with which to create this instance of the <see cref="ReadOnlyObservableList{T}" /> class.
+        /// </param>
         public ReadOnlyObservableList(ObservableList<T> list) :
             base(list)
         {
-            ((INotifyCollectionChanged) InnerList).CollectionChanged += OnCollectionChanged;
-            ((INotifyPropertyChanged) InnerList).PropertyChanged += OnPropertyChanged;
+            ((INotifyCollectionChanged) Items).CollectionChanged += OnCollectionChanged;
+            ((INotifyPropertyChanged) Items).PropertyChanged += OnPropertyChanged;
         }
 
         /// <summary>
@@ -62,6 +69,14 @@ namespace Iesi.Collections.Generic
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
         }
+
+        /// <summary>
+        ///     Gets an empty <see cref="ReadOnlyObservableList{T}" />.
+        /// </summary>
+        /// <value>An empty <see cref="ReadOnlyObservableList{T}" />.</value>
+        /// <remarks>The returned instance is immutable and will always be empty.</remarks>
+        public static ReadOnlyObservableList<T> Empty { get; } =
+            new ReadOnlyObservableList<T>(new ObservableList<T>());
 
         private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
