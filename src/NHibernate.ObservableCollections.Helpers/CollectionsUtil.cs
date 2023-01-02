@@ -30,7 +30,7 @@ namespace NHibernate.ObservableCollections.Helpers
 
         /// <summary>
         ///     Compares the contents of two collections independent of item order.
-        ///     [Source: http://patforna.blogspot.com/2006/12/comparing-collections-independent-of.html ]
+        ///     [Source: https://patforna.blogspot.com/2006/12/comparing-collections-independent-of.html ]
         /// </summary>
         /// <typeparam name="T">The collections' item type</typeparam>
         /// <returns>True if both collections contain the same elements (in any order)</returns>

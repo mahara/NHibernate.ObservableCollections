@@ -1,20 +1,38 @@
 namespace Iesi.Collections.Generic
 {
     using System.ComponentModel;
+    using System.Diagnostics;
 
     /// <summary>
     ///     A read-only wrapper around <see cref="ObservableList{T}" />.
     /// </summary>
     /// <typeparam name="T">The type of item.</typeparam>
+    /// <remarks>
+    ///     REFERENCES:
+    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ReadOnlyObservableCollection.cs
+    /// </remarks>
     [Serializable]
+    [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
+    [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
     public class ReadOnlyObservableList<T> : ReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged
     {
-        public ReadOnlyObservableList(ObservableList<T> list) :
-            base(list)
+        /// <summary>
+        ///     Initializes a new instance of ReadOnlyObservableList
+        ///     that wraps the given ObservableCollection.
+        /// </summary>
+        public ReadOnlyObservableList(ObservableList<T> list) : base(list)
         {
-            ((INotifyCollectionChanged) InnerList).CollectionChanged += OnCollectionChanged;
-            ((INotifyPropertyChanged) InnerList).PropertyChanged += OnPropertyChanged;
+            ((INotifyCollectionChanged) Items).CollectionChanged += new NotifyCollectionChangedEventHandler(HandleCollectionChanged);
+            ((INotifyPropertyChanged) Items).PropertyChanged += new PropertyChangedEventHandler(HandlePropertyChanged);
         }
+
+        /// <summary>
+        ///     Gets an empty <see cref="ReadOnlyObservableList{T}" />.
+        /// </summary>
+        /// <value>An empty <see cref="ReadOnlyObservableList{T}" />.</value>
+        /// <remarks>The returned instance is immutable and will always be empty.</remarks>
+        public static ReadOnlyObservableList<T> Empty { get; } =
+            new ReadOnlyObservableList<T>(new ObservableList<T>());
 
         /// <summary>
         ///     CollectionChanged event (per <see cref="INotifyCollectionChanged" />).
@@ -25,40 +43,57 @@ namespace Iesi.Collections.Generic
             remove => CollectionChanged -= value;
         }
 
+        /// <summary>
+        ///     Occurs when the collection changes, either by adding or removing an item.
+        /// </summary>
+        /// <remarks>
+        ///     See <seealso cref="INotifyCollectionChanged" />.
+        /// </remarks>
         [field: NonSerialized]
-        protected event NotifyCollectionChangedEventHandler? CollectionChanged;
+        protected virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
+
+        /// <summary>
+        ///     Raise CollectionChanged event to any listeners.
+        /// </summary>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
+        {
+            CollectionChanged?.Invoke(this, args);
+        }
 
         /// <summary>
         ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
         /// </summary>
-        /// <inheritdoc />
         event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => PropertyChanged += value;
             remove => PropertyChanged -= value;
         }
 
+        /// <summary>
+        ///     Occurs when a property changes.
+        /// </summary>
+        /// <remarks>
+        ///     See <seealso cref="INotifyPropertyChanged" />.
+        /// </remarks>
         [field: NonSerialized]
-        protected event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
-        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        /// <summary>
+        ///     Raise PropertyChanged event to any listeners.
+        /// </summary>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
+        {
+            PropertyChanged?.Invoke(this, args);
+        }
+
+        private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnCollectionChanged(e);
         }
 
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
-        {
-            CollectionChanged?.Invoke(this, args);
-        }
-
-        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
-        }
-
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs args)
-        {
-            PropertyChanged?.Invoke(this, args);
         }
     }
 }
