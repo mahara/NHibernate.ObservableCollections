@@ -7,17 +7,17 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
     {
         public static string GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
         {
-            string? result = null;
+            var result = string.Empty;
             var isNameUnique = false;
 
             for (var i = 0; !isNameUnique; i++)
             {
-                //find a unique name to use
+                // Find a unique name to use.
                 result = i == 0 ? "New " + newItemType : "New " + newItemType + " (" + i + ")";
                 isNameUnique = true;
                 foreach (var existingItem in parentCollection)
                 {
-                    if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem, nameProperty)))
+                    if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem!, nameProperty)))
                     {
                         isNameUnique = false;
                     }
@@ -34,8 +34,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
         /// <param name="relativePos"></param>
         public static void Insert<T>(T newItem, RelativePosition<T> relativePos)
         {
-            var subItems =
-                (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePos.Parent, relativePos.SubItemsPropName);
+            var subItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePos.Parent!, relativePos.SubItemsPropertyName!);
             var newIndex = -1;
 
             if (relativePos.Command == OutliningCommands.NewSiblingBefore)
@@ -47,7 +46,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
                 newIndex = MaximumIndex(subItems, relativePos.InsertRelativeTo) + 1;
             }
 
-            //((Topic)parent).SubTopics.Insert( newIndex, (Topic)newItem );
+            //((Topic) parent).SubTopics.Insert(newIndex, (Topic) newItem);
             else if (relativePos.Command == OutliningCommands.NewChild)
             {
                 if (relativePos.ChildIndex >= 0)
@@ -56,20 +55,19 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
                 }
                 else
                 {
-                    newIndex = subItems.Count; // Insert the new item at the end of the sub-items list
+                    newIndex = subItems.Count; // Insert the new item at the end of the sub-items list.
                 }
             }
             else if (relativePos.Command == OutliningCommands.NewParent)
             {
-                //Insert the new item at the same position where the first selected item was located:
+                // Insert the new item at the same position where the first selected item was located:
                 newIndex = MinimumIndex(subItems, relativePos.InsertRelativeTo);
-                var newSubItems =
-                    (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem, relativePos.SubItemsPropName);
+                var newSubItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem!, relativePos.SubItemsPropertyName!);
                 foreach (var item in relativePos.InsertRelativeTo)
                 {
-                    //loop thru selected items:
-                    subItems.Remove(item); //remove item from parent's sub-topics list
-                    newSubItems.Add(item); //add it as child of the new item
+                    // Loop thru selected items:
+                    subItems.Remove(item); // Remove item from parent's sub-topics list.
+                    newSubItems.Add(item); // Add it as child of the new item.
                 }
             }
 
