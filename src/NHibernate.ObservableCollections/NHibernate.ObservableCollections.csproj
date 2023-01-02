@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
-    <PackageReference Include="NHibernate" Version="5.4.0" />
+    <PackageReference Include="NHibernate" Version="5.4.1" />
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />
