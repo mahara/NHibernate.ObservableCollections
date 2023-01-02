@@ -2,444 +2,528 @@ namespace Iesi.Collections.Generic
 {
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
-    using System.Runtime.InteropServices;
 
     /// <summary>
-    ///     A generic set that fires events
-    ///     when item(s) have been added to or removed from the set.
+    ///     A generic set that fires events when item(s) have been added to or removed from the set.
     /// </summary>
     /// <typeparam name="T">
     ///     The type of items in the set.
     /// </typeparam>
-    /// <author>Adrian Alexander</author>
-    /// <author>Microsoft Corporation</author>
-    /// <author>Maximilian Haru Raditya</author>
     /// <remarks>
-    ///     <see href="http://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
+    ///     REFERENCES:
+    ///     -   https://github.com/dotnet/efcore/blob/main/src/EFCore/ChangeTracking/ObservableHashSet.cs
+    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs
     /// </remarks>
     [Serializable]
-    [ComVisible(false)]
-    [DebuggerTypeProxy(typeof(Mscorlib_CollectionDebugView<>))]
-    [DebuggerDisplay("Count = {Count}")]
-    public class ObservableSet<T> : ISet<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
+    [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
+    public class ObservableSet<T> : ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
-        protected const string CountPropertyName = "Count";
-
-        private readonly SimpleMonitor _monitor = new();
-
-        public ObservableSet()
-        {
-        }
-
-        public ObservableSet(IEnumerable<T> collection)
-        {
-            if (collection == null)
-            {
-                throw new ArgumentNullException(nameof(collection));
-            }
-
-            Initialize(collection);
-        }
-
-        protected ISet<T> InnerSet { get; } = new HashSet<T>();
-
-        protected IList<T> InnerList { get; } = new List<T>();
+        private HashSet<T> _set;
 
         /// <summary>
-        ///     Occurs when the collection changes, either by adding or removing an item.
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that is empty and uses the default equality comparer for the set type.
         /// </summary>
-        /// <remarks>
-        ///     see <seealso cref="T:System.Collections.Specialized.INotifyCollectionChanged" />
-        /// </remarks>
-        /// <inheritdoc />
-        [field: NonSerialized]
+        public ObservableSet() : this(EqualityComparer<T>.Default)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that is empty and uses the specified equality comparer for the set type.
+        /// </summary>
+        /// <param name="comparer">
+        ///     The <see cref="IEqualityComparer{T}" /> implementation to use when
+        ///     comparing values in the set, or null to use the default <see cref="IEqualityComparer{T}" />
+        ///     implementation for the set type.
+        /// </param>
+        public ObservableSet(IEqualityComparer<T> comparer)
+        {
+            _set = new HashSet<T>(comparer);
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that uses the default equality comparer for the set type, contains elements copied
+        ///     from the specified collection, and has sufficient capacity to accommodate the
+        ///     number of elements copied.
+        /// </summary>
+        /// <param name="collection">The collection whose elements are copied to the new set.</param>
+        public ObservableSet(IEnumerable<T> collection) : this(collection, EqualityComparer<T>.Default)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that uses the specified equality comparer for the set type, contains elements
+        ///     copied from the specified collection, and has sufficient capacity to accommodate
+        ///     the number of elements copied.
+        /// </summary>
+        /// <param name="collection">The collection whose elements are copied to the new set.</param>
+        /// <param name="comparer">
+        ///     The <see cref="IEqualityComparer{T}" /> implementation to use when comparing values in the set,
+        ///     or null to use the default <see cref="IEqualityComparer{T}" /> implementation for the set type.
+        /// </param>
+        public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        {
+            _set = new HashSet<T>(collection, comparer);
+        }
+
+        /// <summary>
+        ///     Occurs when a property of this hash set (such as <see cref="Count" />) changes.
+        /// </summary>
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>
+        ///     Occurs when a property of this hash set (such as <see cref="Count" />) is changing.
+        /// </summary>
+        public event PropertyChangingEventHandler? PropertyChanging;
+
+        /// <summary>
+        ///     Occurs when the contents of the hash set changes.
+        /// </summary>
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
-
-        /// <summary>
-        ///     PropertyChanged event (per <see cref="T:System.ComponentModel.INotifyPropertyChanged" />).
-        /// </summary>
-        /// <inheritdoc />
-        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
-        {
-            add => PropertyChanged += value;
-            remove => PropertyChanged -= value;
-        }
-
-        /// <summary>
-        ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-        /// </summary>
-        [field: NonSerialized]
-        protected event PropertyChangedEventHandler? PropertyChanged;
-
-        public int Count => InnerSet.Count;
-
-        public bool IsReadOnly => InnerSet.IsReadOnly;
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            return InnerSet.GetEnumerator();
-        }
-
-        public virtual bool Add(T item)
-        {
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var isAdded = InnerSet.Add(item);
-            if (isAdded)
-            {
-                InnerList.Add(item);
-
-                EnsureConsistency();
-
-                var index = InnerSet.Count - 1;
-
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, item!, index);
-            }
-
-            return isAdded;
-        }
-
-        public virtual void UnionWith(IEnumerable<T> other)
-        {
-            InnerSet.UnionWith(other);
-
-            ReinitializeItems();
-        }
-
-        public virtual void IntersectWith(IEnumerable<T> other)
-        {
-            InnerSet.IntersectWith(other);
-
-            ReinitializeItems();
-        }
-
-        public virtual void ExceptWith(IEnumerable<T> other)
-        {
-            InnerSet.ExceptWith(other);
-
-            ReinitializeItems();
-        }
-
-        public virtual void SymmetricExceptWith(IEnumerable<T> other)
-        {
-            InnerSet.SymmetricExceptWith(other);
-
-            ReinitializeItems();
-        }
-
-        public bool IsSubsetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsSubsetOf(other);
-        }
-
-        public bool IsProperSubsetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsProperSubsetOf(other);
-        }
-
-        public bool IsSupersetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsSupersetOf(other);
-        }
-
-        public bool IsProperSupersetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsProperSupersetOf(other);
-        }
-
-        public bool Overlaps(IEnumerable<T> other)
-        {
-            return InnerSet.Overlaps(other);
-        }
-
-        public bool SetEquals(IEnumerable<T> other)
-        {
-            return InnerSet.SetEquals(other);
-        }
 
         void ICollection<T>.Add(T item)
         {
             Add(item);
         }
 
-        bool ICollection<T>.Remove(T item)
-        {
-            return Remove(item);
-        }
-
-        void ICollection<T>.Clear()
-        {
-            Clear();
-        }
-
-        bool ICollection<T>.Contains(T item)
-        {
-            return Contains(item);
-        }
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
-        {
-            CopyTo(array, arrayIndex);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable) InnerSet).GetEnumerator();
-        }
-
-        public virtual void AddRange(IEnumerable<T> items)
-        {
-            // Add items starting at the last item position by default.
-            var startingIndex = InnerSet.Count;
-
-            AddRange(startingIndex, items);
-        }
-
-        public virtual void AddRange(int startingIndex, IEnumerable<T> items)
-        {
-            if (startingIndex < 0 || startingIndex > InnerSet.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(startingIndex));
-            }
-
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var addedItems = new HashSet<T>();
-            foreach (var item in items)
-            {
-                if (InnerSet.Add(item))
-                {
-                    InnerList.Add(item);
-
-                    EnsureConsistency();
-
-                    addedItems.Add(item);
-                }
-            }
-
-            EnsureConsistency();
-
-            if (addedItems.Count > 0)
-            {
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, addedItems, startingIndex);
-            }
-        }
-
-        public virtual void RemoveRange(IEnumerable<T> items)
-        {
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var removedItems = new List<T>();
-            foreach (var item in items)
-            {
-                if (InnerSet.Remove(item))
-                {
-                    InnerList.Remove(item);
-
-                    EnsureConsistency();
-
-                    removedItems.Add(item);
-                }
-            }
-
-            EnsureConsistency();
-
-            if (removedItems.Count > 0)
-            {
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems.ToArray(), 0);
-            }
-        }
-
-        public virtual bool Remove(T item)
-        {
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var index = InnerList.IndexOf(item);
-            var isRemoved = index >= 0 && InnerSet.Remove(item);
-            if (isRemoved)
-            {
-                InnerList.RemoveAt(index);
-
-                EnsureConsistency();
-
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item!, index);
-            }
-
-            return isRemoved;
-        }
-
+        /// <summary>
+        ///     Removes all elements from the hash set.
+        /// </summary>
         public virtual void Clear()
         {
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            InnerSet.Clear();
-            InnerList.Clear();
-
-            EnsureConsistency();
-
-            OnPropertyChanged(CountPropertyName);
-            OnCollectionReset();
-        }
-
-        public bool Contains(T item)
-        {
-            return InnerSet.Contains(item);
-        }
-
-        public int IndexOf(T item)
-        {
-            return InnerList.IndexOf(item);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            InnerSet.CopyTo(array, arrayIndex);
-        }
-
-        private void Initialize(IEnumerable<T> collection)
-        {
-            EnsureConsistency();
-
-            foreach (var item in collection)
+            if (_set.Count == 0)
             {
-                if (InnerSet.Add(item))
-                {
-                    InnerList.Add(item);
-
-                    EnsureConsistency();
-                }
+                return;
             }
+
+            OnCountPropertyChanging();
+
+            var removed = this.ToList();
+
+            _set.Clear();
+
+            OnCollectionChanged(ObservableSetCache.NoItems, removed);
+
+            OnCountPropertyChanged();
         }
 
         /// <summary>
-        ///     Checks if there is currently no reentrancy that is making any changes to this set/list.
-        ///     -- ORIGINAL SUMMARY --
-        ///     Check and assert for reentrant attempts to change this collection.
+        ///     Determines whether the hash set object contains the specified element.
         /// </summary>
-        /// <remarks>
-        ///     This should be done before making any changes to this set/list.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Raised when changing the collection
-        ///     while another collection change is still being notified to other listeners.
-        /// </exception>
-        protected void CheckReentrancy()
-        {
-            if (_monitor.Busy)
-            {
-                // We can allow changes if there's only one listener.
-                // The problem only arises if reentrant changes make
-                // the original event args invalid for later listeners.
-                // This keeps existing code working (e.g. Selector.SelectedItems).
-                var handler = CollectionChanged;
-                if (handler != null && handler.GetInvocationList().Length > 1)
-                {
-                    throw new InvalidOperationException($"Cannot change {nameof(ObservableSet<T>)} during a {nameof(CollectionChanged)} event.");
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Blocks new reentrancy to prevent any changes to this set/collection.
-        ///     -- ORIGINAL SUMMARY --
-        ///     Disallow reentrant attempts to change this collection. E.g. an event handler
-        ///     of the CollectionChanged event is not allowed to make changes to this collection.
-        /// </summary>
-        /// <remarks>
-        ///     Typical usage is to wrap e.g. a OnCollectionChanged call with a using() scope:
-        ///     <code>
-        ///         using (BlockReentrancy())
-        ///         {
-        ///             CollectionChanged(this, new NotifyCollectionChangedEventArgs(action, item, index));
-        ///         }
-        ///     </code>
-        /// </remarks>
+        /// <param name="item">The element to locate in the hash set.</param>
         /// <returns>
-        ///     A <see cref="SimpleMonitor" /> that blocks new reentrancy.
+        ///     <see langword="true" /> if the hash set contains the specified element; otherwise, <see langword="false" />.
         /// </returns>
-        protected IDisposable BlockReentrancy()
+        public virtual bool Contains(T item)
         {
-            _monitor.Enter();
-
-            return _monitor;
+            return _set.Contains(item);
         }
 
-        protected virtual void EnsureConsistency()
+        /// <summary>
+        ///     Copies the elements of the hash set to an array, starting at the specified array index.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from
+        ///     the hash set. The array must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        public virtual void CopyTo(T[] array, int arrayIndex)
         {
-            Contract.Assert(InnerList.Count == InnerSet.Count, "Internal data inconsistent.");
+            _set.CopyTo(array, arrayIndex);
         }
 
-        protected virtual void ReinitializeItems()
+        /// <summary>
+        ///     Removes the specified element from the hash set.
+        /// </summary>
+        /// <param name="item">The element to remove.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is successfully found and removed; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool Remove(T item)
         {
-            InnerList.Clear();
-
-            ((List<T>) InnerList).AddRange(InnerSet);
-
-            EnsureConsistency();
-
-            OnCollectionReset();
-        }
-
-        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object item, int startingIndex)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item, startingIndex));
-        }
-
-        protected void OnCollectionChanged(NotifyCollectionChangedAction action, IEnumerable<T> items, int startingIndex)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, (IList) items, startingIndex));
-        }
-
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            var handler = CollectionChanged;
-            if (handler != null)
+            if (!_set.Contains(item))
             {
-                using (BlockReentrancy())
-                {
-                    handler(this, e);
-                }
+                return false;
             }
+
+            OnCountPropertyChanging();
+
+            _set.Remove(item);
+
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
+
+            OnCountPropertyChanged();
+
+            return true;
         }
 
-        protected void OnCollectionReset()
+        /// <summary>
+        ///     Gets the number of elements that are contained in the hash set.
+        /// </summary>
+        public virtual int Count => _set.Count;
+
+        /// <summary>
+        ///     Gets a value indicating whether the hash set is read-only.
+        /// </summary>
+        public virtual bool IsReadOnly => ((ICollection<T>) _set).IsReadOnly;
+
+        /// <summary>
+        ///     Returns an enumerator that iterates through the hash set.
+        /// </summary>
+        /// <returns>
+        ///     An enumerator for the hash set.
+        /// </returns>
+        public virtual HashSet<T>.Enumerator GetEnumerator()
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            return _set.GetEnumerator();
         }
 
-        protected void OnPropertyChanged(string propertyName)
+        /// <inheritdoc />
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+            return GetEnumerator();
         }
 
+        /// <inheritdoc />
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// <summary>
+        ///     Adds the specified element to the hash set.
+        /// </summary>
+        /// <param name="item">The element to add to the set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is added to the hash set; <see langword="false" /> if the element is already present.
+        /// </returns>
+        public virtual bool Add(T item)
+        {
+            if (_set.Contains(item))
+            {
+                return false;
+            }
+
+            OnCountPropertyChanging();
+
+            _set.Add(item);
+
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
+
+            OnCountPropertyChanged();
+
+            return true;
+        }
+
+        /// <summary>
+        ///     Modifies the hash set to contain all elements that are present in itself, the specified collection, or both.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        public virtual void UnionWith(IEnumerable<T> other)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            copy.UnionWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var added = copy.Where(i => !_set.Contains(i)).ToList();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCollectionChanged(added, ObservableSetCache.NoItems);
+
+            OnCountPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Modifies the current hash set to contain only
+        ///     elements that are present in that object and in the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        public virtual void IntersectWith(IEnumerable<T> other)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            copy.IntersectWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToList();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCollectionChanged(ObservableSetCache.NoItems, removed);
+
+            OnCountPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Removes all elements in the specified collection from the hash set.
+        /// </summary>
+        /// <param name="other">The collection of items to remove from the current hash set.</param>
+        public virtual void ExceptWith(IEnumerable<T> other)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            copy.ExceptWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToList();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCollectionChanged(ObservableSetCache.NoItems, removed);
+
+            OnCountPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Modifies the current hash set to contain only elements that are present either in that
+        ///     object or in the specified collection, but not both.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        public virtual void SymmetricExceptWith(IEnumerable<T> other)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            copy.SymmetricExceptWith(other);
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToList();
+            var added = copy.Where(i => !_set.Contains(i)).ToList();
+
+            if (removed.Count == 0 &&
+                added.Count == 0)
+            {
+                return;
+            }
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCollectionChanged(added, removed);
+
+            OnCountPropertyChanged();
+        }
+
+        /// <summary>
+        ///     Determines whether the hash set is a subset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set is a subset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsSubsetOf(IEnumerable<T> other)
+        {
+            return _set.IsSubsetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the hash set is a proper subset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set is a proper subset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsProperSubsetOf(IEnumerable<T> other)
+        {
+            return _set.IsProperSubsetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the hash set is a superset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set is a superset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsSupersetOf(IEnumerable<T> other)
+        {
+            return _set.IsSupersetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the hash set is a proper superset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set is a proper superset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsProperSupersetOf(IEnumerable<T> other)
+        {
+            return _set.IsProperSupersetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the current System.Collections.Generic.HashSet`1 object and a specified collection share common elements.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set and other share at least one common element; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool Overlaps(IEnumerable<T> other)
+        {
+            return _set.Overlaps(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the hash set and the specified collection contain the same elements.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current hash set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the hash set is equal to other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool SetEquals(IEnumerable<T> other)
+        {
+            return _set.SetEquals(other);
+        }
+
+        /// <summary>
+        ///     Copies the elements of the hash set to an array.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from
+        ///     the hash set. The array must have zero-based indexing.
+        /// </param>
+        public virtual void CopyTo(T[] array)
+        {
+            _set.CopyTo(array);
+        }
+
+        /// <summary>
+        ///     Copies the specified number of elements of the hash set to an array, starting at the specified array index.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from
+        ///     the hash set. The array must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        /// <param name="count">The number of elements to copy to array.</param>
+        public virtual void CopyTo(T[] array, int arrayIndex, int count)
+        {
+            _set.CopyTo(array, arrayIndex, count);
+        }
+
+        /// <summary>
+        ///     Removes all elements that match the conditions defined by the specified predicate
+        ///     from the hash set.
+        /// </summary>
+        /// <param name="match">
+        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+        /// </param>
+        /// <returns>The number of elements that were removed from the hash set.</returns>
+        public virtual int RemoveWhere(Predicate<T> match)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            var removedCount = copy.RemoveWhere(match);
+
+            if (removedCount == 0)
+            {
+                return 0;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToList();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCollectionChanged(ObservableSetCache.NoItems, removed);
+
+            OnCountPropertyChanged();
+
+            return removedCount;
+        }
+
+        /// <summary>
+        ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
+        /// </summary>
+        public virtual IEqualityComparer<T> Comparer => _set.Comparer;
+
+        /// <summary>
+        ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
+        ///     implementation-specific value.
+        /// </summary>
+        public virtual void TrimExcess()
+        {
+            _set.TrimExcess();
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">Details of the property that changed.</param>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
         }
+
+        /// <summary>
+        ///     Raises the <see cref="PropertyChanging" /> event.
+        /// </summary>
+        /// <param name="e">Details of the property that is changing.</param>
+        protected virtual void OnPropertyChanging(PropertyChangingEventArgs e)
+        {
+            PropertyChanging?.Invoke(this, e);
+        }
+
+        private void OnCountPropertyChanged()
+        {
+            OnPropertyChanged(ObservableSetCache.CountPropertyChanged);
+        }
+
+        private void OnCountPropertyChanging()
+        {
+            OnPropertyChanging(ObservableSetCache.CountPropertyChanging);
+        }
+
+        private void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
+        }
+
+        private void OnCollectionChanged(IList newItems, IList oldItems)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event.
+        /// </summary>
+        /// <param name="e">Details of the change.</param>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
+    }
+
+    internal static class ObservableSetCache
+    {
+        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<object>.Count));
+        public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<object>.Count));
+
+        public static readonly object[] NoItems = Array.Empty<object>();
     }
 }
