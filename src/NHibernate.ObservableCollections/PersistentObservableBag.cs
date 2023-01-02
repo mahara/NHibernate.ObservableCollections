@@ -62,6 +62,7 @@ namespace Iesi.Collections.Generic
         public override void BeforeInitialize(ICollectionPersister persister, int anticipatedSize)
         {
             base.BeforeInitialize(persister, anticipatedSize);
+
             ((INotifyCollectionChanged) InternalBag).CollectionChanged += OnCollectionChanged;
         }
 

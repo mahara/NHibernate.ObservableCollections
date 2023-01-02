@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageReference Include="NHibernate" Version="5.3.14" />
+    <PackageReference Include="NHibernate" Version="5.4.1" />
     <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
   </ItemGroup>
@@ -42,7 +42,7 @@
     <Content Include="hibernate.cfg.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="DataAccess\Mapping.hbm.xml" />
+    <!--<EmbeddedResource Include="DataAccess\Mapping.hbm.xml" />-->
   </ItemGroup>
 
 </Project>

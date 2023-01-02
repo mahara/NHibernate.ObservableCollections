@@ -112,8 +112,8 @@
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\mahara.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 

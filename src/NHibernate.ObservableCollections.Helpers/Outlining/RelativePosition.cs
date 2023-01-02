@@ -20,21 +20,21 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
         public T Parent;
 
         /// <summary>Name of the sub-items property.</summary>
-        public string? SubItemsPropName;
+        public string? SubItemsPropertyName;
 
         public RelativePosition(ICommand command, T parent, IList<T> insertRelativeTo)
         {
             Command = command;
-            SubItemsPropName = null;
+            SubItemsPropertyName = null;
             Parent = parent;
             InsertRelativeTo = insertRelativeTo;
             ChildIndex = -1;
         }
 
-        public RelativePosition(ICommand command, string subItemsPropName, T parent, IList<T> insertRelativeTo)
+        public RelativePosition(ICommand command, string subItemsPropertyName, T parent, IList<T> insertRelativeTo)
         {
             Command = command;
-            SubItemsPropName = subItemsPropName;
+            SubItemsPropertyName = subItemsPropertyName;
             Parent = parent;
             InsertRelativeTo = insertRelativeTo;
             ChildIndex = -1;

@@ -25,24 +25,24 @@ namespace NHibernate.ObservableCollections.Helpers
                     new object[]
                     {
                         newCollection
-                    });
+                    })!;
             }
 
             return true;
         }
 
-        public static ICollection<T> NavigateToManySide<T>(object start, string propName)
+        public static ICollection<T> NavigateToManySide<T>(object start, string propertyName)
         {
             var bf = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            var pi = start.GetType().GetProperty(propName, bf)
-                          .DeclaringType.GetProperty(propName, bf);
-            return (ICollection<T>) pi.GetValue(start, null);
+            var pi = start.GetType().GetProperty(propertyName, bf)!
+                          .DeclaringType!.GetProperty(propertyName, bf)!;
+            return (ICollection<T>) pi.GetValue(start, null)!;
         }
 
-        public static object NavigateToOneSide(object start, string propName)
+        public static object NavigateToOneSide(object start, string propertyName)
         {
-            var pi = start.GetType().GetProperty(propName);
-            return pi.GetValue(start, null);
+            var pi = start.GetType().GetProperty(propertyName)!;
+            return pi.GetValue(start, null)!;
         }
     }
 }
