@@ -6,7 +6,7 @@ using NHibernate.UserTypes;
 namespace Iesi.Collections.Generic
 {
     /// <summary>
-    ///     The NHibernate type for a generic set collection that fires events
+    ///     The NHibernate type for a generic observable set that fires events
     ///     when item(s) have been added to or removed from the collection.
     /// </summary>
     /// <typeparam name="T">
