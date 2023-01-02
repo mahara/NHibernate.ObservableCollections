@@ -1,4 +1,6 @@
 using NHibernate.Cfg;
+using NHibernate.Cfg.MappingSchema;
+using NHibernate.Mapping.ByCode;
 
 namespace NHibernate.ObservableCollections.DemoApp.DataAccess
 {
@@ -50,10 +52,79 @@ namespace NHibernate.ObservableCollections.DemoApp.DataAccess
         {
             get
             {
-                _sessionFactory ??= new Configuration().Configure().BuildSessionFactory();
+                _sessionFactory ??= CreateSessionFactory();
 
                 return _sessionFactory;
             }
+        }
+
+        private static ISessionFactory CreateSessionFactory()
+        {
+            var configuration = new Configuration();
+
+            configuration.AddMapping(CreateMapping());
+
+            return configuration.Configure().BuildSessionFactory();
+        }
+
+        private static HbmMapping? CreateMapping()
+        {
+            var mapper = new ModelMapper();
+
+            mapper.Class<SampleItem>(
+                c =>
+                {
+                    c.Id(x => x.Id,
+                         m => m.Generator(Generators.Native));
+                    c.Property(x => x.Name,
+                               m => m.NotNullable(true));
+                    c.ManyToOne(x => x.ParentSetContainer,
+                                m =>
+                                {
+                                    m.Cascade(Cascade.Persist);
+                                    m.Column("SetContainerId");
+                                });
+                });
+
+            mapper.Class<SampleSetContainer>(
+                c =>
+                {
+                    c.Id(x => x.Id,
+                         m => m.Generator(Generators.Native));
+                    c.Set(x => x.SampleSet,
+                          m =>
+                          {
+                              //m.Lazy(CollectionLazy.NoLazy);
+                              m.Type<ObservableSetType<SampleItem>>();
+                              m.Inverse(true);
+                              m.Key(k => k.Column("SetContainerID"));
+                          },
+                          r => r.OneToMany());
+                });
+
+            mapper.Class<SampleListContainer>(
+                c =>
+                {
+                    c.Id(x => x.Id,
+                         m => m.Generator(Generators.Native));
+                    c.List(x => x.SampleList,
+                           m =>
+                           {
+                               //m.Lazy(CollectionLazy.NoLazy);
+                               m.Type<ObservableListType<SampleItem>>();
+                               m.Table("Item_List");
+                               m.Cascade(Cascade.Persist);
+                               m.Key(k => k.Column("ListContainerId"));
+                               m.Index(i => i.Column("PositionNumber"));
+                           },
+                           r => r.ManyToMany(m => m.Column("ItemId")));
+                });
+
+            var hbmMapping = mapper.CompileMappingForAllExplicitlyAddedEntities();
+
+            //var hbmMappingString = hbmMapping.AsString();
+
+            return hbmMapping;
         }
 
         /// <summary>
