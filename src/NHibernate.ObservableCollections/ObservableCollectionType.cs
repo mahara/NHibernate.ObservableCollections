@@ -7,11 +7,11 @@ using NHibernate.UserTypes;
 namespace NHibernate.Collection.Generic
 {
     /// <summary>
-    ///     The NHibernate type for a generic list collection that fires events
+    ///     The NHibernate type for a generic observable collection that fires events
     ///     when item(s) have been added to or removed from the collection.
     /// </summary>
     /// <typeparam name="T">
-    ///     The type of items in the list.
+    ///     The type of items in the collection.
     /// </typeparam>
     /// <remarks>
     ///     AUTHORS:
@@ -20,7 +20,7 @@ namespace NHibernate.Collection.Generic
     ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
     ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
     /// </remarks>
-    public class ObservableListType<T> : IUserCollectionType
+    public class ObservableCollectionType<T> : IUserCollectionType
     {
         /// <inheritdoc />
         public bool Contains(object collection, object entity)
@@ -43,13 +43,13 @@ namespace NHibernate.Collection.Generic
         /// <inheritdoc />
         public object Instantiate(int anticipatedSize)
         {
-            return new ObservableList<T>();
+            return new ObservableCollection<T>();
         }
 
         /// <inheritdoc />
         public IPersistentCollection Instantiate(ISessionImplementor session, ICollectionPersister persister)
         {
-            return new PersistentObservableList<T>(session);
+            return new PersistentObservableCollection<T>(session);
         }
 
         /// <inheritdoc />
@@ -70,7 +70,7 @@ namespace NHibernate.Collection.Generic
         /// <inheritdoc />
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
-            return new PersistentObservableList<T>(session, (ObservableList<T>) collection);
+            return new PersistentObservableCollection<T>(session, (ObservableCollection<T>) collection);
         }
     }
 }
