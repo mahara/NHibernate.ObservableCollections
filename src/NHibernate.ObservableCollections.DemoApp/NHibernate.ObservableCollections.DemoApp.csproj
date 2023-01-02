@@ -39,7 +39,7 @@
     <Content Include="hibernate.cfg.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="DataAccess\Mapping.hbm.xml" />
+    <!--<EmbeddedResource Include="DataAccess\Mapping.hbm.xml" />-->
   </ItemGroup>
 
 </Project>
