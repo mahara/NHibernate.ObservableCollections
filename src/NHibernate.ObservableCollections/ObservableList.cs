@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.Serialization;
 
 namespace Iesi.Collections.Generic
 {
@@ -31,35 +32,51 @@ namespace Iesi.Collections.Generic
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
     public class ObservableList<T> :
-        IList<T>, IList,
+        Collection<T>,
         INotifyCollectionChanged, INotifyPropertyChanged
     {
-        protected const string CountPropertyName = "Count";
-
-        protected const string IndexerName = "Item[]";
-
-        private readonly SimpleMonitor _monitor = new();
+        private SimpleMonitor? _monitor; // Lazily allocated only when a subclass calls BlockReentrancy() or during serialization. Do not rename (binary serialization).
 
         [NonSerialized]
-        private object _syncRoot = null!;
+        private int _blockReentrancyCount;
 
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableList{T}" /> class.
+        /// </summary>
         public ObservableList()
         {
         }
 
-        public ObservableList(IEnumerable<T> collection)
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableList{T}" /> class
+        ///     that contains elements copied from the specified collection.
+        /// </summary>
+        /// <param name="collection">The collection from which the elements are copied.</param>
+        /// <remarks>
+        ///     The elements are copied onto the <see cref="ObservableList{T}" />
+        ///     in the same order they are read by the enumerator of the collection.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">The <paramref name="collection" /> parameter cannot be <see langword="null" />.</exception>
+        public ObservableList(IEnumerable<T> collection) :
+            base(new List<T>(collection ?? throw new ArgumentNullException(nameof(collection))))
         {
-            if (collection == null)
-            {
-                throw new ArgumentNullException(nameof(collection));
-            }
+        }
 
-            foreach (var item in collection)
-            {
-                InnerList.Add(item);
-            }
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableList{T}" /> class
+        ///     that contains elements copied from the specified list.
+        /// </summary>
+        /// <param name="list">The list from which the elements are copied.</param>
+        /// <remarks>
+        ///     The elements are copied onto the <see cref="ObservableList{T}" />
+        ///     in the same order they are read by the enumerator of the list.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">The <paramref name="list" /> parameter cannot be <see langword="null" />.</exception>
+        public ObservableList(List<T> list) :
+            base(new List<T>(list ?? throw new ArgumentNullException(nameof(list))))
+        {
         }
 
         /// <summary>
@@ -83,329 +100,324 @@ namespace Iesi.Collections.Generic
             remove => PropertyChanged -= value;
         }
 
-        protected IList<T> InnerList { get; } = new List<T>();
-
-        public int Count => InnerList.Count;
-
-        public bool IsReadOnly => InnerList.IsReadOnly;
-
-        public T this[int index]
-        {
-            get => InnerList[index];
-            set
-            {
-                if (index < 0 || index >= InnerList.Count)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException();
-                }
-
-                SetItem(index, value);
-            }
-        }
-
-        object? IList.this[int index]
-        {
-            get => this[index];
-            set
-            {
-                ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
-
-                try
-                {
-                    this[index] = (T) value!;
-                }
-                catch (InvalidCastException)
-                {
-                    ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
-                }
-            }
-        }
-
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                if (_syncRoot == null)
-                {
-                    if (InnerList is ICollection c)
-                    {
-                        _syncRoot = c.SyncRoot;
-                    }
-                    else
-                    {
-                        Interlocked.CompareExchange<object>(ref _syncRoot!, new object(), null!);
-                    }
-                }
-
-                return _syncRoot;
-            }
-        }
-
-        bool ICollection.IsSynchronized => false;
-
-        bool IList.IsFixedSize => ((IList) InnerList).IsFixedSize;
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            return InnerList.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable) InnerList).GetEnumerator();
-        }
-
-        public bool Contains(T item)
-        {
-            return InnerList.Contains(item);
-        }
-
-        bool IList.Contains(object? value)
-        {
-            if (IsCompatibleObject(value))
-            {
-                return Contains((T) value!);
-            }
-
-            return false;
-        }
-
-        public int IndexOf(T item)
-        {
-            return InnerList.IndexOf(item);
-        }
-
-        int IList.IndexOf(object? value)
-        {
-            if (IsCompatibleObject(value))
-            {
-                return IndexOf((T) value!);
-            }
-
-            return -1;
-        }
-
-        protected virtual void SetItem(int index, T item)
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Called by base <see cref="Collection{T}" /> when an item is set in collection.
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Replace" />) event to any listeners.
+        /// </remarks>
+        protected override void SetItem(int index, T item)
         {
             CheckReentrancy();
 
-            var oldItem = this[index]!;
+            var oldItem = this[index];
 
-            InnerList[index] = item;
+            base.SetItem(index, item);
 
-            OnPropertyChanged(IndexerName);
+            OnIndexerPropertyChanged();
             OnCollectionChanged(oldItem, item, index);
         }
 
-        public virtual void Add(T item)
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Called by base <see cref="Collection{T}" /> when an item is added to collection.
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) event to any listeners.
+        /// </remarks>
+        protected override void InsertItem(int index, T item)
         {
             CheckReentrancy();
 
-            InnerList.Add(item);
+            base.InsertItem(index, item);
 
-            var index = InnerList.Count - 1;
-
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
             OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
         }
 
-        int IList.Add(object? value)
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Called by base <see cref="Collection{T}" /> when an item is removed from collection.
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) event to any listeners.
+        /// </remarks>
+        protected override void RemoveItem(int index)
         {
-            ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
-
-            try
+            if (Count == 0)
             {
-                Add((T) value!);
-            }
-            catch (InvalidCastException)
-            {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
-            }
-
-            return Count - 1;
-        }
-
-        public virtual void Insert(int index, T item)
-        {
-            if (index < 0 || index > InnerList.Count)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException();
+                return;
             }
 
             CheckReentrancy();
 
-            InnerList.Insert(index, item);
+            var removedItem = this[index];
 
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
-        }
+            base.RemoveItem(index);
 
-        void IList.Insert(int index, object? value)
-        {
-            ThrowHelper.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
-
-            try
-            {
-                Insert(index, (T) value!);
-            }
-            catch (InvalidCastException)
-            {
-                ThrowHelper.ThrowWrongValueTypeArgumentException(value!, typeof(T));
-            }
-        }
-
-        public virtual bool Remove(T item)
-        {
-            CheckReentrancy();
-
-            var index = InnerList.IndexOf(item);
-
-            var isRemoved = index >= 0;
-            if (isRemoved)
-            {
-                InnerList.RemoveAt(index);
-
-                OnPropertyChanged(CountPropertyName);
-                OnPropertyChanged(IndexerName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
-            }
-
-            return isRemoved;
-        }
-
-        void IList.Remove(object? value)
-        {
-            if (IsCompatibleObject(value))
-            {
-                Remove((T) value!);
-            }
-        }
-
-        public virtual void RemoveAt(int index)
-        {
-            if (index < 0 || index >= InnerList.Count)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException();
-            }
-
-            CheckReentrancy();
-
-            var removedItem = InnerList[index];
-
-            InnerList.RemoveAt(index);
-
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
             OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItem, index);
         }
 
-        public virtual void Move(int oldIndex, int newIndex)
+        /// <summary>
+        ///     Moves the item at the specified index to a new location in the collection.
+        /// </summary>
+        /// <remarks>
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
+        /// </remarks>
+        public void Move(int oldIndex, int newIndex)
         {
-            if (oldIndex < 0 || oldIndex > InnerList.Count)
-            {
-                ThrowHelper.ThrowArgumentOutOfRangeException();
-            }
+            MoveItem(oldIndex, newIndex);
+        }
 
-            if (newIndex < 0 || newIndex > InnerList.Count)
+        /// <summary>
+        ///     Moves the item at the specified index to a new location in the collection.
+        /// </summary>
+        /// <remarks>
+        ///     Called by <see cref="Collection{T}" /> when an item is to be moved within the collection.
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Move" />) event to any listeners.
+        /// </remarks>
+        protected virtual void MoveItem(int oldIndex, int newIndex)
+        {
+            if (Count == 0)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException();
+                return;
             }
 
             CheckReentrancy();
 
-            var movedItem = this[oldIndex]!;
+            var movedItem = this[oldIndex];
 
-            InnerList.RemoveAt(oldIndex);
-            InnerList.Insert(newIndex, movedItem);
+            base.RemoveItem(oldIndex);
+            base.InsertItem(newIndex, movedItem);
 
-            OnPropertyChanged(IndexerName);
+            OnIndexerPropertyChanged();
             OnCollectionChanged(movedItem, oldIndex, newIndex);
         }
 
-        public virtual void Clear()
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Called by base <see cref="Collection{T}" /> when the collection is being cleared.
+        ///     Raises a <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
+        /// </remarks>
+        protected override void ClearItems()
         {
             CheckReentrancy();
 
-            InnerList.Clear();
+            base.ClearItems();
 
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
             OnCollectionReset();
         }
 
-        public virtual void AddRange(IEnumerable<T> items)
+        /// <summary>
+        ///     Adds a range of items to the end of the <see cref="ObservableList{T}" />.
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) events.
+        /// </remarks>
+        public void AddRange(IEnumerable<T> collection)
         {
-            // Add items starting at the last item position by default.
-            var startingIndex = InnerList.Count;
-
-            AddRange(startingIndex, items);
+            InsertItemsRange(Count, collection);
         }
 
-        public virtual void AddRange(int startingIndex, IEnumerable<T> items)
+        /// <summary>
+        ///     Inserts a range of items into the <see cref="ObservableList{T}" /> at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) events.
+        /// </remarks>
+        public void InsertRange(int index, IEnumerable<T> collection)
         {
-            if (startingIndex < 0 || startingIndex > InnerList.Count)
+            InsertItemsRange(index, collection);
+        }
+
+        /// <summary>
+        ///     Inserts a range of items into the <see cref="ObservableList{T}" /> at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Add" />) events.
+        /// </remarks>
+        protected virtual void InsertItemsRange(int index, IEnumerable<T> collection)
+        {
+            if (index < 0 || index > Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(startingIndex));
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            if (items == null)
+            if (collection == null)
             {
-                throw new ArgumentNullException(nameof(items));
+                throw new ArgumentNullException(nameof(collection));
+            }
+
+            if (collection is ICollection<T> countable)
+            {
+                if (countable.Count == 0)
+                {
+                    return;
+                }
+            }
+            else if (!collection.Any())
+            {
+                return;
             }
 
             CheckReentrancy();
 
-            var addedItems = items.ToArray();
-            foreach (var item in addedItems)
-            {
-                InnerList.Add(item);
-            }
+            var items = (List<T>) Items;
 
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, addedItems, startingIndex);
+            var addedItems = collection.ToArray();
+
+            items.InsertRange(index, addedItems);
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, addedItems, index);
         }
 
-        public virtual void RemoveRange(IEnumerable<T> items)
+        /// <summary>
+        ///     Removes a range of items starting at the specified index of the <see cref="ObservableList{T}" />.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        public void RemoveRange(int index, int count)
         {
-            if (items == null)
+            RemoveItemsRange(index, count);
+        }
+
+        /// <summary>
+        ///     Removes a range of items from the <see cref="ObservableList{T}" /> starting at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        protected virtual void RemoveItemsRange(int index, int count)
+        {
+            if (Count == 0)
             {
-                throw new ArgumentNullException(nameof(items));
+                return;
+            }
+
+            if (index < 0 || index > Count || index + count > Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
 
             CheckReentrancy();
 
             var removedItems = new List<T>();
-            foreach (var item in items)
+            var removedItemsCount = 0;
+            while (removedItemsCount < count)
             {
-                if (InnerList.Remove(item))
+                var removedItem = Items[index];
+
+                base.RemoveItem(index);
+
+                removedItems.Add(removedItem);
+
+                removedItemsCount++;
+            }
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, index);
+        }
+
+        /// <summary>
+        ///     Removes a range of items from the <see cref="ObservableList{T}" />.
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        public void RemoveRange(IEnumerable<T> collection)
+        {
+            RemoveItemsRange(collection);
+        }
+
+        /// <summary>
+        ///     Removes a range of items from the <see cref="ObservableList{T}" />.
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        protected virtual void RemoveItemsRange(IEnumerable<T> collection)
+        {
+            if (collection == null)
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
+
+            if (Count == 0)
+            {
+                return;
+            }
+            else if (collection is ICollection<T> countable)
+            {
+                if (countable.Count == 0)
                 {
+                    return;
+                }
+                else if (countable.Count == 1)
+                {
+                    using var enumerator = countable.GetEnumerator();
+
+                    enumerator.MoveNext();
+
+                    Remove(enumerator.Current);
+
+                    return;
+                }
+            }
+            else if (!collection.Any())
+            {
+                return;
+            }
+
+            CheckReentrancy();
+
+            var removedItems = new List<T>();
+            foreach (var item in collection)
+            {
+                var index = IndexOf(item);
+
+                if (index >= 0)
+                {
+                    base.RemoveItem(index);
+
                     removedItems.Add(item);
                 }
             }
 
-            OnPropertyChanged(CountPropertyName);
-            OnPropertyChanged(IndexerName);
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
             OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, 0);
         }
 
-        public void CopyTo(T[] array, int arrayIndex)
+        /// <summary>
+        ///     Replaces a range of items within the <see cref="ObservableList{T}" /> with fewer, equal, or more items.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Replace" />,
+        ///     <see cref="NotifyCollectionChangedAction.Add" />, and/or <see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        public void ReplaceRange(int index, int count, IEnumerable<T> collection)
         {
-            InnerList.CopyTo(array, arrayIndex);
-        }
-
-        void ICollection.CopyTo(Array array, int index)
-        {
-            ((ICollection) InnerList).CopyTo(array, index);
-        }
-
-        private static bool IsCompatibleObject(object? value)
-        {
-            // Non-null values are fine.  Only accept nulls if T is a class or Nullable<U>.
-            // Note that default(T) is not equal to null for value types except when T is Nullable<U>.
-            return value is T || (value == null && default(T) == null);
+            RemoveItemsRange(index, count);
+            InsertItemsRange(index, collection);
         }
 
         /// <summary>
@@ -422,7 +434,7 @@ namespace Iesi.Collections.Generic
         /// </exception>
         protected void CheckReentrancy()
         {
-            if (_monitor.Busy)
+            if (_blockReentrancyCount > 0)
             {
                 // We can allow changes if there's only one listener.
                 // The problem only arises if reentrant changes make the original event args invalid for later listeners.
@@ -431,7 +443,7 @@ namespace Iesi.Collections.Generic
                 if (handler != null &&
                     handler.GetInvocationList().Length > 1)
                 {
-                    throw new InvalidOperationException("Cannot change ObservableList during a CollectionChanged event.");
+                    throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
                 }
             }
         }
@@ -457,9 +469,14 @@ namespace Iesi.Collections.Generic
         /// </returns>
         protected IDisposable BlockReentrancy()
         {
-            _monitor.Enter();
+            _blockReentrancyCount++;
 
-            return _monitor;
+            return EnsureMonitorInitialized();
+        }
+
+        private SimpleMonitor EnsureMonitorInitialized()
+        {
+            return _monitor ??= new SimpleMonitor(this);
         }
 
         /// <summary>
@@ -467,7 +484,7 @@ namespace Iesi.Collections.Generic
         /// </summary>
         protected void OnCollectionReset()
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
         }
 
         /// <summary>
@@ -516,19 +533,34 @@ namespace Iesi.Collections.Generic
             var handler = CollectionChanged;
             if (handler != null)
             {
-                using (BlockReentrancy())
+                // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
+                _blockReentrancyCount++;
+
+                try
                 {
                     handler(this, e);
+                }
+                finally
+                {
+                    _blockReentrancyCount--;
                 }
             }
         }
 
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event for the the specified property name.
+        ///     Raises the <see cref="PropertyChanged" /> event for the Count property.
         /// </summary>
-        protected void OnPropertyChanged(string propertyName)
+        protected void OnCountPropertyChanged()
         {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="PropertyChanged" /> event for the Indexer property.
+        /// </summary>
+        protected void OnIndexerPropertyChanged()
+        {
+            OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
         }
 
         /// <summary>
@@ -537,6 +569,53 @@ namespace Iesi.Collections.Generic
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        [OnSerializing]
+        private void OnSerializing(StreamingContext context)
+        {
+            EnsureMonitorInitialized();
+
+            _monitor!._busyCount = _blockReentrancyCount;
+        }
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (_monitor != null)
+            {
+                _blockReentrancyCount = _monitor._busyCount;
+                _monitor._collection = this;
+            }
+        }
+
+        // This class helps prevent reentrant calls.
+        [Serializable]
+        private sealed class SimpleMonitor : IDisposable
+        {
+            internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization).
+
+            [NonSerialized]
+            internal ObservableList<T> _collection;
+
+            public SimpleMonitor(ObservableList<T> collection)
+            {
+                Debug.Assert(collection != null);
+
+                _collection = collection!;
+            }
+
+            public void Dispose()
+            {
+                _collection._blockReentrancyCount--;
+            }
+        }
+
+        internal static class EventArgsCache
+        {
+            public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
+            public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
+            public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
         }
     }
 }

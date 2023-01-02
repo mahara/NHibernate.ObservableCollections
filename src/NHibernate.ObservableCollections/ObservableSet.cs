@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 
 namespace Iesi.Collections.Generic
 {
@@ -18,397 +17,474 @@ namespace Iesi.Collections.Generic
     ///     REFERENCES:
     ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
     ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
-    ///     -   <see href="https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
-    ///     -   <see href="https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs" />
+    ///     -   <see href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.changetracking.observablehashset-1" />
+    ///     -   <see href="https://github.com/dotnet/efcore/blob/main/src/EFCore/ChangeTracking/ObservableHashSet.cs" />
+    ///     -   <see href="https://github.com/dotnet/efcore/blob/60524c9b11cdadb0d4be96adbe8d0954f9c7ed0a/src/EFCore/ChangeTracking/ObservableHashSet.cs" />
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
     public class ObservableSet<T> :
-        ISet<T>,
-        INotifyCollectionChanged, INotifyPropertyChanged
+        ISet<T>, IReadOnlyCollection<T>,
+        INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
-        protected const string CountPropertyName = "Count";
+        private HashSet<T> _set;
 
-        private readonly SimpleMonitor _monitor = new();
-
-        public ObservableSet()
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that is empty and uses the default equality comparer for the set type.
+        /// </summary>
+        public ObservableSet() :
+            this(EqualityComparer<T>.Default)
         {
-        }
-
-        public ObservableSet(IEnumerable<T> collection)
-        {
-            if (collection == null)
-            {
-                throw new ArgumentNullException(nameof(collection));
-            }
-
-            Initialize(collection);
         }
 
         /// <summary>
-        ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that uses the default equality comparer for the set type,
+        ///     contains elements copied from the specified collection,
+        ///     and has sufficient capacity to accommodate the number of elements copied.
         /// </summary>
-        [field: NonSerialized]
+        /// <param name="collection">The collection whose elements are copied to the new set.</param>
+        public ObservableSet(IEnumerable<T> collection) :
+            this(collection, EqualityComparer<T>.Default)
+        {
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that is empty and uses the specified equality comparer for the set type.
+        /// </summary>
+        /// <param name="comparer">
+        ///     The <see cref="IEqualityComparer{T}" /> implementation to use when comparing values in the set,
+        ///     or null to use the default <see cref="IEqualityComparer{T}" /> implementation for the set type.
+        /// </param>
+        public ObservableSet(IEqualityComparer<T> comparer)
+        {
+            _set = new HashSet<T>(comparer);
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
+        ///     that uses the specified equality comparer for the set type,
+        ///     contains elements copied from the specified collection,
+        ///     and has sufficient capacity to accommodate the number of elements copied.
+        /// </summary>
+        /// <param name="collection">The collection whose elements are copied to the new set.</param>
+        /// <param name="comparer">
+        ///     The <see cref="IEqualityComparer{T}" /> implementation to use when comparing values in the set,
+        ///     or null to use the default <see cref="IEqualityComparer{T}" /> implementation for the set type.
+        /// </param>
+        public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        {
+            _set = new HashSet<T>(collection, comparer);
+        }
+
+        /// <summary>
+        ///     Occurs when the contents of the <see cref="ObservableSet{T}" /> changes.
+        /// </summary>
         public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
-        ///     Occurs when a property value changes.
+        ///     Occurs when a property of this <see cref="ObservableSet{T}" /> (such as <see cref="Count" />) is changing.
         /// </summary>
-        [field: NonSerialized]
-        protected virtual event PropertyChangedEventHandler? PropertyChanged;
+        public virtual event PropertyChangingEventHandler? PropertyChanging;
 
         /// <summary>
-        ///     Occurs when a property value changes.
+        ///     Occurs when a property of this <see cref="ObservableSet{T}" /> (such as <see cref="Count" />) changes.
         /// </summary>
-        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+        public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+        /// <summary>
+        ///     Gets the number of elements that are contained in the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        public virtual int Count => _set.Count;
+
+        /// <summary>
+        ///     Gets a value indicating whether the <see cref="ObservableSet{T}" /> is read-only.
+        /// </summary>
+        public virtual bool IsReadOnly => ((ICollection<T>) _set).IsReadOnly;
+
+        /// <summary>
+        ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
+        /// </summary>
+        public virtual IEqualityComparer<T> Comparer => _set.Comparer;
+
+        /// <summary>
+        ///     Returns an enumerator that iterates through the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <returns>
+        ///     An enumerator for the <see cref="ObservableSet{T}" />.
+        /// </returns>
+        public virtual HashSet<T>.Enumerator GetEnumerator()
         {
-            add => PropertyChanged += value;
-            remove => PropertyChanged -= value;
+            return _set.GetEnumerator();
         }
 
-        protected ISet<T> InnerSet { get; } = new HashSet<T>();
-
-        protected IList<T> InnerList { get; } = new List<T>();
-
-        public int Count => InnerSet.Count;
-
-        public bool IsReadOnly => InnerSet.IsReadOnly;
-
-        public IEnumerator<T> GetEnumerator()
+        /// <inheritdoc />
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            return InnerSet.GetEnumerator();
+            return GetEnumerator();
         }
 
+        /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) InnerSet).GetEnumerator();
+            return GetEnumerator();
         }
 
-        public bool Contains(T item)
+        /// <summary>
+        ///     Determines whether the <see cref="ObservableSet{T}" /> object contains the specified element.
+        /// </summary>
+        /// <param name="item">The element to locate in the <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> contains the specified element; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool Contains(T item)
         {
-            return InnerSet.Contains(item);
+            return _set.Contains(item);
         }
 
-        bool ICollection<T>.Contains(T item)
-        {
-            return Contains(item);
-        }
-
-        public int IndexOf(T item)
-        {
-            return InnerList.IndexOf(item);
-        }
-
+        /// <summary>
+        ///     Adds the specified element to the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="item">The element to add to the set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is added to the <see cref="ObservableSet{T}" />; <see langword="false" /> if the element is already present.
+        /// </returns>
         public virtual bool Add(T item)
         {
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var isAdded = InnerSet.Add(item);
-            if (isAdded)
+            if (_set.Contains(item))
             {
-                InnerList.Add(item);
-
-                EnsureConsistency();
-
-                var index = InnerSet.Count - 1;
-
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
+                return false;
             }
 
-            return isAdded;
+            OnCountPropertyChanging();
+
+            _set.Add(item);
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
+
+            return true;
         }
 
+        /// <inheritdoc />
         void ICollection<T>.Add(T item)
         {
             Add(item);
         }
 
+        /// <summary>
+        ///     Removes the specified element from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="item">The element to remove.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is successfully found and removed; otherwise, <see langword="false" />.
+        /// </returns>
         public virtual bool Remove(T item)
         {
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var index = InnerList.IndexOf(item);
-            var isRemoved = index >= 0 && InnerSet.Remove(item);
-            if (isRemoved)
+            if (!_set.Contains(item))
             {
-                InnerList.RemoveAt(index);
-
-                EnsureConsistency();
-
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
+                return false;
             }
 
-            return isRemoved;
+            OnCountPropertyChanging();
+
+            _set.Remove(item);
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
+
+            return true;
         }
 
-        bool ICollection<T>.Remove(T item)
+        /// <summary>
+        ///     Removes all elements that match the conditions defined by the specified predicate from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="match">
+        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+        /// </param>
+        /// <returns>
+        ///     The number of elements that were removed from the <see cref="ObservableSet{T}" />.
+        /// </returns>
+        public virtual int RemoveWhere(Predicate<T> match)
         {
-            return Remove(item);
+            if (_set.Count == 0)
+            {
+                return 0;
+            }
+
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            var removedCount = copy.RemoveWhere(match);
+
+            if (removedCount == 0)
+            {
+                return 0;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
+
+            return removedCount;
         }
 
+        /// <summary>
+        ///     Removes all elements from the <see cref="ObservableSet{T}" />.
+        /// </summary>
         public virtual void Clear()
         {
-            CheckReentrancy();
+            if (_set.Count == 0)
+            {
+                return;
+            }
 
-            EnsureConsistency();
+            OnCountPropertyChanging();
 
-            InnerSet.Clear();
-            InnerList.Clear();
+            var removed = this.ToArray();
 
-            EnsureConsistency();
+            _set.Clear();
 
-            OnPropertyChanged(CountPropertyName);
-            OnCollectionReset();
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
         }
 
-        void ICollection<T>.Clear()
+        /// <summary>
+        ///     Sets the capacity of the <see cref="ObservableSet{T}" /> to the actual number of elements it contains,
+        ///     rounded up to a nearby, implementation-specific value.
+        /// </summary>
+        public virtual void TrimExcess()
         {
-            Clear();
+            _set.TrimExcess();
         }
 
-        public virtual void AddRange(IEnumerable<T> items)
-        {
-            // Add items starting at the last item position by default.
-            AddRange(InnerSet.Count, items);
-        }
-
-        public virtual void AddRange(int startingIndex, IEnumerable<T> items)
-        {
-            if (startingIndex < 0 || startingIndex > InnerSet.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(startingIndex));
-            }
-
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var addedItems = new HashSet<T>();
-            foreach (var item in items)
-            {
-                if (InnerSet.Add(item))
-                {
-                    InnerList.Add(item);
-
-                    EnsureConsistency();
-
-                    addedItems.Add(item);
-                }
-            }
-
-            EnsureConsistency();
-
-            if (addedItems.Count > 0)
-            {
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, addedItems, startingIndex);
-            }
-        }
-
-        public virtual void RemoveRange(IEnumerable<T> items)
-        {
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            CheckReentrancy();
-
-            EnsureConsistency();
-
-            var removedItems = new List<T>();
-            foreach (var item in items)
-            {
-                if (InnerSet.Remove(item))
-                {
-                    InnerList.Remove(item);
-
-                    EnsureConsistency();
-
-                    removedItems.Add(item);
-                }
-            }
-
-            EnsureConsistency();
-
-            if (removedItems.Count > 0)
-            {
-                OnPropertyChanged(CountPropertyName);
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, 0);
-            }
-        }
-
+        /// <summary>
+        ///     Modifies the <see cref="ObservableSet{T}" /> to contain all elements that are present in itself, the specified collection, or both.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void UnionWith(IEnumerable<T> other)
         {
-            InnerSet.UnionWith(other);
+            var copy = new HashSet<T>(_set, _set.Comparer);
 
-            ReinitializeItems();
+            copy.UnionWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var added = copy.Where(i => !_set.Contains(i)).ToArray();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(EventArgsCache.Items_Empty, added);
         }
 
+        /// <summary>
+        ///     Modifies the current <see cref="ObservableSet{T}" /> to contain only elements
+        ///     that are present in that object and in the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void IntersectWith(IEnumerable<T> other)
         {
-            InnerSet.IntersectWith(other);
+            var copy = new HashSet<T>(_set, _set.Comparer);
 
-            ReinitializeItems();
+            copy.IntersectWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
         }
 
+        /// <summary>
+        ///     Removes all elements in the specified collection from the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="other">The collection of items to remove from the current <see cref="ObservableSet{T}" />.</param>
         public virtual void ExceptWith(IEnumerable<T> other)
         {
-            InnerSet.ExceptWith(other);
+            var copy = new HashSet<T>(_set, _set.Comparer);
 
-            ReinitializeItems();
+            copy.ExceptWith(other);
+
+            if (copy.Count == _set.Count)
+            {
+                return;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
         }
 
+        /// <summary>
+        ///     Modifies the current <see cref="ObservableSet{T}" /> to contain only elements that are present either in that object
+        ///     or in the specified collection, but not both.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void SymmetricExceptWith(IEnumerable<T> other)
         {
-            InnerSet.SymmetricExceptWith(other);
+            var copy = new HashSet<T>(_set, _set.Comparer);
 
-            ReinitializeItems();
-        }
+            copy.SymmetricExceptWith(other);
 
-        public bool IsSubsetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsSubsetOf(other);
-        }
+            var removed = _set.Where(i => !copy.Contains(i)).ToArray();
+            var added = copy.Where(i => !_set.Contains(i)).ToArray();
 
-        public bool IsProperSubsetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsProperSubsetOf(other);
-        }
-
-        public bool IsSupersetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsSupersetOf(other);
-        }
-
-        public bool IsProperSupersetOf(IEnumerable<T> other)
-        {
-            return InnerSet.IsProperSupersetOf(other);
-        }
-
-        public bool Overlaps(IEnumerable<T> other)
-        {
-            return InnerSet.Overlaps(other);
-        }
-
-        public bool SetEquals(IEnumerable<T> other)
-        {
-            return InnerSet.SetEquals(other);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            InnerSet.CopyTo(array, arrayIndex);
-        }
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
-        {
-            CopyTo(array, arrayIndex);
-        }
-
-        private void Initialize(IEnumerable<T> collection)
-        {
-            EnsureConsistency();
-
-            foreach (var item in collection)
+            if (removed.Length == 0 && added.Length == 0)
             {
-                if (InnerSet.Add(item))
-                {
-                    InnerList.Add(item);
-
-                    EnsureConsistency();
-                }
+                return;
             }
-        }
 
-        protected virtual void ReinitializeItems()
-        {
-            InnerList.Clear();
+            OnCountPropertyChanging();
 
-            ((List<T>) InnerList).AddRange(InnerSet);
+            _set = copy;
 
-            EnsureConsistency();
-
-            OnCollectionReset();
-        }
-
-        protected virtual void EnsureConsistency()
-        {
-            Contract.Assert(InnerList.Count == InnerSet.Count, "Internal data inconsistent.");
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, added);
         }
 
         /// <summary>
-        ///     Checks if there is currently no reentrancy that is making any changes to this collection.
-        ///
-        ///     -- ORIGINAL SUMMARY --
-        ///     Check and assert for reentrant attempts to change this collection.
+        ///     Determines whether the <see cref="ObservableSet{T}" /> is a subset of the specified collection.
         /// </summary>
-        /// <remarks>
-        ///     This should be done before making any changes to this collection.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Raised when changing the collection while another collection change is still being notified to other listeners.
-        /// </exception>
-        protected void CheckReentrancy()
-        {
-            if (_monitor.Busy)
-            {
-                // We can allow changes if there's only one listener.
-                // The problem only arises if reentrant changes make the original event args invalid for later listeners.
-                // This keeps existing code working (e.g. Selector.SelectedItems).
-                var handler = CollectionChanged;
-                if (handler != null &&
-                    handler.GetInvocationList().Length > 1)
-                {
-                    throw new InvalidOperationException($"Cannot change {nameof(ObservableSet<T>)} during a {nameof(CollectionChanged)} event.");
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Blocks new reentrancy to prevent any changes to this collection.
-        ///
-        ///     -- ORIGINAL SUMMARY --
-        ///     Disallow reentrant attempts to change this collection.
-        ///     E.g. an event handler of the <see cref="CollectionChanged" /> event is not allowed to make changes to this collection.
-        /// </summary>
-        /// <remarks>
-        ///     Typical usage is to wrap e.g. a <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)" /> call with a using() scope:
-        ///     <code>
-        ///         using (BlockReentrancy())
-        ///         {
-        ///             OnCollectionChanged(this, new NotifyCollectionChangedEventArgs(action, item, index));
-        ///         }
-        ///     </code>
-        /// </remarks>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         /// <returns>
-        ///     A <see cref="SimpleMonitor" /> that blocks new reentrancy.
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> is a subset of other; otherwise, <see langword="false" />.
         /// </returns>
-        protected IDisposable BlockReentrancy()
+        public virtual bool IsSubsetOf(IEnumerable<T> other)
         {
-            _monitor.Enter();
-
-            return _monitor;
+            return _set.IsSubsetOf(other);
         }
 
         /// <summary>
-        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
+        ///     Determines whether the <see cref="ObservableSet{T}" /> is a proper subset of the specified collection.
         /// </summary>
-        protected void OnCollectionReset()
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> is a proper subset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsProperSubsetOf(IEnumerable<T> other)
         {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            return _set.IsProperSubsetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the <see cref="ObservableSet{T}" /> is a superset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> is a superset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsSupersetOf(IEnumerable<T> other)
+        {
+            return _set.IsSupersetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the <see cref="ObservableSet{T}" /> is a proper superset of the specified collection.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> is a proper superset of other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool IsProperSupersetOf(IEnumerable<T> other)
+        {
+            return _set.IsProperSupersetOf(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the current <see cref="ObservableSet{T}" /> object and a specified collection share common elements.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> and other share at least one common element; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool Overlaps(IEnumerable<T> other)
+        {
+            return _set.Overlaps(other);
+        }
+
+        /// <summary>
+        ///     Determines whether the <see cref="ObservableSet{T}" /> and the specified collection contain the same elements.
+        /// </summary>
+        /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the <see cref="ObservableSet{T}" /> is equal to other; otherwise, <see langword="false" />.
+        /// </returns>
+        public virtual bool SetEquals(IEnumerable<T> other)
+        {
+            return _set.SetEquals(other);
+        }
+
+        /// <summary>
+        ///     Copies the elements of the <see cref="ObservableSet{T}" /> to an array.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from the <see cref="ObservableSet{T}" />.
+        ///     The array must have zero-based indexing.
+        /// </param>
+        public virtual void CopyTo(T[] array)
+        {
+            _set.CopyTo(array);
+        }
+
+        /// <summary>
+        ///     Copies the elements of the <see cref="ObservableSet{T}" /> to an array, starting at the specified array index.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from the <see cref="ObservableSet{T}" />.
+        ///     The array must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        public virtual void CopyTo(T[] array, int arrayIndex)
+        {
+            _set.CopyTo(array, arrayIndex);
+        }
+
+        /// <summary>
+        ///     Copies the specified number of elements of the <see cref="ObservableSet{T}" /> to an array, starting at the specified array index.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from the <see cref="ObservableSet{T}" />.
+        ///     The array must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        /// <param name="count">The number of elements to copy to array.</param>
+        public virtual void CopyTo(T[] array, int arrayIndex, int count)
+        {
+            _set.CopyTo(array, arrayIndex, count);
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        /// </summary>
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
         }
 
         /// <summary>
@@ -429,6 +505,22 @@ namespace Iesi.Collections.Generic
 
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        /// </summary>
+        protected void OnCollectionChanged(IList oldItems, IList newItems)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        /// </summary>
+        protected void OnCollectionChanged(IList oldItems, IList newItems, int startingIndex)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems, startingIndex));
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         ///     Properties/methods modifying this <see cref="ObservableSet{T}" /> will raise
         ///     a <see cref="CollectionChanged" /> event through this virtual method.
         /// </summary>
@@ -438,22 +530,25 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var handler = CollectionChanged;
-            if (handler != null)
-            {
-                using (BlockReentrancy())
-                {
-                    handler(this, e);
-                }
-            }
+            CollectionChanged?.Invoke(this, e);
+        }
+
+        protected void OnCountPropertyChanging()
+        {
+            OnPropertyChanging(EventArgsCache.CountPropertyChanging);
         }
 
         /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event for the the specified property name.
+        ///     Raises the <see cref="PropertyChanging" /> event.
         /// </summary>
-        protected void OnPropertyChanged(string propertyName)
+        protected virtual void OnPropertyChanging(PropertyChangingEventArgs e)
         {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+            PropertyChanging?.Invoke(this, e);
+        }
+
+        protected void OnCountPropertyChanged()
+        {
+            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
         }
 
         /// <summary>
@@ -462,6 +557,14 @@ namespace Iesi.Collections.Generic
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        internal static class EventArgsCache
+        {
+            public static readonly T[] Items_Empty = Array.Empty<T>();
+
+            public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
+            public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
         }
     }
 }
