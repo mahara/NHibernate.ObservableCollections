@@ -41,7 +41,7 @@ namespace NHibernate.Collection.Generic
         /// <inheritdoc />
         public object Instantiate(int anticipatedSize)
         {
-            return new ObservableList<T>();
+            return new ObservableCollection<T>();
         }
 
         /// <inheritdoc />
@@ -68,7 +68,7 @@ namespace NHibernate.Collection.Generic
         /// <inheritdoc />
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
-            return new PersistentObservableBag<T>(session, (ObservableList<T>) collection);
+            return new PersistentObservableBag<T>(session, (ObservableCollection<T>) collection);
         }
     }
 }
