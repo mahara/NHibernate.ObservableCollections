@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="App.config">
+    <None Update="App.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
