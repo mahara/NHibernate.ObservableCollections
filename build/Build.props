@@ -57,52 +57,69 @@
               https://github.com/dotnet/msbuild/issues/87
                 https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
 
-      NOTE:   IntermediateOutputPath has a certain folder structure
-              where TargetFramework folder cannot be specified before MSBuildProjectName folder within the path.
-              TargetFramework folder will be created automatically after IntermediateOutputPath.
-              In short, TargetFramework folder cannot be specified within IntermediateOutputPath.
-              This is different than OutputPath where TargetFramework can be defined anywhere within the path.
-              The default folder structure of IntermediateOutputPath is as the following:
+      NOTE:   IntermediateOutputPath has a certain, predefined folder structure,
+              where TargetFramework will be automatically added after itself.
+              That way, TargetFramework cannot be specified before MSBuildProjectName within the path.
+              In short, TargetFramework cannot be re-specified within IntermediateOutputPath.
+              That is unlike OutputPath, where TargetFramework can be specified anywhere within the path.
+
+              IntermediateOutputPath is predefined as follows:
 
               $(MSBuildProjectName)\$(Configuration)\$(TargetFramework)
 
       NOTE:   NuGet messed up with the need to set both MSBuildProjectExtensionsPath and BaseIntermediateOutputPath.
 
-      - IntermediateOutputPath is scoped per project configuration (Debug/Release).
-        It is used by MSBuild as temporary output folder.
-        When overriden, project configuration folder (Configuration) MUST BE MANUALLY specified within the path,
-        along with project name (MSBuildProjectName).
+      - IntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
+        It is used by MSBuild as temporary output path.
+        When overridden, Configuration MUST BE EXPLICITLY specified within the path,
+        along with MSBuildProjectName.
+
+        IntermediateOutputPath is re-defined as follows:
 
           <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
 
-      - BaseIntermediateOutputPath is scoped per project configuration (Debug/Release).
-        It is used by NuGet as temporary folder for NuGet specification files (.nuspec) for the NuGet package created.
-        When overriden, project configuration folder (Configuration) will be AUTOMATICALLY created,
-        so there is no need to include it within the path.
-        The project name (MSBuildProjectName) however must be explicitly specified.
+      - BaseIntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
+        It is used by NuGet as temporary output path for NuGet specification files (.nuspec)
+        for the project NuGet package created.
+        BaseIntermediateOutputPath has a certain, predefined folder structure,
+        where Configuration will be automatically added after itself.
+        Thus, there is no need to re-specify Configuration within the path.
+        The MSBuildProjectName however MUST BE EXPLICITLY specified.
 
         BaseIntermediateOutputPath consists of the following files:
         - [ProjectName/PackageName].[PackageVersion].nuspec
         - [ProjectName/PackageName].[PackageVersion].symbols.nuspec
 
+        BaseIntermediateOutputPath is re-defined as follows:
+
           <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
 
-      - MSBuildProjectExtensionsPath is scoped per project.
+      - MSBuildProjectExtensionsPath is scoped per project (MSBuildProjectName).
         It is used by NuGet as RestoreOutputPath.
         https://github.com/NuGet/NuGet.Client/blob/deab84db30cbd8cc738cd46ad694aebdbb43a1cf/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L592
           https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
 
-        MSBuildProjectExtensionsPath consists of the following files:
+        MSBuildProjectExtensionsPath consists of, at least, the following files:
         - project.assets.json
         - project.nuget.cache
         - [ProjectName].csproj.nuget.dgspec.json
         - [ProjectName].csproj.nuget.g.props
         - [ProjectName].csproj.nuget.g.targets
 
+        MSBuildProjectExtensionsPath is re-defined as follows:
+
           <MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
 
       NOTE:   There seems to be an known issue with .NET Framework 4.8 WPF project when overriding MSBuildProjectExtensionsPath.
               https://github.com/dotnet/wpf/issues/5679
+
+
+      ============
+      GLOSSARIES
+      ============
+      - MSBuildProjectName = project name
+      - TargetFramework = project target framework moniker, eg: net6.0, net48, etc.
+      - Configuration = project build configuration, eg: Debug or Release
 
     -->
     <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
@@ -117,6 +134,7 @@
     <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
 
     <OutputBaseFolderPath>$(SolutionDir)$(OutputFolder)\</OutputBaseFolderPath>
+    <BaseOutputPath>$(OutputBaseFolderPath)</BaseOutputPath>
     <OutputPath>$(OutputBaseFolderPath)$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)\</OutputPath>
     <OutDir>$(OutputPath)</OutDir>
 
