@@ -15,6 +15,8 @@
     <File Path="build/Read Me.txt" />
     <File Path="BuildPackages.cmd" />
     <File Path="CleanPackages.cmd" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
     <File Path="nuget.config" />
   </Folder>
   <Folder Name="/Solution Items/build/GitHub Actions/">
