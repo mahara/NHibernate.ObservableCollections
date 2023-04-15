@@ -56,7 +56,9 @@ namespace NHibernate.ObservableCollections.DemoApp
             if (_sampleSetContainer.SampleSet.Add(newItem))
             {
                 newItem.ParentSetContainer = _sampleSetContainer;
+
                 using var dbMgr = new NHibernateDatabaseManager();
+
                 dbMgr.Save(newItem);
             }
         }
@@ -70,7 +72,9 @@ namespace NHibernate.ObservableCollections.DemoApp
 
             var selectedItem = (SampleItem) SampleSetBox.SelectedItem;
             _sampleListContainer.SampleList.Add(selectedItem);
+
             using var dbMgr = new NHibernateDatabaseManager();
+
             dbMgr.Update(_sampleListContainer);
         }
 
@@ -89,6 +93,7 @@ namespace NHibernate.ObservableCollections.DemoApp
                     selectedItem.ParentSetContainer = null;
 
                     using var dbMgr = new NHibernateDatabaseManager();
+
                     if (_sampleListContainer.SampleList.Contains(selectedItem))
                     {
                         dbMgr.Update(selectedItem);
@@ -107,7 +112,9 @@ namespace NHibernate.ObservableCollections.DemoApp
                     if (selectedContainer != null)
                     {
                         using var dbMgr = new NHibernateDatabaseManager();
+
                         dbMgr.Update(selectedContainer);
+
                         if (!(_sampleSetContainer.SampleSet.Contains(selectedItem) ||
                               _sampleListContainer.SampleList.Contains(selectedItem)))
                         {
@@ -122,6 +129,7 @@ namespace NHibernate.ObservableCollections.DemoApp
         {
             // load the set and list containers from database, then bind their items to list boxes
             using var dbMgr = new NHibernateDatabaseManager();
+
             _sampleSetContainer = dbMgr.Get<SampleSetContainer>(1);
             NHibernateUtil.Initialize(_sampleSetContainer.SampleSet);
             SampleSetBox.ItemsSource = _sampleSetContainer.SampleSet;
@@ -140,7 +148,9 @@ namespace NHibernate.ObservableCollections.DemoApp
             if (selectedItem != null)
             {
                 selectedItem.Name = editItemBox.Text; // update selected item from value in text box
+
                 using var dbMgr = new NHibernateDatabaseManager();
+
                 dbMgr.Update(selectedItem);
             }
         }
