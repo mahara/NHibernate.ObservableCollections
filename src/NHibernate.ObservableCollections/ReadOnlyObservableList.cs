@@ -1,6 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System.ComponentModel;
     using System.Diagnostics;
 
     /// <summary>
@@ -14,7 +13,9 @@ namespace Iesi.Collections.Generic
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
-    public class ReadOnlyObservableList<T> : ReadOnlyList<T>, INotifyCollectionChanged, INotifyPropertyChanged
+    public class ReadOnlyObservableList<T> :
+        ReadOnlyList<T>,
+        INotifyCollectionChanged, INotifyPropertyChanged
     {
         /// <summary>
         ///     Initializes a new instance of ReadOnlyObservableList
@@ -22,8 +23,8 @@ namespace Iesi.Collections.Generic
         /// </summary>
         public ReadOnlyObservableList(ObservableList<T> list) : base(list)
         {
-            ((INotifyCollectionChanged) Items).CollectionChanged += new NotifyCollectionChangedEventHandler(HandleCollectionChanged);
-            ((INotifyPropertyChanged) Items).PropertyChanged += new PropertyChangedEventHandler(HandlePropertyChanged);
+            ((INotifyCollectionChanged) Items).CollectionChanged += new NotifyCollectionChangedEventHandler(OnCollectionChanged);
+            ((INotifyPropertyChanged) Items).PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
         }
 
         /// <summary>
@@ -60,6 +61,11 @@ namespace Iesi.Collections.Generic
             CollectionChanged?.Invoke(this, args);
         }
 
+        private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnCollectionChanged(e);
+        }
+
         /// <summary>
         ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
         /// </summary>
@@ -86,12 +92,7 @@ namespace Iesi.Collections.Generic
             PropertyChanged?.Invoke(this, args);
         }
 
-        private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnCollectionChanged(e);
-        }
-
-        private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(e);
         }

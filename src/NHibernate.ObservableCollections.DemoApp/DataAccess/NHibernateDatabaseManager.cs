@@ -54,7 +54,7 @@ namespace NHibernate.ObservableCollections.DemoApp.DataAccess
                     c.ManyToOne(x => x.ParentSetContainer,
                                 m =>
                                 {
-                                    m.Cascade(Cascade.All | Cascade.DeleteOrphans);
+                                    m.Cascade(Cascade.Persist);
                                     m.Column("SetContainerId");
                                 });
                 });
@@ -86,7 +86,7 @@ namespace NHibernate.ObservableCollections.DemoApp.DataAccess
                                //m.Lazy(CollectionLazy.NoLazy);
                                m.Type<ObservableListType<SampleItem>>();
                                m.Table("Item_List");
-                               m.Cascade(Cascade.All | Cascade.DeleteOrphans);
+                               m.Cascade(Cascade.Persist);
                                m.Key(k => k.Column("ListContainerId"));
                                m.Index(i => i.Column("PositionNumber"));
                            },

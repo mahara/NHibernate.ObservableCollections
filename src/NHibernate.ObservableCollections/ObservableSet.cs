@@ -1,6 +1,5 @@
 namespace Iesi.Collections.Generic
 {
-    using System.ComponentModel;
     using System.Diagnostics;
 
     /// <summary>
@@ -17,15 +16,20 @@ namespace Iesi.Collections.Generic
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
-    public class ObservableSet<T> : ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
+    public class ObservableSet<T> :
+        ISet<T>, IReadOnlyCollection<T>,
+        INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
+        private static readonly List<T> NoItems = new();
+
         private HashSet<T> _set;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
         ///     that is empty and uses the default equality comparer for the set type.
         /// </summary>
-        public ObservableSet() : this(EqualityComparer<T>.Default)
+        public ObservableSet() :
+            this(EqualityComparer<T>.Default)
         {
         }
 
@@ -50,7 +54,8 @@ namespace Iesi.Collections.Generic
         ///     number of elements copied.
         /// </summary>
         /// <param name="collection">The collection whose elements are copied to the new set.</param>
-        public ObservableSet(IEnumerable<T> collection) : this(collection, EqualityComparer<T>.Default)
+        public ObservableSet(IEnumerable<T> collection) :
+            this(collection, EqualityComparer<T>.Default)
         {
         }
 
@@ -71,9 +76,9 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Occurs when a property of this hash set (such as <see cref="Count" />) changes.
+        ///     Occurs when the contents of the hash set changes.
         /// </summary>
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
         ///     Occurs when a property of this hash set (such as <see cref="Count" />) is changing.
@@ -81,35 +86,27 @@ namespace Iesi.Collections.Generic
         public event PropertyChangingEventHandler? PropertyChanging;
 
         /// <summary>
-        ///     Occurs when the contents of the hash set changes.
+        ///     Occurs when a property of this hash set (such as <see cref="Count" />) changes.
         /// </summary>
-        public event NotifyCollectionChangedEventHandler? CollectionChanged;
-
-        void ICollection<T>.Add(T item)
-        {
-            Add(item);
-        }
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
-        ///     Removes all elements from the hash set.
+        ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
         /// </summary>
-        public virtual void Clear()
-        {
-            if (_set.Count == 0)
-            {
-                return;
-            }
+        public virtual IEqualityComparer<T> Comparer =>
+            _set.Comparer;
 
-            OnCountPropertyChanging();
+        /// <summary>
+        ///     Gets the number of elements that are contained in the hash set.
+        /// </summary>
+        public virtual int Count =>
+            _set.Count;
 
-            var removed = this.ToList();
-
-            _set.Clear();
-
-            OnCollectionChanged(ObservableSetCache.NoItems, removed);
-
-            OnCountPropertyChanged();
-        }
+        /// <summary>
+        ///     Gets a value indicating whether the hash set is read-only.
+        /// </summary>
+        public virtual bool IsReadOnly =>
+            ((ICollection<T>) _set).IsReadOnly;
 
         /// <summary>
         ///     Determines whether the hash set object contains the specified element.
@@ -123,17 +120,33 @@ namespace Iesi.Collections.Generic
             return _set.Contains(item);
         }
 
-        /// <summary>
-        ///     Copies the elements of the hash set to an array, starting at the specified array index.
-        /// </summary>
-        /// <param name="array">
-        ///     The one-dimensional array that is the destination of the elements copied from
-        ///     the hash set. The array must have zero-based indexing.
-        /// </param>
-        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
-        public virtual void CopyTo(T[] array, int arrayIndex)
+        void ICollection<T>.Add(T item)
         {
-            _set.CopyTo(array, arrayIndex);
+            Add(item);
+        }
+
+        /// <summary>
+        ///     Adds the specified element to the hash set.
+        /// </summary>
+        /// <param name="item">The element to add to the set.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the element is added to the hash set; <see langword="false" /> if the element is already present.
+        /// </returns>
+        public virtual bool Add(T item)
+        {
+            if (_set.Contains(item))
+            {
+                return false;
+            }
+
+            OnCountPropertyChanging();
+
+            _set.Add(item);
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
+
+            return true;
         }
 
         /// <summary>
@@ -154,22 +167,71 @@ namespace Iesi.Collections.Generic
 
             _set.Remove(item);
 
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
-
             OnCountPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
 
             return true;
         }
 
         /// <summary>
-        ///     Gets the number of elements that are contained in the hash set.
+        ///     Removes all elements that match the conditions defined by the specified predicate
+        ///     from the hash set.
         /// </summary>
-        public virtual int Count => _set.Count;
+        /// <param name="match">
+        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
+        /// </param>
+        /// <returns>The number of elements that were removed from the hash set.</returns>
+        public virtual int RemoveWhere(Predicate<T> match)
+        {
+            var copy = new HashSet<T>(_set, _set.Comparer);
+
+            var removedCount = copy.RemoveWhere(match);
+
+            if (removedCount == 0)
+            {
+                return 0;
+            }
+
+            var removed = _set.Where(i => !copy.Contains(i)).ToList();
+
+            OnCountPropertyChanging();
+
+            _set = copy;
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, NoItems);
+
+            return removedCount;
+        }
 
         /// <summary>
-        ///     Gets a value indicating whether the hash set is read-only.
+        ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
+        ///     implementation-specific value.
         /// </summary>
-        public virtual bool IsReadOnly => ((ICollection<T>) _set).IsReadOnly;
+        public virtual void TrimExcess()
+        {
+            _set.TrimExcess();
+        }
+
+        /// <summary>
+        ///     Removes all elements from the hash set.
+        /// </summary>
+        public virtual void Clear()
+        {
+            if (_set.Count == 0)
+            {
+                return;
+            }
+
+            OnCountPropertyChanging();
+
+            var removed = this.ToList();
+
+            _set.Clear();
+
+            OnCountPropertyChanged();
+            OnCollectionChanged(removed, NoItems);
+        }
 
         /// <summary>
         ///     Returns an enumerator that iterates through the hash set.
@@ -195,31 +257,6 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Adds the specified element to the hash set.
-        /// </summary>
-        /// <param name="item">The element to add to the set.</param>
-        /// <returns>
-        ///     <see langword="true" /> if the element is added to the hash set; <see langword="false" /> if the element is already present.
-        /// </returns>
-        public virtual bool Add(T item)
-        {
-            if (_set.Contains(item))
-            {
-                return false;
-            }
-
-            OnCountPropertyChanging();
-
-            _set.Add(item);
-
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
-
-            OnCountPropertyChanged();
-
-            return true;
-        }
-
-        /// <summary>
         ///     Modifies the hash set to contain all elements that are present in itself, the specified collection, or both.
         /// </summary>
         /// <param name="other">The collection to compare to the current hash set.</param>
@@ -240,9 +277,8 @@ namespace Iesi.Collections.Generic
 
             _set = copy;
 
-            OnCollectionChanged(added, ObservableSetCache.NoItems);
-
             OnCountPropertyChanged();
+            OnCollectionChanged(NoItems, added);
         }
 
         /// <summary>
@@ -267,9 +303,8 @@ namespace Iesi.Collections.Generic
 
             _set = copy;
 
-            OnCollectionChanged(ObservableSetCache.NoItems, removed);
-
             OnCountPropertyChanged();
+            OnCollectionChanged(removed, NoItems);
         }
 
         /// <summary>
@@ -293,9 +328,8 @@ namespace Iesi.Collections.Generic
 
             _set = copy;
 
-            OnCollectionChanged(ObservableSetCache.NoItems, removed);
-
             OnCountPropertyChanged();
+            OnCollectionChanged(removed, NoItems);
         }
 
         /// <summary>
@@ -322,9 +356,8 @@ namespace Iesi.Collections.Generic
 
             _set = copy;
 
-            OnCollectionChanged(added, removed);
-
             OnCountPropertyChanged();
+            OnCollectionChanged(removed, added);
         }
 
         /// <summary>
@@ -412,6 +445,19 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Copies the elements of the hash set to an array, starting at the specified array index.
+        /// </summary>
+        /// <param name="array">
+        ///     The one-dimensional array that is the destination of the elements copied from
+        ///     the hash set. The array must have zero-based indexing.
+        /// </param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        public virtual void CopyTo(T[] array, int arrayIndex)
+        {
+            _set.CopyTo(array, arrayIndex);
+        }
+
+        /// <summary>
         ///     Copies the specified number of elements of the hash set to an array, starting at the specified array index.
         /// </summary>
         /// <param name="array">
@@ -426,58 +472,22 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Removes all elements that match the conditions defined by the specified predicate
-        ///     from the hash set.
+        ///     Raises the <see cref="CollectionChanged" /> event.
         /// </summary>
-        /// <param name="match">
-        ///     The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
-        /// </param>
-        /// <returns>The number of elements that were removed from the hash set.</returns>
-        public virtual int RemoveWhere(Predicate<T> match)
+        /// <param name="e">Details of the change.</param>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            var copy = new HashSet<T>(_set, _set.Comparer);
-
-            var removedCount = copy.RemoveWhere(match);
-
-            if (removedCount == 0)
-            {
-                return 0;
-            }
-
-            var removed = _set.Where(i => !copy.Contains(i)).ToList();
-
-            OnCountPropertyChanging();
-
-            _set = copy;
-
-            OnCollectionChanged(ObservableSetCache.NoItems, removed);
-
-            OnCountPropertyChanged();
-
-            return removedCount;
+            CollectionChanged?.Invoke(this, e);
         }
 
-        /// <summary>
-        ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
-        /// </summary>
-        public virtual IEqualityComparer<T> Comparer => _set.Comparer;
-
-        /// <summary>
-        ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
-        ///     implementation-specific value.
-        /// </summary>
-        public virtual void TrimExcess()
+        private void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
         {
-            _set.TrimExcess();
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
         }
 
-        /// <summary>
-        ///     Raises the <see cref="PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="e">Details of the property that changed.</param>
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+        private void OnCollectionChanged(IList oldItems, IList newItems)
         {
-            PropertyChanged?.Invoke(this, e);
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
         }
 
         /// <summary>
@@ -489,41 +499,29 @@ namespace Iesi.Collections.Generic
             PropertyChanging?.Invoke(this, e);
         }
 
-        private void OnCountPropertyChanged()
-        {
-            OnPropertyChanged(ObservableSetCache.CountPropertyChanged);
-        }
-
         private void OnCountPropertyChanging()
         {
             OnPropertyChanging(ObservableSetCache.CountPropertyChanging);
         }
 
-        private void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
-        }
-
-        private void OnCollectionChanged(IList newItems, IList oldItems)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
-        }
-
         /// <summary>
-        ///     Raises the <see cref="CollectionChanged" /> event.
+        ///     Raises the <see cref="PropertyChanged" /> event.
         /// </summary>
-        /// <param name="e">Details of the change.</param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        /// <param name="e">Details of the property that changed.</param>
+        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            CollectionChanged?.Invoke(this, e);
+            PropertyChanged?.Invoke(this, e);
+        }
+
+        private void OnCountPropertyChanged()
+        {
+            OnPropertyChanged(ObservableSetCache.CountPropertyChanged);
         }
     }
 
     internal static class ObservableSetCache
     {
-        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<object>.Count));
         public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<object>.Count));
-
-        public static readonly object[] NoItems = Array.Empty<object>();
+        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<object>.Count));
     }
 }
