@@ -47,6 +47,9 @@ namespace Iesi.Collections.Generic
         [NonSerialized]
         private int _blockReentrancyCount;
 
+        [NonSerialized]
+        private DeferredEventsCollection? _deferredEventsCollection;
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObservableCollection{T}" /> class.
         /// </summary>
@@ -380,20 +383,11 @@ namespace Iesi.Collections.Generic
 
             using var _ = BlockReentrancy();
 
-            var itemsRemoved = new List<T>();
+            var items = (List<T>) Items;
 
-            var itemsRemovedCount = 0;
+            var itemsRemoved = items.GetRange(index, count);
 
-            while (itemsRemovedCount < count)
-            {
-                var removedItem = Items[index];
-
-                base.RemoveItem(index);
-
-                itemsRemoved.Add(removedItem);
-
-                itemsRemovedCount++;
-            }
+            items.RemoveRange(index, count);
 
             if (Count == 0)
             {
@@ -470,7 +464,10 @@ namespace Iesi.Collections.Generic
 
             using var _ = BlockReentrancy();
 
-            var itemsRemoved = new List<T>();
+            var clusters = new Dictionary<int, List<T>>();
+
+            var lastIndex = -1;
+            List<T>? lastCluster = null;
 
             foreach (var item in collection)
             {
@@ -483,7 +480,14 @@ namespace Iesi.Collections.Generic
 
                 base.RemoveItem(index);
 
-                itemsRemoved.Add(item);
+                if (lastIndex == index && lastCluster is not null)
+                {
+                    lastCluster.Add(item);
+                }
+                else
+                {
+                    clusters[lastIndex = index] = lastCluster = new List<T> { item };
+                }
             }
 
             if (Count == 0)
@@ -492,7 +496,10 @@ namespace Iesi.Collections.Generic
             }
             else
             {
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, itemsRemoved, 0);
+                foreach (var cluster in clusters)
+                {
+                    OnCollectionChanged(NotifyCollectionChangedAction.Remove, cluster.Value, cluster.Key);
+                }
             }
 
             OnCountPropertyChanged();
@@ -617,6 +624,11 @@ namespace Iesi.Collections.Generic
             return _monitor ??= new SimpleMonitor(this);
         }
 
+        protected virtual IDisposable DeferEventNotifications()
+        {
+            return new DeferredEventsCollection(this);
+        }
+
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
         /// </summary>
@@ -668,6 +680,13 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            if (_deferredEventsCollection is not null)
+            {
+                _deferredEventsCollection.Add(e);
+
+                return;
+            }
+
             if (CollectionChanged is NotifyCollectionChangedEventHandler handler)
             {
                 // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
@@ -745,6 +764,30 @@ namespace Iesi.Collections.Generic
             public void Dispose()
             {
                 _collection._blockReentrancyCount--;
+            }
+        }
+
+        private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+        {
+            private readonly ObservableCollection<T> _collection;
+
+            public DeferredEventsCollection(ObservableCollection<T> collection)
+            {
+                Debug.Assert(collection is not null);
+                Debug.Assert(collection!._deferredEventsCollection is null);
+
+                _collection = collection;
+                _collection._deferredEventsCollection = this;
+            }
+
+            public void Dispose()
+            {
+                _collection._deferredEventsCollection = null;
+
+                foreach (var eventArgs in this)
+                {
+                    _collection.OnCollectionChanged(eventArgs);
+                }
             }
         }
 
