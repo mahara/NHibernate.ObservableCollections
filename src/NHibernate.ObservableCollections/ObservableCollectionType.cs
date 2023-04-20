@@ -6,14 +6,18 @@ namespace Iesi.Collections.Generic
     using NHibernate.UserTypes;
 
     /// <summary>
-    ///     The NHibernate type for a generic list collection that fires events
+    ///     The NHibernate type for a generic collection that fires events
     ///     when item(s) have been added to or removed from the collection.
     /// </summary>
     /// <typeparam name="T">
-    ///     The type of items in the list
+    ///     The type of items in the collection.
     /// </typeparam>
     /// <author>Adrian Alexander</author>
-    public class ObservableListType<T> : IUserCollectionType
+    /// <remarks>
+    ///     REFERENCES:
+    ///     -   https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html
+    /// </remarks>
+    public class ObservableCollectionType<T> : IUserCollectionType
     {
         /// <summary>
         ///     Optional operation. Does the collection contain the entity instance?
@@ -82,7 +86,7 @@ namespace Iesi.Collections.Generic
         /// <inheritdoc />
         public object Instantiate(int anticipatedSize)
         {
-            return new ObservableList<T>();
+            return new ObservableCollection<T>();
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace Iesi.Collections.Generic
         /// <inheritdoc />
         public IPersistentCollection Instantiate(ISessionImplementor session, ICollectionPersister persister)
         {
-            return new PersistentObservableList<T>(session);
+            return new PersistentObservableCollection<T>(session);
         }
 
         /// <summary>
@@ -157,7 +161,7 @@ namespace Iesi.Collections.Generic
         /// <inheritdoc />
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
-            return new PersistentObservableList<T>(session, (ObservableList<T>) collection);
+            return new PersistentObservableCollection<T>(session, (ObservableCollection<T>) collection);
         }
     }
 }

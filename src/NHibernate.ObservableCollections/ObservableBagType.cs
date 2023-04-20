@@ -12,7 +12,6 @@ namespace Iesi.Collections.Generic
     /// <typeparam name="T">
     ///     The type of items in the bag.
     /// </typeparam>
-    /// <author>Adrian Alexander</author>
     public class ObservableBagType<T> : IUserCollectionType
     {
         /// <summary>
@@ -82,7 +81,7 @@ namespace Iesi.Collections.Generic
         /// <inheritdoc />
         public object Instantiate(int anticipatedSize)
         {
-            return new ObservableList<T>();
+            return new ObservableCollection<T>();
         }
 
         /// <summary>
@@ -157,7 +156,7 @@ namespace Iesi.Collections.Generic
         /// <inheritdoc />
         public IPersistentCollection Wrap(ISessionImplementor session, object collection)
         {
-            return new PersistentObservableBag<T>(session, (ObservableList<T>) collection);
+            return new PersistentObservableBag<T>(session, (ObservableCollection<T>) collection);
         }
     }
 }

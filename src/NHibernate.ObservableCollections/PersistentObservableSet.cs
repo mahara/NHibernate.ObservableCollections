@@ -52,6 +52,20 @@ namespace Iesi.Collections.Generic
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
+        ///     Called when the collection changes.
+        /// </summary>
+        /// <param name="sender">
+        ///     The sender.
+        /// </param>
+        /// <param name="args">
+        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
+        /// </param>
+        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            CollectionChanged?.Invoke(this, args);
+        }
+
+        /// <summary>
         ///     Before the initialize.
         /// </summary>
         /// <param name="persister">
@@ -65,20 +79,6 @@ namespace Iesi.Collections.Generic
             base.BeforeInitialize(persister, anticipatedSize);
 
             ((INotifyCollectionChanged) WrappedSet).CollectionChanged += OnCollectionChanged;
-        }
-
-        /// <summary>
-        ///     Called when CollectionChanged.
-        /// </summary>
-        /// <param name="sender">
-        ///     The sender.
-        /// </param>
-        /// <param name="args">
-        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
-        /// </param>
-        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            CollectionChanged?.Invoke(this, args);
         }
     }
 }

@@ -6,6 +6,10 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
     ///     Keeps both sides of a bidirectional one-to-many association in sync with each other.
     /// </summary>
     /// <author>Adrian Alexander</author>
+    /// <remarks>
+    ///     REFERENCES:
+    ///     -   https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html
+    /// </remarks>
     public sealed class OneToManyAssociationSync
     {
         private readonly object _thisOneSide;

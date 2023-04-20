@@ -1,13 +1,15 @@
 namespace Iesi.Collections.Generic
 {
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Runtime.Serialization;
 
     /// <summary>
-    ///     A generic list that fires events when item(s) have been added to or removed from the list.
+    ///     A generic collection that fires events
+    ///     when item(s) have been added to or removed from the collection.
     /// </summary>
     /// <typeparam name="T">
-    ///     The type of items in the list.
+    ///     The type of items in the collection.
     /// </typeparam>
     /// <remarks>
     ///     REFERENCES:
@@ -17,6 +19,7 @@ namespace Iesi.Collections.Generic
     ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs
     ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs
     ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs
+    ///     -   https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html
     ///     -   https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs
     ///     -   https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs
     ///     -   https://blog.stephencleary.com/2009/07/interpreting-notifycollectionchangedeve.html
@@ -24,7 +27,7 @@ namespace Iesi.Collections.Generic
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
-    public class ObservableList<T> :
+    public class ObservableCollection<T> :
         Collection<T>,
         INotifyCollectionChanged, INotifyPropertyChanged
     {
@@ -33,40 +36,44 @@ namespace Iesi.Collections.Generic
         [NonSerialized]
         private int _blockReentrancyCount;
 
+        [NonSerialized]
+        private DeferredEventsCollection? _deferredEventsCollection;
+
         /// <summary>
-        ///     Initializes a new instance of ObservableList that is empty and has default initial capacity.
+        ///     Initializes a new instance of <see cref="ObservableCollection{T}" />
+        ///     that is empty and has default initial capacity.
         /// </summary>
-        public ObservableList()
+        public ObservableCollection()
         {
         }
 
         /// <summary>
-        ///     Initializes a new instance of the ObservableList class that contains elements
+        ///     Initializes a new instance of the <see cref="ObservableCollection{T}" /> class that contains elements
         ///     copied from the specified collection and has sufficient capacity
         ///     to accommodate the number of elements copied.
         /// </summary>
-        /// <param name="collection">The collection whose elements are copied to the new list.</param>
+        /// <param name="collection">The collection whose elements are copied to the new collection.</param>
         /// <remarks>
-        ///     The elements are copied onto the ObservableList
+        ///     The elements are copied onto the <see cref="ObservableCollection{T}" />
         ///     in the same order they are read by the enumerator of the collection.
         /// </remarks>
         /// <exception cref="ArgumentNullException"> collection is a null reference </exception>
-        public ObservableList(IEnumerable<T> collection) :
+        public ObservableCollection(IEnumerable<T> collection) :
             base(new List<T>(collection ?? throw new ArgumentNullException(nameof(collection))))
         {
         }
 
         /// <summary>
-        ///     Initializes a new instance of the ObservableList class
-        ///     that contains elements copied from the specified list
+        ///     Initializes a new instance of the <see cref="ObservableCollection{T}" /> class
+        ///     that contains elements copied from the specified collection.
         /// </summary>
-        /// <param name="list">The list whose elements are copied to the new list.</param>
+        /// <param name="list">The list whose elements are copied to the new collection.</param>
         /// <remarks>
-        ///     The elements are copied onto the ObservableList
+        ///     The elements are copied onto the <see cref="ObservableCollection{T}" />
         ///     in the same order they are read by the enumerator of the list.
         /// </remarks>
         /// <exception cref="ArgumentNullException"> list is a null reference </exception>
-        public ObservableList(List<T> list) :
+        public ObservableCollection(List<T> list) :
             base(new List<T>(list ?? throw new ArgumentNullException(nameof(list))))
         {
         }
@@ -93,8 +100,8 @@ namespace Iesi.Collections.Generic
         protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
-        ///     Called by base class Collection{T} when an item is added to list;
-        ///     raises a CollectionChanged event to any listeners.
+        ///     Called by base class <see cref="Collection{T}" /> when an item is added to collection;
+        ///     raises a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected override void InsertItem(int index, T item)
         {
@@ -108,8 +115,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Called by base class Collection{T} when an item is removed from list;
-        ///     raises a CollectionChanged event to any listeners.
+        ///     Called by base class <see cref="Collection{T}" /> when an item is removed from collection;
+        ///     raises a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected override void RemoveItem(int index)
         {
@@ -124,8 +131,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Called by base class Collection{T} when an item is set in list;
-        ///     raises a CollectionChanged event to any listeners.
+        ///     Called by base class <see cref="Collection{T}" /> when an item is set in collection;
+        ///     raises a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected override void SetItem(int index, T item)
         {
@@ -139,7 +146,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Move item at oldIndex to newIndex.
+        ///     Moves an item at <paramref name="oldIndex" /> to <paramref name="newIndex" />.
         /// </summary>
         public void Move(int oldIndex, int newIndex)
         {
@@ -147,8 +154,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Called by base class Collection{T} when an item is to be moved within the list;
-        ///     raises a CollectionChanged event to any listeners.
+        ///     Called by base class <see cref="Collection{T}" /> when an item is to be moved within the collection;
+        ///     raises a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected virtual void MoveItem(int oldIndex, int newIndex)
         {
@@ -163,8 +170,8 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Called by base class Collection{T} when the list is being cleared;
-        ///     raises a CollectionChanged event to any listeners.
+        ///     Called by base class <see cref="Collection{T}" /> when the collection is being cleared;
+        ///     raises a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected override void ClearItems()
         {
@@ -184,9 +191,7 @@ namespace Iesi.Collections.Generic
         /// <param name="collection"></param>
         public void AddRange(IEnumerable<T> collection)
         {
-            var count = Count;
-            var index = count > 0 ? count : 0;
-            InsertItemsRange(index, collection);
+            InsertItemsRange(Count, collection);
         }
 
         /// <summary>
@@ -260,7 +265,7 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var addedItems = new List<T>(collection);
+            var addedItems = collection.ToList();
             ((List<T>) Items).InsertRange(index, addedItems);
 
             OnCountPropertyChanged();
@@ -302,21 +307,42 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var removedItems = new List<T>();
+            var clusters = new Dictionary<int, List<T>>();
+            var lastIndex = -1;
+            List<T>? lastCluster = null;
             foreach (var item in collection)
             {
                 var index = IndexOf(item);
-                if (index >= 0)
+                if (index < 0)
                 {
-                    base.RemoveItem(index);
+                    continue;
+                }
 
-                    removedItems.Add(item);
+                base.RemoveItem(index);
+
+                if (lastIndex == index && lastCluster != null)
+                {
+                    lastCluster.Add(item);
+                }
+                else
+                {
+                    clusters[lastIndex = index] = lastCluster = new List<T> { item };
                 }
             }
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, 0);
+            if (Count == 0)
+            {
+                OnCollectionReset();
+            }
+            else
+            {
+                foreach (var cluster in clusters)
+                {
+                    OnCollectionChanged(NotifyCollectionChangedAction.Remove, cluster.Value, cluster.Key);
+                }
+            }
         }
 
         protected virtual void RemoveItemsRange(int index, int count)
@@ -328,26 +354,30 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var removedItems = new List<T>();
-            var removedItemsCount = 0;
-            while (removedItemsCount < count)
-            {
-                var removedItem = Items[index];
-                base.RemoveItem(index);
-
-                removedItems.Add(removedItem);
-
-                removedItemsCount++;
-            }
+            var items = (List<T>) Items;
+            var removedItems = items.GetRange(index, count);
+            items.RemoveRange(index, count);
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, index);
+            if (Count == 0)
+            {
+                OnCollectionReset();
+            }
+            else
+            {
+                OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, index);
+            }
+        }
+
+        protected virtual IDisposable DeferEvents()
+        {
+            return new DeferredEventsCollection(this);
         }
 
         /// <summary>
-        ///     Raise CollectionChanged event to any listeners.
-        ///     Properties/methods modifying this ObservableList will raise
+        ///     Raises a <see cref="CollectionChanged" /> event to any listeners.
+        ///     Properties/methods modifying this <see cref="ObservableCollection{T}" /> instance will raise
         ///     a collection changed event through this virtual method.
         /// </summary>
         /// <remarks>
@@ -356,6 +386,13 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            if (_deferredEventsCollection != null)
+            {
+                _deferredEventsCollection.Add(e);
+
+                return;
+            }
+
             var handler = CollectionChanged;
             if (handler != null)
             {
@@ -374,7 +411,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Helper to raise CollectionChanged event to any listeners.
+        ///     Helper to raise a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         private void OnCollectionChanged(NotifyCollectionChangedAction action, object? item, int index)
         {
@@ -382,7 +419,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Helper to raise CollectionChanged event to any listeners.
+        ///     Helper to raise a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         private void OnCollectionChanged(NotifyCollectionChangedAction action, object? item, int oldIndex, int newIndex)
         {
@@ -390,7 +427,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Helper to raise CollectionChanged event to any listeners.
+        ///     Helper to raise a <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         private void OnCollectionChanged(NotifyCollectionChangedAction action, object? oldItem, object? newItem, int index)
         {
@@ -398,7 +435,7 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Helper to raise ranged CollectionChanged event to any listeners.
+        ///     Helper to raise a ranged <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         private void OnCollectionChanged(NotifyCollectionChangedAction action, IList items, int startingIndex)
         {
@@ -406,11 +443,11 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Helper to raise ranged CollectionChanged event with action == Reset to any listeners.
+        ///     Helper to raise a ranged <see cref="CollectionChanged" /> event with action == Reset to any listeners.
         /// </summary>
         private void OnCollectionReset()
         {
-            OnCollectionChanged(ObservableListCache.ResetCollectionChanged);
+            OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
         }
 
         /// <summary>
@@ -426,7 +463,7 @@ namespace Iesi.Collections.Generic
         /// </summary>
         private void OnCountPropertyChanged()
         {
-            OnPropertyChanged(ObservableListCache.CountPropertyChanged);
+            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
         }
 
         /// <summary>
@@ -434,7 +471,7 @@ namespace Iesi.Collections.Generic
         /// </summary>
         private void OnIndexerPropertyChanged()
         {
-            OnPropertyChanged(ObservableListCache.IndexerPropertyChanged);
+            OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
         }
 
         [OnSerializing]
@@ -456,8 +493,9 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
-        ///     Disallow reentrant attempts to change this collection. E.g. an event handler
-        ///     of the CollectionChanged event is not allowed to make changes to this collection.
+        ///     Disallow reentrant attempts to change this collection.
+        ///     E.g. an event handler of the <see cref="CollectionChanged" /> event
+        ///     is not allowed to make changes to this collection.
         /// </summary>
         /// <remarks>
         ///     Typical usage is to wrap e.g. a OnCollectionChanged call with a using() scope:
@@ -508,9 +546,9 @@ namespace Iesi.Collections.Generic
             internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization)
 
             [NonSerialized]
-            internal ObservableList<T> _collection = null!;
+            internal ObservableCollection<T> _collection = null!;
 
-            public SimpleMonitor(ObservableList<T> collection)
+            public SimpleMonitor(ObservableCollection<T> collection)
             {
                 Debug.Assert(collection != null);
 
@@ -522,12 +560,35 @@ namespace Iesi.Collections.Generic
                 _collection._blockReentrancyCount--;
             }
         }
-    }
 
-    internal static class ObservableListCache
-    {
-        internal static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableList<object>.Count));
-        internal static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
-        internal static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
+        private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+        {
+            private readonly ObservableCollection<T> _collection;
+
+            public DeferredEventsCollection(ObservableCollection<T> collection)
+            {
+                Debug.Assert(collection != null);
+                Debug.Assert(collection!._deferredEventsCollection == null);
+
+                _collection = collection;
+                _collection._deferredEventsCollection = this;
+            }
+
+            public void Dispose()
+            {
+                _collection._deferredEventsCollection = null;
+                foreach (var args in this)
+                {
+                    _collection.OnCollectionChanged(args);
+                }
+            }
+        }
+
+        internal static class EventArgsCache
+        {
+            internal static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
+            internal static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
+            internal static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
+        }
     }
 }

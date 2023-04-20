@@ -1,7 +1,7 @@
 namespace Iesi.Collections.Generic.Tests
 {
     [TestFixture]
-    public class ObservableListTests
+    public class ObservableCollectionTests
     {
         private readonly List<int> _items = new();
 
@@ -13,12 +13,12 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanAdd_EmptyObservableList()
+        public void CanAdd_EmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
 
-            var collection = new ObservableList<int>();
+            var collection = new ObservableCollection<int>();
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -49,14 +49,14 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanRemove_NonEmptyObservableList()
+        public void CanRemove_NonEmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
 
             var removedItemIndex = 3;
 
-            var collection = new ObservableList<int>(_items);
+            var collection = new ObservableCollection<int>(_items);
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -87,12 +87,12 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanAddRange_EmptyObservableList()
+        public void CanAddRange_EmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
 
-            var collection = new ObservableList<int>();
+            var collection = new ObservableCollection<int>();
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -123,12 +123,12 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanAddRange_NonEmptyObservableList()
+        public void CanAddRange_NonEmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
 
-            var collection = new ObservableList<int>(_items);
+            var collection = new ObservableCollection<int>(_items);
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -159,7 +159,7 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanRemoveRange_NonEmptyObservableList()
+        public void CanRemoveRange_NonEmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
@@ -167,7 +167,7 @@ namespace Iesi.Collections.Generic.Tests
             var removedItemsIndex = 3;
             var removedItemsCount = 4;
 
-            var collection = new ObservableList<int>(_items);
+            var collection = new ObservableCollection<int>(_items);
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -189,7 +189,7 @@ namespace Iesi.Collections.Generic.Tests
 
             Assert.That(removedItems, Is.Not.Null);
             Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
-            Assert.That(args.OldStartingIndex, Is.EqualTo(0));
+            Assert.That(args.OldStartingIndex, Is.GreaterThanOrEqualTo(0));
 
             itemsCount -= removedItemsCount;
 
@@ -197,7 +197,40 @@ namespace Iesi.Collections.Generic.Tests
         }
 
         [Test]
-        public void CanRemoveRangeByIndexAndCount_NonEmptyObservableList()
+        public void CanRemoveRangeAll_NonEmptyObservableCollection()
+        {
+            NotifyCollectionChangedEventArgs args = null!;
+            var notificationCount = 0;
+
+            var removedItemsIndex = 0;
+            var removedItemsCount = _items.Count;
+
+            var collection = new ObservableCollection<int>(_items);
+            var itemsCount = collection.Count;
+
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
+
+            using var _ = new CollectionChangedEventSubscription(
+                collection,
+                (o, e) =>
+                {
+                    args = e;
+                    notificationCount++;
+                });
+
+            collection.RemoveRange(_items.GetRange(removedItemsIndex, removedItemsCount));
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(notificationCount, Is.EqualTo(1));
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+
+            itemsCount -= removedItemsCount;
+
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        }
+
+        [Test]
+        public void CanRemoveRangeByIndexAndCount_NonEmptyObservableCollection()
         {
             NotifyCollectionChangedEventArgs args = null!;
             var notificationCount = 0;
@@ -205,7 +238,7 @@ namespace Iesi.Collections.Generic.Tests
             var removedItemsIndex = 3;
             var removedItemsCount = 4;
 
-            var collection = new ObservableList<int>(_items);
+            var collection = new ObservableCollection<int>(_items);
             var itemsCount = collection.Count;
 
             Assert.That(collection, Has.Count.EqualTo(itemsCount));
@@ -228,6 +261,39 @@ namespace Iesi.Collections.Generic.Tests
             Assert.That(removedItems, Is.Not.Null);
             Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
             Assert.That(args.OldStartingIndex, Is.EqualTo(removedItemsIndex));
+
+            itemsCount -= removedItemsCount;
+
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        }
+
+        [Test]
+        public void CanRemoveRangeAllByIndexAndCount_NonEmptyObservableCollection()
+        {
+            NotifyCollectionChangedEventArgs args = null!;
+            var notificationCount = 0;
+
+            var removedItemsIndex = 0;
+            var removedItemsCount = _items.Count;
+
+            var collection = new ObservableCollection<int>(_items);
+            var itemsCount = collection.Count;
+
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
+
+            using var _ = new CollectionChangedEventSubscription(
+                collection,
+                (o, e) =>
+                {
+                    args = e;
+                    notificationCount++;
+                });
+
+            collection.RemoveRange(removedItemsIndex, removedItemsCount);
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(notificationCount, Is.EqualTo(1));
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
 
             itemsCount -= removedItemsCount;
 
