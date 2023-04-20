@@ -111,7 +111,7 @@ namespace NHibernate.ObservableCollections.DemoApp.DataAccess
                            m =>
                            {
                                //m.Lazy(CollectionLazy.NoLazy);
-                               m.Type<ObservableListType<SampleItem>>();
+                               m.Type<ObservableCollectionType<SampleItem>>();
                                m.Table("Item_List");
                                m.Cascade(Cascade.Persist);
                                m.Key(k => k.Column("ListContainerId"));
