@@ -20,8 +20,6 @@ namespace Iesi.Collections.Generic
         ISet<T>, IReadOnlyCollection<T>,
         INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
-        private static readonly List<T> NoItems = new();
-
         private HashSet<T> _set;
 
         /// <summary>
@@ -199,7 +197,7 @@ namespace Iesi.Collections.Generic
             _set = copy;
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, NoItems);
+            OnCollectionChanged(removed, EventArgsCache.NoItems);
 
             return removedCount;
         }
@@ -230,7 +228,7 @@ namespace Iesi.Collections.Generic
             _set.Clear();
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, NoItems);
+            OnCollectionChanged(removed, EventArgsCache.NoItems);
         }
 
         /// <summary>
@@ -278,7 +276,7 @@ namespace Iesi.Collections.Generic
             _set = copy;
 
             OnCountPropertyChanged();
-            OnCollectionChanged(NoItems, added);
+            OnCollectionChanged(EventArgsCache.NoItems, added);
         }
 
         /// <summary>
@@ -304,7 +302,7 @@ namespace Iesi.Collections.Generic
             _set = copy;
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, NoItems);
+            OnCollectionChanged(removed, EventArgsCache.NoItems);
         }
 
         /// <summary>
@@ -329,7 +327,7 @@ namespace Iesi.Collections.Generic
             _set = copy;
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, NoItems);
+            OnCollectionChanged(removed, EventArgsCache.NoItems);
         }
 
         /// <summary>
@@ -501,7 +499,7 @@ namespace Iesi.Collections.Generic
 
         private void OnCountPropertyChanging()
         {
-            OnPropertyChanging(ObservableSetCache.CountPropertyChanging);
+            OnPropertyChanging(EventArgsCache.CountPropertyChanging);
         }
 
         /// <summary>
@@ -515,13 +513,15 @@ namespace Iesi.Collections.Generic
 
         private void OnCountPropertyChanged()
         {
-            OnPropertyChanged(ObservableSetCache.CountPropertyChanged);
+            OnPropertyChanged(EventArgsCache.CountPropertyChanged);
         }
-    }
 
-    internal static class ObservableSetCache
-    {
-        public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<object>.Count));
-        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<object>.Count));
+        internal static class EventArgsCache
+        {
+            public static readonly List<T> NoItems = new();
+
+            public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<T>.Count));
+            public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<T>.Count));
+        }
     }
 }

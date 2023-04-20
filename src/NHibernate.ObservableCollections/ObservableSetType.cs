@@ -12,7 +12,6 @@ namespace Iesi.Collections.Generic
     /// <typeparam name="T">
     ///     The type of items in the set.
     /// </typeparam>
-    /// <author>Adrian Alexander</author>
     public class ObservableSetType<T> : IUserCollectionType
     {
         /// <summary>
