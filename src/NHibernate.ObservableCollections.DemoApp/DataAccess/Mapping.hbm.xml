@@ -37,7 +37,7 @@
     <list name="SampleList"
           table="Item_List"
           cascade="save-update"
-          collection-type="Iesi.Collections.Generic.ObservableListType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
+          collection-type="Iesi.Collections.Generic.ObservableCollectionType`1[[NHibernate.ObservableCollections.DemoApp.SampleItem, NHibernate.ObservableCollections.DemoApp]], NHibernate.ObservableCollections">
       <key column="ListContainerId" />
       <index column="PositionNumber" />
       <many-to-many column="ItemId"
