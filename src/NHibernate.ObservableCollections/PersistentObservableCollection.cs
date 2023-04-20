@@ -7,28 +7,28 @@ namespace Iesi.Collections.Generic
     using NHibernate.Persister.Collection;
 
     /// <summary>
-    ///     Represents a persistent observable list.
+    ///     Represents a persistent observable collection.
     /// </summary>
     /// <typeparam name="T">
-    ///     The type of the items in the list.
+    ///     The type of the items in the collection.
     /// </typeparam>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionProxy<>))]
-    public class PersistentObservableList<T> : PersistentGenericList<T>, INotifyCollectionChanged
+    public class PersistentObservableCollection<T> : PersistentGenericList<T>, INotifyCollectionChanged
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="PersistentObservableList{T}" /> class.
+        ///     Initializes a new instance of the <see cref="PersistentObservableCollection{T}" /> class.
         /// </summary>
         /// <param name="session">
         ///     The session.
         /// </param>
-        public PersistentObservableList(ISessionImplementor session) :
+        public PersistentObservableCollection(ISessionImplementor session) :
             base(session)
         {
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="PersistentObservableList{T}" /> class.
+        ///     Initializes a new instance of the <see cref="PersistentObservableCollection{T}" /> class.
         /// </summary>
         /// <param name="session">
         ///     The session.
@@ -36,7 +36,7 @@ namespace Iesi.Collections.Generic
         /// <param name="collection">
         ///     The collection.
         /// </param>
-        public PersistentObservableList(ISessionImplementor session, IList<T> collection) :
+        public PersistentObservableCollection(ISessionImplementor session, IList<T> collection) :
             base(session, collection)
         {
             if (collection != null)
@@ -52,6 +52,20 @@ namespace Iesi.Collections.Generic
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
         /// <summary>
+        ///     Called when the collection changes.
+        /// </summary>
+        /// <param name="sender">
+        ///     The sender.
+        /// </param>
+        /// <param name="args">
+        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
+        /// </param>
+        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            CollectionChanged?.Invoke(this, args);
+        }
+
+        /// <summary>
         ///     Before the initialize.
         /// </summary>
         /// <param name="persister">
@@ -65,20 +79,6 @@ namespace Iesi.Collections.Generic
             base.BeforeInitialize(persister, anticipatedSize);
 
             ((INotifyCollectionChanged) WrappedList).CollectionChanged += OnCollectionChanged;
-        }
-
-        /// <summary>
-        ///     Called when CollectionChanged.
-        /// </summary>
-        /// <param name="sender">
-        ///     The sender.
-        /// </param>
-        /// <param name="args">
-        ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
-        /// </param>
-        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
-        {
-            CollectionChanged?.Invoke(this, args);
         }
     }
 }
