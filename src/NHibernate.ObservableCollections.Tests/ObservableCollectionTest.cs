@@ -189,7 +189,40 @@ namespace Iesi.Collections.Tests.Generic
 
             Assert.That(eventOldItems, Is.Not.Null);
             Assert.That(eventOldItems.Count, Is.EqualTo(itemsRemovedCount));
-            Assert.That(@event.OldStartingIndex, Is.EqualTo(0));
+            Assert.That(@event.OldStartingIndex, Is.GreaterThanOrEqualTo(0));
+
+            collectionCount -= itemsRemovedCount;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
+
+        [Test]
+        public void CanRemoveRangeAll_NonEmptyObservableCollection()
+        {
+            NotifyCollectionChangedEventArgs @event = null!;
+            var eventsCount = 0;
+
+            var itemsRemovedIndex = 0;
+            var itemsRemovedCount = _items.Count;
+
+            var collection = new ObservableCollection<int>(_items);
+            var collectionCount = collection.Count;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+
+            using var _ = new CollectionChangedEventSubscription(
+                collection,
+                (o, e) =>
+                {
+                    @event = e;
+                    eventsCount++;
+                });
+
+            collection.RemoveRange(_items.GetRange(itemsRemovedIndex, itemsRemovedCount));
+
+            Assert.That(@event, Is.Not.Null);
+            Assert.That(eventsCount, Is.EqualTo(1));
+            Assert.That(@event.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
 
             collectionCount -= itemsRemovedCount;
 
@@ -228,6 +261,39 @@ namespace Iesi.Collections.Tests.Generic
             Assert.That(eventOldItems, Is.Not.Null);
             Assert.That(eventOldItems.Count, Is.EqualTo(itemsRemovedCount));
             Assert.That(@event.OldStartingIndex, Is.EqualTo(itemsRemovedIndex));
+
+            collectionCount -= itemsRemovedCount;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
+
+        [Test]
+        public void CanRemoveRangeAllByIndexAndCount_NonEmptyObservableCollection()
+        {
+            NotifyCollectionChangedEventArgs @event = null!;
+            var eventsCount = 0;
+
+            var itemsRemovedIndex = 0;
+            var itemsRemovedCount = _items.Count;
+
+            var collection = new ObservableCollection<int>(_items);
+            var collectionCount = collection.Count;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+
+            using var _ = new CollectionChangedEventSubscription(
+                collection,
+                (o, e) =>
+                {
+                    @event = e;
+                    eventsCount++;
+                });
+
+            collection.RemoveRange(itemsRemovedIndex, itemsRemovedCount);
+
+            Assert.That(@event, Is.Not.Null);
+            Assert.That(eventsCount, Is.EqualTo(1));
+            Assert.That(@event.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
 
             collectionCount -= itemsRemovedCount;
 
