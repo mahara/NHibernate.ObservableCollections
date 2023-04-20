@@ -7,10 +7,10 @@ using NHibernate.Persister.Collection;
 namespace Iesi.Collections.Generic
 {
     /// <summary>
-    ///     Represents a persistent observable list.
+    ///     Represents a persistent observable collection.
     /// </summary>
     /// <typeparam name="T">
-    ///     The type of the items in the list.
+    ///     The type of the items in the collection.
     /// </typeparam>
     /// <remarks>
     ///     AUTHORS:
@@ -21,14 +21,14 @@ namespace Iesi.Collections.Generic
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionProxy<>))]
-    public class PersistentObservableList<T> : PersistentGenericList<T>, INotifyCollectionChanged
+    public class PersistentObservableCollection<T> : PersistentGenericList<T>, INotifyCollectionChanged
     {
-        public PersistentObservableList(ISessionImplementor session) :
+        public PersistentObservableCollection(ISessionImplementor session) :
             base(session)
         {
         }
 
-        public PersistentObservableList(ISessionImplementor session, IList<T> collection) :
+        public PersistentObservableCollection(ISessionImplementor session, IList<T> collection) :
             base(session, collection)
         {
             if (collection is not null)
