@@ -518,7 +518,7 @@ namespace Iesi.Collections.Generic
 
         internal static class EventArgsCache
         {
-            public static readonly List<T> NoItems = new();
+            public static readonly List<T> NoItems = [];
 
             public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<T>.Count));
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<T>.Count));
