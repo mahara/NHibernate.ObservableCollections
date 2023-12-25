@@ -4,6 +4,4 @@ NHibernate.ObservableCollections
 
 ## License
 
-Copyright (c) 2022 NHibernate.ObservableCollections Contributors.
-
-It is free software, and may be redistributed under the terms of the [MIT](https://opensource.org/licenses/MIT) license.
+NHibernate.ObservableCollections is &copy; 2007-2024 NHibernate.ObservableCollections Contributors. It is licensed under the terms of the [MIT](https://opensource.org/license/mit/) license.
