@@ -22,10 +22,9 @@ namespace NHibernate.ObservableCollections.Helpers
                 // true if the NHibernate assembly is present
                 return (bool) _isInitializedMethod.Invoke(
                     null,
-                    new object?[]
-                    {
+                    [
                         collection
-                    })!;
+                    ])!;
             }
 
             return true;
