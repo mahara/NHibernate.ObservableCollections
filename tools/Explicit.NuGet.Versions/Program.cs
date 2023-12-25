@@ -1,5 +1,5 @@
 #region License
-// Copyright 2004-2022 Castle Project - https://www.castleproject.org/
+// Copyright 2004-2024 Castle Project - https://www.castleproject.org/
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -51,7 +47,7 @@ namespace Explicit.NuGet.Versions
 
                 foreach (var zipEntry in zipFile.Entries)
                 {
-                    if (zipEntry.FileName.ToLowerInvariant().EndsWith(".nuspec"))
+                    if (zipEntry.FileName.EndsWith(".nuspec", StringComparison.OrdinalIgnoreCase))
                     {
                         using var zipEntryReader = new StreamReader(zipEntry.OpenReader());
 
@@ -81,7 +77,11 @@ namespace Explicit.NuGet.Versions
 
                 string updatedNuspecXmlDocument;
 
-                using (var writer = new StringWriterWithEncoding(Encoding.UTF8))
+                // UTF8 Encoding without BOM
+                using (var writer = new StringWriterWithEncoding(new UTF8Encoding()))
+                // UTF8 Encoding with BOM
+                //using (var writer = new StringWriterWithEncoding(Encoding.UTF8))
+
                 using (var xmlWriter = new XmlTextWriter(writer) { Formatting = Formatting.Indented })
                 {
                     nuspecXmlDocument.Save(xmlWriter);
@@ -96,15 +96,15 @@ namespace Explicit.NuGet.Versions
         {
             WalkDocumentNodes(nuspecXmlDocument.ChildNodes, node =>
             {
-                if (node.Name.ToLowerInvariant() == "dependency" &&
-                    !string.IsNullOrEmpty(node.Attributes["id"].Value) &&
-                    node.Attributes["id"].Value.StartsWith(packageIdPrefixFilter, StringComparison.InvariantCultureIgnoreCase))
+                if (string.Equals(node.Name, "dependency", StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrEmpty(node.Attributes!["id"]!.Value) &&
+                    node.Attributes!["id"]!.Value.StartsWith(packageIdPrefixFilter, StringComparison.OrdinalIgnoreCase))
                 {
-                    var dependencyVersion = node.Attributes["version"].Value;
-                    if (!node.Attributes["version"].Value.StartsWith("[") &&
-                        !node.Attributes["version"].Value.EndsWith("]"))
+                    var dependencyVersion = node.Attributes!["version"]!.Value;
+                    if (!(dependencyVersion.StartsWith('[') ||
+                          dependencyVersion.EndsWith(']')))
                     {
-                        node.Attributes["version"].Value = $"[{dependencyVersion}]";
+                        node.Attributes!["version"]!.Value = $"[{dependencyVersion}]";
                     }
                 }
             });
@@ -131,11 +131,11 @@ namespace Explicit.NuGet.Versions
             }
         }
 
-        class NuspecContentEntry
+        record NuspecContentEntry
         {
-            public string EntryName { get; set; }
+            public string EntryName { get; set; } = string.Empty;
 
-            public string Contents { get; set; }
+            public string Contents { get; set; } = string.Empty;
         }
 
         sealed class StringWriterWithEncoding : StringWriter
