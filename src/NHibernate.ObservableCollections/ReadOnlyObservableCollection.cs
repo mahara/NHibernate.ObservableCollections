@@ -29,13 +29,15 @@ namespace Iesi.Collections.Generic
             ((INotifyPropertyChanged) Items).PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
         }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         ///     Gets an empty <see cref="ReadOnlyObservableCollection{T}" />.
         /// </summary>
         /// <value>An empty <see cref="ReadOnlyObservableCollection{T}" />.</value>
         /// <remarks>The returned instance is immutable and will always be empty.</remarks>
         public static ReadOnlyObservableCollection<T> Empty { get; } =
-            new ReadOnlyObservableCollection<T>(new ObservableCollection<T>());
+            new ReadOnlyObservableCollection<T>([]);
+#endif
 
         /// <summary>
         ///     CollectionChanged event (per <see cref="INotifyCollectionChanged" />).

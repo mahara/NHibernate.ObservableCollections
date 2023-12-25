@@ -70,7 +70,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         /// <summary>
         ///     Responds to add/remove events raised by the one-side's collection.
         /// </summary>
-        public void UpdateManySide(object sender, NotifyCollectionChangedEventArgs e)
+        public void UpdateManySide(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
