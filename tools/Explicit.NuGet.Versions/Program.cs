@@ -1,5 +1,5 @@
 #region License
-// Copyright (c) 2004-2022 Castle Project - https://www.castleproject.org/
+// Copyright (c) 2004-2023 Castle Project - https://www.castleproject.org/
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
 // limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Xml;
 
@@ -63,24 +60,22 @@ namespace Explicit.NuGet.Versions
 
             foreach (var packageFilePath in packageDiscoveryDirectory.GetFiles("*.nupkg", SearchOption.AllDirectories))
             {
-                using (var zipFile = ZipFile.Read(packageFilePath.FullName))
-                {
-                    foreach (var zipEntry in zipFile.Entries)
-                    {
-                        if (zipEntry.FileName.ToLowerInvariant().EndsWith(".nuspec"))
-                        {
-                            using (var zipEntryReader = new StreamReader(zipEntry.OpenReader(), Utf8Encoding))
-                            {
-                                var nuspecXml = zipEntryReader.ReadToEnd();
-                                packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
-                                {
-                                    EntryName = zipEntry.FileName,
-                                    Contents = nuspecXml,
-                                };
+                using var zipFile = ZipFile.Read(packageFilePath.FullName);
 
-                                break;
-                            }
-                        }
+                foreach (var zipEntry in zipFile.Entries)
+                {
+                    if (zipEntry.FileName.EndsWith(".nuspec", StringComparison.OrdinalIgnoreCase))
+                    {
+                        using var zipEntryReader = new StreamReader(zipEntry.OpenReader(), Utf8Encoding);
+
+                        var nuspecXml = zipEntryReader.ReadToEnd();
+                        packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
+                        {
+                            EntryName = zipEntry.FileName,
+                            Contents = nuspecXml,
+                        };
+
+                        break;
                     }
                 }
             }
@@ -115,15 +110,17 @@ namespace Explicit.NuGet.Versions
         {
             WalkDocumentNodes(nuspecXmlDocument.ChildNodes, node =>
             {
-                if (node.Name.ToLowerInvariant() == "dependency" &&
-                    !string.IsNullOrEmpty(node.Attributes["id"].Value) &&
-                    node.Attributes["id"].Value.StartsWith(packageIdPrefixFilter, StringComparison.InvariantCultureIgnoreCase))
+                if (node is XmlElement element &&
+                    string.Equals(element.Name, "dependency", StringComparison.OrdinalIgnoreCase) &&
+                    element.GetAttribute("id").StartsWith(packageIdPrefixFilter, StringComparison.OrdinalIgnoreCase))
                 {
-                    var dependencyVersion = node.Attributes["version"].Value;
-                    if (!node.Attributes["version"].Value.StartsWith("[") &&
-                        !node.Attributes["version"].Value.EndsWith("]"))
+                    var version = element.GetAttribute("version");
+                    if (!string.IsNullOrEmpty(version) &&
+                        !version.Contains('*', StringComparison.Ordinal) &&
+                        !version.StartsWith('[') && !version.StartsWith('(') &&
+                        !version.EndsWith(']') && !version.EndsWith(')'))
                     {
-                        node.Attributes["version"].Value = $"[{dependencyVersion}]";
+                        element.SetAttribute("version", $"[{version}]");
                     }
                 }
             });
@@ -135,7 +132,10 @@ namespace Explicit.NuGet.Versions
             {
                 callback(node);
 
-                WalkDocumentNodes(node.ChildNodes, callback);
+                if (node.HasChildNodes)
+                {
+                    WalkDocumentNodes(node.ChildNodes, callback);
+                }
             }
         }
 
@@ -143,34 +143,28 @@ namespace Explicit.NuGet.Versions
         {
             foreach (var packageFile in packageMetaData)
             {
-                using (var zipFile = ZipFile.Read(packageFile.Key))
-                {
-                    zipFile.UpdateEntry(packageFile.Value.EntryName, Utf8Encoding.GetBytes(packageFile.Value.Contents));
-                    zipFile.Save();
-                }
+                using var zipFile = ZipFile.Read(packageFile.Key);
+
+                zipFile.UpdateEntry(packageFile.Value.EntryName, Utf8Encoding.GetBytes(packageFile.Value.Contents));
+                zipFile.Save();
             }
         }
 
-        class NuspecContentEntry
+        record NuspecContentEntry
         {
-            public string EntryName { get; set; }
+            public string EntryName { get; init; } = string.Empty;
 
-            public string Contents { get; set; }
+            public string Contents { get; set; } = string.Empty;
         }
 
         sealed class StringWriterWithEncoding : StringWriter
         {
-            private readonly Encoding _encoding;
-
             public StringWriterWithEncoding(Encoding encoding)
             {
-                _encoding = encoding;
+                Encoding = encoding;
             }
 
-            public override Encoding Encoding
-            {
-                get { return _encoding; }
-            }
+            public override Encoding Encoding { get; }
         }
     }
 }
