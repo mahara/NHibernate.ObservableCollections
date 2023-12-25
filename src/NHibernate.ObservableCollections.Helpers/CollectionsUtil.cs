@@ -56,8 +56,8 @@ namespace NHibernate.ObservableCollections.Helpers
                 return false;
             }
 
-            List<T> listA = new(collectionA);
-            List<T> listB = new(collectionB);
+            List<T> listA = [.. collectionA];
+            List<T> listB = [.. collectionB];
 
             // Make sure that every object in one is also in two
             for (var i = 0; i < listA.Count; i++)
