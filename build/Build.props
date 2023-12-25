@@ -1,8 +1,8 @@
 <Project>
 
   <!--
-    https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build
-    https://docs.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-your-build
+    https://learn.microsoft.com/en-us/cpp/build/reference/common-macros-for-build-commands-and-properties
     https://github.com/dotnet/sdk/issues/867
     https://github.com/dotnet/msbuild/issues/3244
     https://github.com/dotnet/msbuild/issues/3497
@@ -16,11 +16,11 @@
   -->
 
   <PropertyGroup>
-    <WinExeTargetFrameworks>net7.0-windows</WinExeTargetFrameworks>
-    <WinLibTargetFrameworks>net7.0-windows;net6.0-windows;net48</WinLibTargetFrameworks>
-    <ExeTargetFrameworks>net7.0</ExeTargetFrameworks>
-    <ExeTestTargetFrameworks>net7.0;net6.0;net48</ExeTestTargetFrameworks>
-    <LibTargetFrameworks>net7.0;net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
+    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
+    <ExeTestTargetFrameworks>net8.0;net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -57,7 +57,7 @@
 
       - IntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
         It is used by MSBuild as temporary output path.
-        When overridden, Configuration MUST BE EXPLICITLY specified within the path,
+        When overridden, Configuration must be EXPLICITLY specified within the path,
         along with MSBuildProjectName.
 
         IntermediateOutputPath is re-defined as follows:
@@ -65,13 +65,13 @@
           <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
 
       - BaseIntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
-        It is used by NuGet as temporary output path for NuGet specification files (.nuspec)
-        for the project NuGet package created.
+        It is used by NuGet as temporary output path for
+        NuGet specification files (.nuspec) of NuGet package of the project.
         BaseIntermediateOutputPath has a certain, predefined folder structure,
         where Configuration will be automatically added after itself.
         Thus, there is no need to re-specify Configuration within the path.
-        The MSBuildProjectName however MUST BE EXPLICITLY specified.
-        BaseIntermediateOutputPath consists of the following files:
+        The MSBuildProjectName, however, must be EXPLICITLY specified.
+        BaseIntermediateOutputPath contains, at least, the following files:
         - [ProjectName/PackageName].[PackageVersion].nuspec
         - [ProjectName/PackageName].[PackageVersion].symbols.nuspec
 
@@ -80,10 +80,13 @@
           <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
 
       - MSBuildProjectExtensionsPath is scoped per project (MSBuildProjectName).
+        By default, its value is the same as BaseIntermediateOutputPath.
         It is used by NuGet as RestoreOutputPath.
-        https://github.com/NuGet/NuGet.Client/blob/deab84db30cbd8cc738cd46ad694aebdbb43a1cf/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L592
-          https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
-        MSBuildProjectExtensionsPath consists of, at least, the following files:
+        https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+          https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
+          https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets
+          https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L795
+        MSBuildProjectExtensionsPath contains, at least, the following files:
         - project.assets.json
         - project.nuget.cache
         - [ProjectName].csproj.nuget.dgspec.json
@@ -120,6 +123,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <BuildVersion Condition="'$(BuildVersion)' == ''">0.0.0</BuildVersion>
@@ -134,7 +139,7 @@
   </PropertyGroup>
 
   <!--
-    https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
     <Product>NHibernate.ObservableCollections</Product>
@@ -150,6 +155,7 @@
 
     <PackageVersion>$(BuildVersion)</PackageVersion>
     <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
@@ -165,6 +171,14 @@
     <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
     <NetConstants>TRACE</NetConstants>
     <NetFrameworkConstants>TRACE</NetFrameworkConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Debug'">
+    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Release'">
+    <DefineConstants>$(NetConstants)</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Debug'">
@@ -192,9 +206,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NETStandard.Library" Version="2.0.3" />
+    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <!--
@@ -203,13 +217,13 @@
     -->
     <Reference Include="System.Transactions" />
 
-    <PackageReference Include="IndexRange" Version="1.0.3" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <PackageReference Include="IndexRange" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" />
     <!--
       https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
       https://github.com/Microsoft/dotnet/tree/main/releases/reference-assemblies
     -->
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
