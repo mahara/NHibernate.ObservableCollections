@@ -33,7 +33,7 @@ ECHO ----------------------------------------------------
 dotnet build "NHibernate.ObservableCollections.sln" --configuration %BUILD_CONFIGURATION% -property:APPVEYOR_BUILD_VERSION=%BUILD_VERSION% || EXIT /B 1
 
 dotnet build "tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln" --configuration Release
-"tools\Explicit.NuGet.Versions\bin\nev.exe" "bin" "NHibernate.ObservableCollections."
+"tools\Explicit.NuGet.Versions\bin\nev.exe" "bin" "NHibernate.ObservableCollections"
 
 GOTO TEST
 
@@ -44,6 +44,12 @@ REM https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test
 REM https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-vstest
 REM https://github.com/Microsoft/vstest-docs/blob/main/docs/report.md
 REM https://github.com/spekt/nunit.testlogger/issues/56
+
+ECHO ------------------------------------
+ECHO Running .NET (net8.0) Unit Tests
+ECHO ------------------------------------
+
+dotnet test "bin\%BUILD_CONFIGURATION%\net8.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net8.0_TestResults.xml;format=nunit3"
 
 ECHO ------------------------------------
 ECHO Running .NET (net7.0) Unit Tests
