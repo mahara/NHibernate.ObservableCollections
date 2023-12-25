@@ -68,7 +68,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(comparer);
-            _list = new List<T>();
+            _list = [];
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(collection, comparer);
-            _list = new List<T>(_set);
+            _list = [.. _set];
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             OnCountPropertyChanged();
             OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
@@ -327,7 +327,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             OnCountPropertyChanged();
             OnCollectionChanged(EventArgsCache.Items_Empty, added, 0);
@@ -356,7 +356,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             OnCountPropertyChanged();
             OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
@@ -384,7 +384,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             OnCountPropertyChanged();
             OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
@@ -414,7 +414,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             OnCountPropertyChanged();
             OnCollectionChanged(removed, added, 0);
@@ -708,7 +708,7 @@ namespace Iesi.Collections.Generic
 
         internal static class EventArgsCache
         {
-            public static readonly T[] Items_Empty = Array.Empty<T>();
+            public static readonly T[] Items_Empty = [];
 
             public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
