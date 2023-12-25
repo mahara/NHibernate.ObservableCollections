@@ -561,7 +561,7 @@ namespace Iesi.Collections.Generic
 
         internal static class EventArgsCache
         {
-            public static readonly T[] Items_Empty = Array.Empty<T>();
+            public static readonly T[] Items_Empty = [];
 
             public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
