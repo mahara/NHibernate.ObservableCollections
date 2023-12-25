@@ -326,7 +326,7 @@ namespace Iesi.Collections.Generic
                 }
                 else
                 {
-                    clusters[lastIndex = index] = lastCluster = new List<T> { item };
+                    clusters[lastIndex = index] = lastCluster = [item];
                 }
             }
 
