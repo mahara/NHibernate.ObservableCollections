@@ -66,7 +66,7 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         /// <exception cref="ArgumentNullException">The <paramref name="collection" /> parameter cannot be <see langword="null" />.</exception>
         public ObservableCollection(IEnumerable<T> collection) :
-            base(new List<T>(collection ?? throw new ArgumentNullException(nameof(collection))))
+            base([.. collection ?? throw new ArgumentNullException(nameof(collection))])
         {
         }
 
@@ -81,7 +81,7 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         /// <exception cref="ArgumentNullException">The <paramref name="list" /> parameter cannot be <see langword="null" />.</exception>
         public ObservableCollection(List<T> list) :
-            base(new List<T>(list ?? throw new ArgumentNullException(nameof(list))))
+            base([.. list ?? throw new ArgumentNullException(nameof(list))])
         {
         }
 
@@ -418,7 +418,7 @@ namespace Iesi.Collections.Generic
                 }
                 else
                 {
-                    clusters[lastIndex = index] = lastCluster = new List<T> { item };
+                    clusters[lastIndex = index] = lastCluster = [item];
                 }
             }
 
