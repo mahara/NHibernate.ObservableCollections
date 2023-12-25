@@ -4,7 +4,7 @@
 ## 4.0.0 (2023-xx-xx)
 
 Improvements:
-- Added **`.NET 7.0`** and **`.NET 6.0`** supports.
+- Added **`.NET 8.0`**, **`.NET 7.0`**, and **`.NET 6.0`** supports.
 
 Breaking Changes:
-- Updated **`NHibernate`** version to 5.3.0.
+- Updated **`NHibernate`** version to 5.4.0.
