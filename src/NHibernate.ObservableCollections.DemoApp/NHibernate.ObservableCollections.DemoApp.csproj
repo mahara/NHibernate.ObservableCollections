@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" />
+    <PackageReference Include="Iesi.Collections" />
     <PackageReference Include="NHibernate" />
     <PackageReference Include="Remotion.Linq" />
     <PackageReference Include="Remotion.Linq.EagerFetching" />
