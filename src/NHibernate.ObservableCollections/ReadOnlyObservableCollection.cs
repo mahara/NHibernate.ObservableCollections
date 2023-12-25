@@ -71,13 +71,15 @@ namespace Iesi.Collections.Generic
             remove => PropertyChanged -= value;
         }
 
+#if !NET8_0_OR_GREATER
         /// <summary>
         ///     Gets an empty <see cref="ReadOnlyObservableCollection{T}" />.
         /// </summary>
         /// <value>An empty <see cref="ReadOnlyObservableCollection{T}" />.</value>
         /// <remarks>The returned instance is immutable and will always be empty.</remarks>
         public static ReadOnlyObservableCollection<T> Empty { get; } =
-            new ReadOnlyObservableCollection<T>(new ObservableCollection<T>());
+            new ReadOnlyObservableCollection<T>([]);
+#endif
 
         private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
