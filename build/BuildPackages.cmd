@@ -47,6 +47,12 @@ REM https://github.com/Microsoft/vstest-docs/blob/main/docs/report.md
 REM https://github.com/spekt/nunit.testlogger/issues/56
 
 ECHO ------------------------------------
+ECHO Running .NET (net8.0) Unit Tests
+ECHO ------------------------------------
+
+dotnet test "bin\%BUILD_CONFIGURATION%\net8.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "bin\%BUILD_CONFIGURATION%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net8.0_TestResults.xml;format=nunit3"
+
+ECHO ------------------------------------
 ECHO Running .NET (net7.0) Unit Tests
 ECHO ------------------------------------
 
