@@ -71,7 +71,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(comparer);
-            _list = new List<T>();
+            _list = [];
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(comparer);
-            _list = new List<T>();
+            _list = [];
 
             foreach (var item in collection)
             {
@@ -329,7 +329,7 @@ namespace Iesi.Collections.Generic
             var removed = _set.Where(i => !copy.Contains(i)).ToArray();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             VerifyState();
 
@@ -406,7 +406,7 @@ namespace Iesi.Collections.Generic
             var added = copy.Where(i => !_set.Contains(i)).ToArray();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             VerifyState();
 
@@ -443,7 +443,7 @@ namespace Iesi.Collections.Generic
             var removed = _set.Where(i => !copy.Contains(i)).ToArray();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             VerifyState();
 
@@ -479,7 +479,7 @@ namespace Iesi.Collections.Generic
             var removed = _set.Where(i => !copy.Contains(i)).ToArray();
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             VerifyState();
 
@@ -517,7 +517,7 @@ namespace Iesi.Collections.Generic
             }
 
             _set = copy;
-            _list = new List<T>(_set);
+            _list = [.. _set];
 
             VerifyState();
 
@@ -887,7 +887,7 @@ namespace Iesi.Collections.Generic
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
             public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
 
-            public static readonly T[] Items_Empty = Array.Empty<T>();
+            public static readonly T[] Items_Empty = [];
         }
     }
 }
