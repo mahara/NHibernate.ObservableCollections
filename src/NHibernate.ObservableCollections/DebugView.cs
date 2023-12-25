@@ -3,7 +3,7 @@ namespace Iesi.Collections.Generic
     using System.Diagnostics;
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <remarks>

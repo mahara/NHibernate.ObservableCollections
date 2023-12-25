@@ -1,6 +1,7 @@
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.2.32519.379
+VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E507A42-984B-470D-8A0C-648B9AF8E1DC}"
 	ProjectSection(SolutionItems) = preProject
@@ -9,20 +10,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		CHANGELOG.md = CHANGELOG.md
 		LICENSE = LICENSE
-		Read Me.txt = Read Me.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79-C382-439C-AFD9-5505D414680D}"
 	ProjectSection(SolutionItems) = preProject
+		BuildPackages.cmd = BuildPackages.cmd
+		CleanPackages.cmd = CleanPackages.cmd
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{E8456C26-3E0D-4272-9794-3041D2DC97E8}"
+	ProjectSection(SolutionItems) = preProject
 		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
 		build\Build.props = build\Build.props
 		build\Build.targets = build\Build.targets
-		BuildPackages.cmd = BuildPackages.cmd
 		build\BuildPackages.cmd = build\BuildPackages.cmd
-		CleanPackages.cmd = CleanPackages.cmd
-		nuget.config = nuget.config
-		build\Read Me.txt = build\Read Me.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE}"
@@ -30,9 +36,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Ac
 		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BCAA4557-7813-4A6E-AFE3-D5745C62E6BB}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
+	EndProjectSection
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections", "src\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj", "{74E68B0D-2E27-4360-8AEB-75D389533DD3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.Tests", "src\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.csproj", "{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.Helpers", "src\NHibernate.ObservableCollections.Helpers\NHibernate.ObservableCollections.Helpers.csproj", "{F4BDCE2B-9911-48C9-9D5C-93CB14992966}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.DemoApp", "src\NHibernate.ObservableCollections.DemoApp\NHibernate.ObservableCollections.DemoApp.csproj", "{E97AE325-7B6F-4C7F-AF03-643877DC8C52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +64,14 @@ Global
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4BDCE2B-9911-48C9-9D5C-93CB14992966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E97AE325-7B6F-4C7F-AF03-643877DC8C52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E97AE325-7B6F-4C7F-AF03-643877DC8C52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E97AE325-7B6F-4C7F-AF03-643877DC8C52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E97AE325-7B6F-4C7F-AF03-643877DC8C52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +79,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6E3FEE79-C382-439C-AFD9-5505D414680D} = {7E507A42-984B-470D-8A0C-648B9AF8E1DC}
 		{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
+		{E8456C26-3E0D-4272-9794-3041D2DC97E8} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
+		{BCAA4557-7813-4A6E-AFE3-D5745C62E6BB} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {533C1EB4-B488-47CC-AB26-AD9C1A24E5CF}

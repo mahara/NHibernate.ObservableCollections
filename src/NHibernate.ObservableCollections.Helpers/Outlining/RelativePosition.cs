@@ -2,7 +2,7 @@ namespace NHibernate.ObservableCollections.Helpers.Outlining
 {
     using System.Windows.Input;
 
-    public struct RelativePosition<T>
+    public record struct RelativePosition<T>
     {
         /// <summary>Desired index when inserting a child.</summary>
         public int ChildIndex;
