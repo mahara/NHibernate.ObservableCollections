@@ -3,7 +3,7 @@ namespace Iesi.Collections.Generic.Tests
     [TestFixture]
     public class ObservableSetTests
     {
-        private readonly List<int> _items = new();
+        private readonly List<int> _items = [];
 
         [OneTimeSetUp]
         public void SetupFixture()
