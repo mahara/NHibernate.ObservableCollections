@@ -24,7 +24,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 var newItems = e.NewItems;
-                if (newItems != null)
+                if (newItems is not null)
                 {
                     foreach (SampleItem item in newItems)
                     {
@@ -35,7 +35,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 var oldItems = e.OldItems;
-                if (oldItems != null)
+                if (oldItems is not null)
                 {
                     foreach (SampleItem item in oldItems)
                     {
