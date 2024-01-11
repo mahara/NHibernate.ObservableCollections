@@ -8,7 +8,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
     /// <author>Adrian Alexander</author>
     /// <remarks>
     ///     REFERENCES:
-    ///     -   https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html
+    ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
     /// </remarks>
     public sealed class ManyToManyAssociationSync<T>
     {
@@ -78,13 +78,10 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private ICollection<T>? GetOtherSidesCollection(object otherSide)
         {
-            if (_otherSideProperty == null)
-            {
-                _otherSideProperty = otherSide.GetType().GetProperty(_otherSidePropertyName);
-            }
+            _otherSideProperty ??= otherSide.GetType().GetProperty(_otherSidePropertyName);
 
             var otherSideProperty = _otherSideProperty;
-            if (otherSideProperty != null)
+            if (otherSideProperty is not null)
             {
                 return (ICollection<T>?) otherSideProperty.GetValue(otherSide, null);
             }

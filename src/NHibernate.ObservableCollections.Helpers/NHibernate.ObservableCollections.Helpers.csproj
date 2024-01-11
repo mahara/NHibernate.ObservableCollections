@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(WinLibTargetFrameworks)</TargetFrameworks>
 
-    <ImplicitUsings>disable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 

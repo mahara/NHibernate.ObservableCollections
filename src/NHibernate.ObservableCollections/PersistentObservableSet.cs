@@ -39,7 +39,7 @@ namespace Iesi.Collections.Generic
         public PersistentObservableSet(ISessionImplementor session, ISet<T> collection) :
             base(session, collection)
         {
-            if (collection != null)
+            if (collection is not null)
             {
                 ((INotifyCollectionChanged) collection).CollectionChanged += OnCollectionChanged;
             }

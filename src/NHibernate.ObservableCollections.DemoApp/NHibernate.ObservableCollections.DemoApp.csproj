@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(WinExeTargetFrameworks)</TargetFrameworks>
-    <!--<TargetFrameworks>net8.0-windows</TargetFrameworks>-->
-    <!--<TargetFrameworks>net48</TargetFrameworks>-->
 
     <UseWPF>true</UseWPF>
 
