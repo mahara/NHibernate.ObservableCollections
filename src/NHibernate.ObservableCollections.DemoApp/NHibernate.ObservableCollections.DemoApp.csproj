@@ -26,10 +26,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" />
-    <PackageReference Include="Iesi.Collections" />
-    <PackageReference Include="NHibernate" />
-    <PackageReference Include="Remotion.Linq" />
-    <PackageReference Include="Remotion.Linq.EagerFetching" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
   </ItemGroup>
