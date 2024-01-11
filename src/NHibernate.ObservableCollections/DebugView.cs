@@ -8,7 +8,7 @@ namespace Iesi.Collections.Generic
     /// <typeparam name="T"></typeparam>
     /// <remarks>
     ///     REFERENCES:
-    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs" />
     /// </remarks>
     internal sealed class CollectionDebugView<T>
     {
