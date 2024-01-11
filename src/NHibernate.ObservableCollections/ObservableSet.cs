@@ -10,8 +10,8 @@ namespace Iesi.Collections.Generic
     /// </typeparam>
     /// <remarks>
     ///     REFERENCES:
-    ///     -   https://github.com/dotnet/efcore/blob/main/src/EFCore/ChangeTracking/ObservableHashSet.cs
-    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs
+    ///     -   <see href="https://github.com/dotnet/efcore/blob/main/src/EFCore/ChangeTracking/ObservableHashSet.cs" />
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
