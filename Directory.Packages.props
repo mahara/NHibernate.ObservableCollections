@@ -29,6 +29,5 @@
     <PackageVersion Include="Remotion.Linq" Version="2.2.0" />
     <PackageVersion Include="Remotion.Linq.EagerFetching" Version="2.2.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.5" />
-    <PackageVersion Include="System.Security.Permissions" Version="8.0.0" />
   </ItemGroup>
 </Project>

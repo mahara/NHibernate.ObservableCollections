@@ -40,6 +40,7 @@ MAKEFILE            text
 *.sql               text
 *.sqlgen            text    eol=crlf
 *.wixproj           text    eol=crlf    merge=union
+*.shproj            text    eol=crlf    merge=union
 *.proj              text    eol=crlf    merge=union
 *.xml               text                                diff=html
 *.xsd               text                                diff=html
@@ -56,6 +57,8 @@ MAKEFILE            text
 *.ps1xml            text    eol=crlf
 *.cmd               text    eol=crlf
 *.bat               text    eol=crlf
+*.yml               text
+*.yaml              text
 *.licenseheader     text    eol=crlf
 *.pubxml            text    eol=crlf
 *.md                text                                diff=markdown
@@ -65,16 +68,15 @@ MAKEFILE            text
 *.exe               binary
 *.dll               binary
 *.pdb               binary
-*.msi               binary
 *.xap               binary
 *.snk               binary
 *.png               binary
-*.ico               binary
 *.jpg               binary
 *.jpeg              binary
 *.gif               binary
 *.bmp               binary
 *.webp              binary
+*.ico               binary
 *.cur               binary
 *.sys               binary
 *.chm               binary

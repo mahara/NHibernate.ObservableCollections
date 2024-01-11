@@ -1,6 +1,6 @@
 namespace Iesi.Collections.Generic.Tests
 {
-    internal struct CollectionChangedEventSubscription : IDisposable
+    internal readonly struct CollectionChangedEventSubscription : IDisposable
     {
         private readonly INotifyCollectionChanged _collection;
         private readonly NotifyCollectionChangedEventHandler _collectionChangedMethod;
