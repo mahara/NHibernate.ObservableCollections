@@ -5,9 +5,11 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
     /// <summary>
     ///     Keeps both sides of a bidirectional many-to-many association in sync with each other.
     /// </summary>
-    /// <author>Adrian Alexander</author>
     /// <remarks>
+    ///     AUTHORS:
+    ///     -   Adrian Alexander
     ///     REFERENCES:
+    ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
     ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
     /// </remarks>
     public sealed class ManyToManyAssociationSync<T>

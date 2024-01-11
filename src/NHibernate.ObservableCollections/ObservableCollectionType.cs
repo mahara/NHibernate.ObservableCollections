@@ -12,10 +12,11 @@ namespace Iesi.Collections.Generic
     /// <typeparam name="T">
     ///     The type of items in the collection.
     /// </typeparam>
-    /// <author>Adrian Alexander</author>
     /// <remarks>
+    ///     AUTHORS:
+    ///     -   Adrian Alexander
     ///     REFERENCES:
-    ///     -   https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html
+    ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
     /// </remarks>
     public class ObservableCollectionType<T> : IUserCollectionType
     {

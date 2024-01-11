@@ -13,16 +13,16 @@ namespace Iesi.Collections.Generic
     /// </typeparam>
     /// <remarks>
     ///     REFERENCES:
-    ///     -   https://github.com/dotnet/runtime/issues/18087
-    ///     -   https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091
-    ///     -   https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each
-    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs
-    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs
-    ///     -   https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs
-    ///     -   https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html
-    ///     -   https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs
-    ///     -   https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs
-    ///     -   https://blog.stephencleary.com/2009/07/interpreting-notifycollectionchangedeve.html
+    ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+    ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
+    ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
+    ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
+    ///     -   <see href="https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs" />
+    ///     -   <see href="https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
+    ///     -   <see href="https://blog.stephencleary.com/2009/07/interpreting-notifycollectionchangedeve.html" />
     /// </remarks>
     [Serializable]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
