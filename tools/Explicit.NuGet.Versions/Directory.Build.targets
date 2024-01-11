@@ -14,7 +14,7 @@
   <!--
     SOLUTION BUILD TARGETS
   -->
-  <!--<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..\'))" />-->
+  <!--<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..\..\'))" />-->
   <Import Project="$(WorkspaceFolderPath)Directory.Build.targets" />
 
 
