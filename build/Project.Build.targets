@@ -4,6 +4,10 @@
     TARGETS
   -->
 
+  <Target Name="Project_DisplayBuildProperties_BeforeBuild" BeforeTargets="BeforeBuild">
+    <Message Text="$(MSBuildProjectName) ($(Configuration)\$(TargetFramework)):%0D%0A  WorkspaceFolderPath = '$(WorkspaceFolderPath)'%0D%0A  ArtifactsFolderPath = '$(ArtifactsFolderPath)'%0D%0A  IntermediateOutputBaseFolderPath = '$(IntermediateOutputBaseFolderPath)'%0D%0A  BaseIntermediateOutputPath = '$(BaseIntermediateOutputPath)'%0D%0A  MSBuildProjectExtensionsPath = '$(MSBuildProjectExtensionsPath)'%0D%0A  IntermediateOutputPath = '$(IntermediateOutputPath)'%0D%0A  OutputBaseFolderPath = '$(OutputBaseFolderPath)'%0D%0A  BaseOutputPath = '$(BaseOutputPath)'%0D%0A  OutputPath = '$(OutputPath)'%0D%0A  OutDir = '$(OutDir)'" Importance="high" />
+  </Target>
+
   <Target Name="Project_ProjectDeepCleanup_AfterClean" AfterTargets="AfterClean">
     <Message Text="$(MSBuildProjectName): Starting project deep cleanup..." Importance="high" />
 
