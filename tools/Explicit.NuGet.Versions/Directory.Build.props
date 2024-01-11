@@ -11,7 +11,20 @@
     PROPERTIES
   -->
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+  <PropertyGroup>
+    <!--
+
+      NOTE:   SolutionDir must always be defined in the Directory.Build.props file
+              located alongside the solution files.
+
+              WorkspaceFolderPath represents the shared workspace context.
+              SolutionDir represents the current solution context within the workspace.
+
+    -->
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+  </PropertyGroup>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\..\'))" />
 
   <Import Project="$(BuildConfigurationFolderPath)Project.Build.props" />
   <Import Project="$(BuildConfigurationFolderPath)Project.Build.References.props" />
