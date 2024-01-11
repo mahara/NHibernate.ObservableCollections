@@ -1,6 +1,13 @@
 <Project>
 
   <!--
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/property-functions
+    https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-by-directory
+      https://github.com/dotnet/msbuild/issues/2456
+      https://stackoverflow.com/questions/45974279/multi-level-merging-of-msbuild-directory-build-props-files
+  -->
+
+  <!--
     PROPERTIES
   -->
 
@@ -22,5 +29,24 @@
     -->
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
+
+  <Import Project="Solution.Build.Folders.props" Condition="Exists('Solution.Build.Folders.props')" />
+
+  <PropertyGroup>
+    <BuildConfigurationFolderName Condition="'$(BuildConfigurationFolderName)' == ''">build</BuildConfigurationFolderName>
+
+    <!--
+
+      NOTE:   SolutionDir and WorkspaceFolderPath must always be defined
+              in Directory.Build.props of where the solution file is located.
+
+    -->
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+    <WorkspaceFolderPath Condition="'$(WorkspaceFolderPath)' == ''">$(SolutionDir)</WorkspaceFolderPath>
+
+    <BuildConfigurationFolderPath Condition="'$(BuildConfigurationFolderPath)' == ''">$(WorkspaceFolderPath)$(BuildConfigurationFolderName)\</BuildConfigurationFolderPath>
+  </PropertyGroup>
+
+  <Import Project="$(BuildConfigurationFolderPath)Solution.Build.props" />
 
 </Project>

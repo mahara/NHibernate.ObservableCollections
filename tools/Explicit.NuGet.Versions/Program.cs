@@ -78,10 +78,11 @@ namespace Explicit.NuGet.Versions
                 string updatedNuspecXmlDocument;
 
                 // UTF8 Encoding without BOM
-                using (var writer = new StringWriterWithEncoding(new UTF8Encoding()))
+                var encoding = new UTF8Encoding();
                 // UTF8 Encoding with BOM
-                //using (var writer = new StringWriterWithEncoding(Encoding.UTF8))
+                //var encoding = Encoding.UTF8;
 
+                using (var writer = new StringWriterWithEncoding(encoding))
                 using (var xmlWriter = new XmlTextWriter(writer) { Formatting = Formatting.Indented })
                 {
                     nuspecXmlDocument.Save(xmlWriter);
@@ -140,14 +141,12 @@ namespace Explicit.NuGet.Versions
 
         sealed class StringWriterWithEncoding : StringWriter
         {
-            private readonly Encoding _encoding;
-
             public StringWriterWithEncoding(Encoding encoding)
             {
-                _encoding = encoding;
+                Encoding = encoding;
             }
 
-            public override Encoding Encoding => _encoding;
+            public override Encoding Encoding { get; }
         }
     }
 }
