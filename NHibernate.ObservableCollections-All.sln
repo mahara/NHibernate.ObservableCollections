@@ -20,15 +20,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79
 		Directory.Build.targets = Directory.Build.targets
 		Directory.Packages.props = Directory.Packages.props
 		nuget.config = nuget.config
+		Solution.Build.Folders.props = Solution.Build.Folders.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{E8456C26-3E0D-4272-9794-3041D2DC97E8}"
 	ProjectSection(SolutionItems) = preProject
 		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
-		build\Build.props = build\Build.props
-		build\Build.targets = build\Build.targets
 		build\BuildPackages.cmd = build\BuildPackages.cmd
-		build\Read Me.txt = build\Read Me.txt
+		build\Project.Build.props = build\Project.Build.props
+		build\Project.Build.targets = build\Project.Build.targets
+		build\Solution.Build.props = build\Solution.Build.props
+		build\Solution.Build.targets = build\Solution.Build.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE}"
@@ -40,7 +42,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BCAA4557-781
 	ProjectSection(SolutionItems) = preProject
 		src\Directory.Build.props = src\Directory.Build.props
 		src\Directory.Build.targets = src\Directory.Build.targets
+		src\Project.Build.References.props = src\Project.Build.References.props
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{0446DEC4-9238-485F-8134-51E3CD2D8FCF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Explicit.NuGet.Versions", "Explicit.NuGet.Versions", "{8FCCA2F0-EF2B-44A4-B815-57D3C7A4FE04}"
+	ProjectSection(SolutionItems) = preProject
+		tools\Explicit.NuGet.Versions\Directory.Build.props = tools\Explicit.NuGet.Versions\Directory.Build.props
+		tools\Explicit.NuGet.Versions\Directory.Build.targets = tools\Explicit.NuGet.Versions\Directory.Build.targets
+		tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.csproj = tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.csproj
+		tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln = tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln
+		tools\Explicit.NuGet.Versions\Program.cs = tools\Explicit.NuGet.Versions\Program.cs
+		tools\Explicit.NuGet.Versions\Project.Build.References.props = tools\Explicit.NuGet.Versions\Project.Build.References.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "db", "db", "{D1D9D4B0-63FC-4A35-97C6-347007558FA1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{F9E53161-9491-411A-A341-7C333B62F6F3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections", "src\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj", "{74E68B0D-2E27-4360-8AEB-75D389533DD3}"
 EndProject
@@ -78,9 +97,13 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6E3FEE79-C382-439C-AFD9-5505D414680D} = {7E507A42-984B-470D-8A0C-648B9AF8E1DC}
-		{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
 		{E8456C26-3E0D-4272-9794-3041D2DC97E8} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
+		{7BAAD61E-1493-4B51-A458-2A8F2FDD45FE} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
 		{BCAA4557-7813-4A6E-AFE3-D5745C62E6BB} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
+		{0446DEC4-9238-485F-8134-51E3CD2D8FCF} = {6E3FEE79-C382-439C-AFD9-5505D414680D}
+		{8FCCA2F0-EF2B-44A4-B815-57D3C7A4FE04} = {0446DEC4-9238-485F-8134-51E3CD2D8FCF}
+		{D1D9D4B0-63FC-4A35-97C6-347007558FA1} = {7E507A42-984B-470D-8A0C-648B9AF8E1DC}
+		{F9E53161-9491-411A-A341-7C333B62F6F3} = {7E507A42-984B-470D-8A0C-648B9AF8E1DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {533C1EB4-B488-47CC-AB26-AD9C1A24E5CF}

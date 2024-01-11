@@ -11,6 +11,8 @@
     TARGETS
   -->
 
-  <Import Project="$(BuildConfigurationFolderPath)Solution.Build.targets" />
+  <Import Project="$(WorkspaceFolderPath)Directory.Build.targets" />
+
+  <Import Project="$(BuildConfigurationFolderPath)Project.Build.targets" />
 
 </Project>
