@@ -39,7 +39,7 @@ namespace Iesi.Collections.Generic
         public PersistentObservableBag(ISessionImplementor session, ICollection<T> collection) :
             base(session, collection)
         {
-            if (collection != null)
+            if (collection is not null)
             {
                 ((INotifyCollectionChanged) collection).CollectionChanged += OnCollectionChanged;
             }

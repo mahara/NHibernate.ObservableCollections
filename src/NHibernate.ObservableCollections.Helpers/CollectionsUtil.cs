@@ -37,38 +37,38 @@ namespace NHibernate.ObservableCollections.Helpers
         ///     REFERENCES:
         ///     - <see href="https://patforna.blogspot.com/2006/12/comparing-collections-independent-of.html" />
         /// </remarks>
-        public static bool Equals<T>(ICollection<T> one, ICollection<T> two)
+        public static bool Equals<T>(ICollection<T> collectionA, ICollection<T> collectionB)
         {
-            if (one == null || two == null)
+            if (collectionA is null || collectionB is null)
             {
                 // Special case
-                return one == two;
+                return collectionA == collectionB;
             }
 
-            if (ReferenceEquals(one, two))
+            if (ReferenceEquals(collectionA, collectionB))
             {
                 // Same objects
                 return true;
             }
 
-            if (one.Count != two.Count)
+            if (collectionA.Count != collectionB.Count)
             {
                 return false;
             }
 
-            IList<T> listOne = new List<T>(one);
-            IList<T> listTwo = new List<T>(two);
+            var listA = new List<T>(collectionA);
+            var listB = new List<T>(collectionB);
 
             // Make sure that every object in one is also in two
-            for (var i = 0; i < listOne.Count; i++)
+            for (var i = 0; i < listA.Count; i++)
             {
-                var obj = listOne[i];
-                if (!listTwo.Contains(obj))
+                var obj = listA[i];
+                if (!listB.Contains(obj))
                 {
                     return false;
                 }
 
-                listTwo.Remove(obj);
+                listB.Remove(obj);
             }
 
             return true;
