@@ -1,5 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <!--
+    PROPERTIES
+  -->
+
   <PropertyGroup>
 
     <!--
@@ -20,5 +24,20 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
   </PropertyGroup>
+
+  <Import Project="Solution.Build.Folders.props" Condition="Exists('Solution.Build.Folders.props')" />
+
+  <PropertyGroup>
+
+    <BuildConfigurationFolderName Condition="'$(BuildConfigurationFolderName)' == ''">build</BuildConfigurationFolderName>
+
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+    <WorkspaceFolderPath Condition="'$(WorkspaceFolderPath)' == ''">$(SolutionDir)</WorkspaceFolderPath>
+
+    <BuildConfigurationFolderPath Condition="'$(BuildConfigurationFolderPath)' == ''">$(WorkspaceFolderPath)$(BuildConfigurationFolderName)\</BuildConfigurationFolderPath>
+
+  </PropertyGroup>
+
+  <Import Project="$(BuildConfigurationFolderPath)Solution.Build.props" />
 
 </Project>
