@@ -86,7 +86,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
             _otherSideProperty ??= otherSide.GetType().GetProperty(_otherSidePropertyName);
 
             var otherSideProperty = _otherSideProperty;
-            if (otherSideProperty != null)
+            if (otherSideProperty is not null)
             {
                 return (ICollection<T>?) otherSideProperty.GetValue(otherSide, null);
             }
