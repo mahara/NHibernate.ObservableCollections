@@ -20,131 +20,16 @@
 
   <PropertyGroup>
     <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks>net8.0-windows</WinTestTargetFrameworks>
     <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
     <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
-    <ExeTestTargetFrameworks>net8.0;net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <TestTargetFrameworks>net8.0;net7.0;net6.0;net48</TestTargetFrameworks>
     <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
 
-  <PropertyGroup>
-    <!--
-
-      NOTE:   How to specify OutputPath, OutDir, and IntermediateOutputPath manually,
-              to move them out of project folder.
-              https://github.com/dotnet/sdk/issues/867
-                https://github.com/dotnet/msbuild/issues/3497
-                https://github.com/dotnet/msbuild/issues/4881
-              https://github.com/dotnet/msbuild/issues/87
-                https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
-              https://github.com/OmniSharp/omnisharp-vscode/issues/4787
-              https://github.com/dotnet/project-system/issues/4737
-                https://github.com/dotnet/project-system/pull/5773
-              https://github.com/dotnet/msbuild/issues/1603
-                https://github.com/NuGet/NuGet.Client/pull/2131
-                https://github.com/dotnet/msbuild/pull/3059
-              https://github.com/dotnet/msbuild/issues/3244
-              https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
-                https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
-              https://github.com/NuGet/Home/issues/4463
-              https://github.com/NuGet/Home/issues/6734
-              https://github.com/dotnet/wpf/issues/5679
-
-      NOTE:   OutputPath vs OutDir
-              https://github.com/dotnet/msbuild/issues/87
-                https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
-
-      NOTE:   IntermediateOutputPath has a certain, predefined folder structure,
-              where TargetFramework will be automatically added after itself.
-              That way, TargetFramework cannot be specified before MSBuildProjectName within the path.
-              In short, TargetFramework cannot be re-specified within IntermediateOutputPath.
-              That is unlike OutputPath, where TargetFramework can be specified anywhere within the path.
-
-              IntermediateOutputPath is predefined as follows:
-
-              $(MSBuildProjectName)\$(Configuration)\$(TargetFramework)
-
-      NOTE:   NuGet messed up with the need to set both MSBuildProjectExtensionsPath and BaseIntermediateOutputPath.
-
-      - IntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
-        It is used by MSBuild as temporary output path.
-        When overridden, Configuration must be EXPLICITLY specified within the path,
-        along with MSBuildProjectName.
-
-        IntermediateOutputPath is re-defined as follows:
-
-          <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
-
-      - BaseIntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
-        It is used by NuGet as temporary output path for
-        NuGet specification files (.nuspec) of NuGet package of the project.
-        BaseIntermediateOutputPath has a certain, predefined folder structure,
-        where Configuration will be automatically added after itself.
-        Thus, there is no need to re-specify Configuration within the path.
-        The MSBuildProjectName, however, must be EXPLICITLY specified.
-
-        BaseIntermediateOutputPath contains, at least, the following files:
-        - [ProjectName/PackageName].[PackageVersion].nuspec
-        - [ProjectName/PackageName].[PackageVersion].symbols.nuspec
-
-        BaseIntermediateOutputPath is re-defined as follows:
-
-          <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-
-      - MSBuildProjectExtensionsPath is scoped per project (MSBuildProjectName).
-        By default, its value is the same as BaseIntermediateOutputPath.
-        It is used by NuGet as RestoreOutputPath.
-        https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
-          https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
-          https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets
-          https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L795
-
-        MSBuildProjectExtensionsPath contains, at least, the following files:
-        - project.assets.json
-        - project.nuget.cache
-        - [ProjectName].csproj.nuget.dgspec.json
-        - [ProjectName].csproj.nuget.g.props
-        - [ProjectName].csproj.nuget.g.targets
-
-        MSBuildProjectExtensionsPath is re-defined as follows:
-
-          <MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
-
-      NOTE:   There seems to be an known issue with .NET Framework 4.8 WPF project when overriding MSBuildProjectExtensionsPath.
-              https://github.com/dotnet/wpf/issues/5679
-
-
-      ============
-      GLOSSARIES
-      ============
-      - MSBuildProjectName = project name
-      - TargetFramework = project target framework moniker, eg: net6.0, net48, etc.
-      - Configuration = project build configuration, eg: Debug or Release
-
-    -->
-    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
-
-    <BuildConfigurationFolder>build</BuildConfigurationFolder>
-    <OutputFolder>bin</OutputFolder>
-    <TemporaryOutputFolder>obj</TemporaryOutputFolder>
-
-    <IntermediateOutputBaseFolderPath>$(SolutionDir)$(TemporaryOutputFolder)\</IntermediateOutputBaseFolderPath>
-    <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-    <!--<MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>-->
-    <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
-
-    <OutputBaseFolderPath>$(SolutionDir)$(OutputFolder)\</OutputBaseFolderPath>
-    <BaseOutputPath>$(OutputBaseFolderPath)</BaseOutputPath>
-    <OutputPath>$(OutputBaseFolderPath)$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)\</OutputPath>
-    <OutDir>$(OutputPath)</OutDir>
-
-    <PackageOutputPath>$(OutputBaseFolderPath)$(Configuration)\</PackageOutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -154,7 +39,7 @@
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(BuildConfigurationFolderPath)NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -184,6 +69,7 @@
     <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
     <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
     <ContentTargetFolders>.</ContentTargetFolders>
@@ -195,35 +81,19 @@
     <NetFrameworkConstants>TRACE</NetFrameworkConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Debug'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0')) AND '$(Configuration)' == 'Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Release'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0')) AND '$(Configuration)' == 'Release'">
     <DefineConstants>$(NetConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Debug'">
-    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Release'">
-    <DefineConstants>$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Debug'">
-    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Release'">
-    <DefineConstants>$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Debug'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48')) AND '$(Configuration)' == 'Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Release'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48')) AND '$(Configuration)' == 'Release'">
     <DefineConstants>$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
 
@@ -234,9 +104,9 @@
     </PackageReference>
     <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
     <!--
       https://github.com/dotnet/sdk/issues/19521
       https://github.com/dotnet/runtime/issues/59163
@@ -257,13 +127,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(SolutionDir)$(BuildConfigurationFolder)\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+    <Compile Include="$(BuildConfigurationFolderPath)AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(SolutionDir)README.md" Link="Properties\README.md" Pack="true" PackagePath="\" />
-    <None Include="$(SolutionDir)CHANGELOG.md" Link="Properties\CHANGELOG.md" Pack="true" PackagePath="\" />
-    <None Include="$(SolutionDir)LICENSE" Link="Properties\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="$(WorkspaceFolderPath)README.md" Link="Properties\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(WorkspaceFolderPath)CHANGELOG.md" Link="Properties\CHANGELOG.md" Pack="true" PackagePath="\" />
+    <None Include="$(WorkspaceFolderPath)LICENSE" Link="Properties\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
