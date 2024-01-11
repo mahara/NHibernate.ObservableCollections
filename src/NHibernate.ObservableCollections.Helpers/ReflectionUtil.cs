@@ -8,16 +8,16 @@ namespace NHibernate.ObservableCollections.Helpers
 
         public static bool IsInitialized<T>(ICollection<T> collection)
         {
-            if (_isInitializedMethod == null)
+            if (_isInitializedMethod is null)
             {
                 var type = System.Type.GetType("NHibernate.NHibernateUtil, NHibernate");
-                if (type != null)
+                if (type is not null)
                 {
                     _isInitializedMethod = type.GetMethod("IsInitialized", BindingFlags.Static | BindingFlags.Public);
                 }
             }
 
-            if (_isInitializedMethod != null)
+            if (_isInitializedMethod is not null)
             {
                 // true if the NHibernate assembly is present
                 return (bool) _isInitializedMethod.Invoke(
