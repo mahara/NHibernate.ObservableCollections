@@ -33,16 +33,16 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      trx_file_name: 'TestResults.trx'
-      md_file_name: 'TestResults.md' # Report file name for LiquidTestReports.Markdown
+      TestResults_Trx_FileName: 'TestResults.trx'
+      TestResults_MarkDown_FileName: 'TestResults.md' # Report file name for LiquidTestReports.Markdown
 
     steps:
 
       - name: Checkout Source Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
@@ -50,20 +50,22 @@ jobs:
         # https://github.com/orgs/community/discussions/25713
       - name: Setup Environment Variables
         run: |
-          $working_directory = "$env:GITHUB_WORKSPACE"
-          $project_name = [System.IO.Path]::GetFileNameWithoutExtension("${{ matrix.project }}")
-          $test_results_artifact_name = "TestResults_${project_name}_${{ matrix.os }}_${{ matrix.configuration }}_${{ matrix.framework }}"
+          $WorkingDirectory = "$env:GITHUB_WORKSPACE"
+          $ProjectName = [System.IO.Path]::GetFileNameWithoutExtension("${{ matrix.project }}")
+          $TestResults_ArtifactName = "TestResults_${ProjectName}_${{ matrix.os }}_${{ matrix.configuration }}_${{ matrix.framework }}"
+          $TestResults_NUnit_FileName = "${ProjectName}_${{ matrix.os }}_${{ matrix.configuration }}_${{ matrix.framework }}_TestResults-NUnit.xml"
 
-          Write-Host "Project Name: $project_name"
-          Write-Host "Test Results Artifact Name: $test_results_artifact_name"
-          Write-Host "Working Directory: $working_directory"
+          Write-Host "Project Name: $ProjectName"
+          Write-Host "Test Results Artifact Name: $TestResults_ArtifactName"
+          Write-Host "Working Directory: $WorkingDirectory"
 
-          Write-Output "project_name=$project_name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Output "test_results_artifact_name=$test_results_artifact_name" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "ProjectName=$ProjectName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "TestResults_ArtifactName=$TestResults_ArtifactName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "TestResults_NUnit_FileName=$TestResults_NUnit_FileName" | Out-File -FilePath $env:GITHUB_ENV -Append
           # Set the Azure DevOps default working directory env variable, so our tests only need to deal with a single env variable
-          Write-Output "SYSTEM_DEFAULTWORKINGDIRECTORY=$working_directory" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "SYSTEM_DEFAULTWORKINGDIRECTORY=$WorkingDirectory" | Out-File -FilePath $env:GITHUB_ENV -Append
           # Title for LiquidTestReports.Markdown
-          Write-Output "title=Test Run for $project_name - ${{ matrix.os }} - ${{ matrix.configuration }} - ${{ matrix.framework }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "Title=Test Run for $ProjectName - ${{ matrix.os }} - ${{ matrix.configuration }} - ${{ matrix.framework }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         shell: pwsh
 
       - name: Build
@@ -72,12 +74,12 @@ jobs:
 
       - name: Test
         run: |
-          dotnet test ${{ matrix.project }} --configuration ${{ matrix.configuration }} --framework ${{ matrix.framework }} --no-build --no-restore --blame-hang --blame-hang-dump-type mini --blame-hang-timeout 10minutes --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=${{ env.trx_file_name }}" --logger:"liquid.md;LogFileName=${{ env.md_file_name }};Title=${{ env.title }};" --results-directory:"${{ github.workspace }}/${{ env.test_results_artifact_name }}/${{ env.project_name }}"
+          dotnet test ${{ matrix.project }} --configuration ${{ matrix.configuration }} --framework ${{ matrix.framework }} --no-build --no-restore --blame-hang --blame-hang-dump-type mini --blame-hang-timeout 10minutes --results-directory:"${{ github.workspace }}/${{ env.TestResults_ArtifactName }}/${{ env.ProjectName }}" --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=${{ env.TestResults_Trx_FileName }}" --logger "nunit;LogFileName=${{ env.TestResults_NUnit_FileName }};format=nunit3" --logger:"liquid.md;LogFileName=${{ env.TestResults_MarkDown_FileName }};Title=${{ env.Title }}"
 
       - name: Upload Test Results Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: ${{ env.test_results_artifact_name }}
-          path: ${{ github.workspace }}/${{ env.test_results_artifact_name }}
+          name: ${{ env.TestResults_ArtifactName }}
+          path: ${{ github.workspace }}/${{ env.TestResults_ArtifactName }}
           if-no-files-found: warn

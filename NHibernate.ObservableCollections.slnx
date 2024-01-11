@@ -14,13 +14,15 @@
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />
+    <File Path="Solution.Build.Folders.props" />
   </Folder>
   <Folder Name="/Solution Items/build/build/">
     <File Path="build/AssemblyInfo.Global.cs" />
-    <File Path="build/Build.props" />
-    <File Path="build/Build.targets" />
     <File Path="build/BuildPackages.cmd" />
-    <File Path="build/Read Me.txt" />
+    <File Path="build/Project.Build.props" />
+    <File Path="build/Project.Build.targets" />
+    <File Path="build/Solution.Build.props" />
+    <File Path="build/Solution.Build.targets" />
   </Folder>
   <Folder Name="/Solution Items/build/GitHub Actions/">
     <File Path=".github/workflows/build.yml" />
@@ -28,7 +30,19 @@
   <Folder Name="/Solution Items/build/src/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Build.targets" />
+    <File Path="src/Project.Build.References.props" />
   </Folder>
+  <Folder Name="/Solution Items/build/tools/" />
+  <Folder Name="/Solution Items/build/tools/Explicit.NuGet.Versions/">
+    <File Path="tools/Explicit.NuGet.Versions/Directory.Build.props" />
+    <File Path="tools/Explicit.NuGet.Versions/Directory.Build.targets" />
+    <File Path="tools/Explicit.NuGet.Versions/Explicit.NuGet.Versions.csproj" />
+    <File Path="tools/Explicit.NuGet.Versions/Explicit.NuGet.Versions.sln" />
+    <File Path="tools/Explicit.NuGet.Versions/Program.cs" />
+    <File Path="tools/Explicit.NuGet.Versions/Project.Build.References.props" />
+  </Folder>
+  <Folder Name="/Solution Items/db/" />
+  <Folder Name="/Solution Items/docs/" />
   <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
   <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
 </Solution>
