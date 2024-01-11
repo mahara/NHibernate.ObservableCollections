@@ -4,27 +4,27 @@ namespace NHibernate.ObservableCollections.Helpers
 
     public static class ReflectionUtil
     {
-        private static MethodInfo? isInitialized;
+        private static MethodInfo? isInitializedMethod;
 
-        public static bool IsInitialized<T>(ICollection<T> newCollection)
+        public static bool IsInitialized<T>(ICollection<T> collection)
         {
-            if (isInitialized == null)
+            if (isInitializedMethod is null)
             {
-                var t = System.Type.GetType("NHibernate.NHibernateUtil, NHibernate");
-                if (t != null)
+                var type = System.Type.GetType("NHibernate.NHibernateUtil, NHibernate");
+                if (type is not null)
                 {
-                    isInitialized = t.GetMethod("IsInitialized", BindingFlags.Static | BindingFlags.Public);
+                    isInitializedMethod = type.GetMethod("IsInitialized", BindingFlags.Static | BindingFlags.Public);
                 }
             }
 
-            if (isInitialized != null)
+            if (isInitializedMethod is not null)
             {
                 // true if the NHibernate assembly is present
-                return (bool) isInitialized.Invoke(
+                return (bool) isInitializedMethod.Invoke(
                     null,
                     new object[]
                     {
-                        newCollection
+                        collection
                     })!;
             }
 
@@ -33,16 +33,16 @@ namespace NHibernate.ObservableCollections.Helpers
 
         public static ICollection<T> NavigateToManySide<T>(object start, string propertyName)
         {
-            var bf = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            var pi = start.GetType().GetProperty(propertyName, bf)!
-                          .DeclaringType!.GetProperty(propertyName, bf)!;
-            return (ICollection<T>) pi.GetValue(start, null)!;
+            var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            var property = start.GetType().GetProperty(propertyName, flags)!
+                                .DeclaringType!.GetProperty(propertyName, flags)!;
+            return (ICollection<T>) property.GetValue(start, null)!;
         }
 
         public static object NavigateToOneSide(object start, string propertyName)
         {
-            var pi = start.GetType().GetProperty(propertyName)!;
-            return pi.GetValue(start, null)!;
+            var property = start.GetType().GetProperty(propertyName)!;
+            return property.GetValue(start, null)!;
         }
     }
 }

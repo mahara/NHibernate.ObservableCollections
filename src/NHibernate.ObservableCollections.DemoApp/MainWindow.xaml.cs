@@ -17,14 +17,14 @@ namespace NHibernate.ObservableCollections.DemoApp
 
         private bool TryGetSelection(out object? selectedContainer, out SampleItem? selectedItem)
         {
-            if (SampleSetBox.SelectedItem != null)
+            if (SampleSetBox.SelectedItem is not null)
             {
                 selectedContainer = _sampleSetContainer;
                 selectedItem = (SampleItem) SampleSetBox.SelectedItem;
                 return true;
             }
 
-            if (SampleListBox.SelectedItem != null)
+            if (SampleListBox.SelectedItem is not null)
             {
                 selectedContainer = _sampleListContainer;
                 selectedItem = (SampleItem) SampleListBox.SelectedItem;
@@ -39,7 +39,7 @@ namespace NHibernate.ObservableCollections.DemoApp
         private void ItemSelectionChange(object s, RoutedEventArgs e)
         {
             var sender = (ListBox) s;
-            if (sender.SelectedItem == null)
+            if (sender.SelectedItem is null)
             {
                 return;
             }
@@ -51,8 +51,10 @@ namespace NHibernate.ObservableCollections.DemoApp
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            var newItem = new SampleItem();
-            newItem.Name = editItemBox.Text; // add new item from value in text box
+            var newItem = new SampleItem
+            {
+                Name = editItemBox.Text // add new item from value in text box
+            };
             if (_sampleSetContainer.SampleSet.Add(newItem))
             {
                 newItem.ParentSetContainer = _sampleSetContainer;
@@ -65,7 +67,7 @@ namespace NHibernate.ObservableCollections.DemoApp
 
         private void CopyToButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SampleSetBox.SelectedItem == null)
+            if (SampleSetBox.SelectedItem is null)
             {
                 return;
             }
@@ -88,7 +90,7 @@ namespace NHibernate.ObservableCollections.DemoApp
             if (selectedContainer is SampleSetContainer)
             {
                 // then delete item from set
-                if (selectedItem != null && _sampleSetContainer.SampleSet.Remove(selectedItem))
+                if (selectedItem is not null && _sampleSetContainer.SampleSet.Remove(selectedItem))
                 {
                     selectedItem.ParentSetContainer = null;
 
@@ -107,9 +109,9 @@ namespace NHibernate.ObservableCollections.DemoApp
             else
             {
                 // delete item from list
-                if (selectedItem != null && _sampleListContainer.SampleList.Remove(selectedItem))
+                if (selectedItem is not null && _sampleListContainer.SampleList.Remove(selectedItem))
                 {
-                    if (selectedContainer != null)
+                    if (selectedContainer is not null)
                     {
                         using var dbMgr = new NHibernateDatabaseManager();
 
@@ -145,7 +147,7 @@ namespace NHibernate.ObservableCollections.DemoApp
                 return;
             }
 
-            if (selectedItem != null)
+            if (selectedItem is not null)
             {
                 selectedItem.Name = editItemBox.Text; // update selected item from value in text box
 
