@@ -30,47 +30,54 @@
   <PropertyGroup>
     <!--
 
-      NOTE:   How to Specify OutputPath and IntermediateOutputPath manually to move them out of source codes folder (src).
-              https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+      NOTE:   How to specify OutputPath, OutDir, and IntermediateOutputPath manually,
+              to move them out of project folder.
+              https://github.com/dotnet/sdk/issues/867
+                https://github.com/dotnet/msbuild/issues/3497
+                https://github.com/dotnet/msbuild/issues/4881
+              https://github.com/dotnet/msbuild/issues/87
+                https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
+              https://github.com/OmniSharp/omnisharp-vscode/issues/4787
+              https://github.com/dotnet/project-system/issues/4737
+                https://github.com/dotnet/project-system/pull/5773
               https://github.com/dotnet/msbuild/issues/1603
-
-    -->
-    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
-
-    <BuildConfigurationFolder>build</BuildConfigurationFolder>
-    <OutputFolder>bin</OutputFolder>
-    <TemporaryOutputFolder>obj</TemporaryOutputFolder>
-
-    <!--
-
-      NOTE:   IntermediateOutputPath has a certain, predefined folder structure,
-              where TargetFramework will be automatically added after itself.
-              That way, TargetFramework cannot be specified before MSBuildProjectName within the path.
-              In short, TargetFramework cannot be re-specified within IntermediateOutputPath.
-              That is unlike OutputPath, where TargetFramework can be specified anywhere within the path.
-
-              IntermediateOutputPath is predefined as follows:
-
-              $(MSBuildProjectName)\$(Configuration)\$(TargetFramework)
-
-      NOTE:   NuGet messed up with the need to set both MSBuildProjectExtensionsPath and BaseIntermediateOutputPath.
+                https://github.com/NuGet/NuGet.Client/pull/2131
+                https://github.com/dotnet/msbuild/pull/3059
+              https://github.com/dotnet/msbuild/issues/3244
+              https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
+                https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
+              https://github.com/NuGet/Home/issues/4463
+              https://github.com/NuGet/Home/issues/6734
+              https://github.com/dotnet/wpf/issues/5679
 
       - IntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
         It is used by MSBuild as temporary output path.
         When overridden, Configuration must be EXPLICITLY specified within the path,
         along with MSBuildProjectName.
 
+        IntermediateOutputPath has a certain, predefined folder structure,
+        where TargetFramework will be automatically added after itself.
+        That way, TargetFramework cannot be specified before MSBuildProjectName within the path.
+        In short, TargetFramework cannot be re-specified within IntermediateOutputPath.
+        That is unlike OutputPath, where TargetFramework can be specified anywhere within the path.
+
+        IntermediateOutputPath is predefined as follows:
+
+          <IntermediateOutputPath>$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)</IntermediateOutputPath>
+
         IntermediateOutputPath is re-defined as follows:
 
           <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
 
       - BaseIntermediateOutputPath is scoped per project configuration (Configuration), eg.: Debug or Release.
-        It is used by NuGet as temporary output path for
-        NuGet specification files (.nuspec) of NuGet package of the project.
+        It is used by NuGet as temporary output path for NuGet specification files (.nuspec)
+        of the project NuGet package.
+
         BaseIntermediateOutputPath has a certain, predefined folder structure,
         where Configuration will be automatically added after itself.
         Thus, there is no need to re-specify Configuration within the path.
         The MSBuildProjectName, however, must be EXPLICITLY specified.
+
         BaseIntermediateOutputPath contains, at least, the following files:
         - [ProjectName/PackageName].[PackageVersion].nuspec
         - [ProjectName/PackageName].[PackageVersion].symbols.nuspec
@@ -84,8 +91,10 @@
         It is used by NuGet as RestoreOutputPath.
         https://github.com/MicrosoftDocs/visualstudio-docs/issues/853
           https://github.com/MicrosoftDocs/visualstudio-docs/pull/854
-          https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets
+        https://github.com/NuGet/Home/issues/4463
+        https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets
           https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets#L795
+
         MSBuildProjectExtensionsPath contains, at least, the following files:
         - project.assets.json
         - project.nuget.cache
@@ -97,20 +106,34 @@
 
           <MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
 
-        NOTE:   There seems to be an known issue with .NET Framework 4.8 WPF project when overriding this property.
-                https://github.com/dotnet/wpf/issues/5679
-
+      NOTE:   There seems to be an known issue with .NET Framework 4.8 WPF project
+              when overriding MSBuildProjectExtensionsPath.
+              https://github.com/dotnet/wpf/issues/5679
 
       ============
       GLOSSARIES
       ============
       - MSBuildProjectName = project name
-      - TargetFramework = project target framework moniker, eg: net6.0, net48, etc.
+      - TargetFramework = project target framework moniker, eg: net8.0, net48, etc.
       - Configuration = project build configuration, eg: Debug or Release
 
     -->
+
+    <UseCommonOutputDirectory>false</UseCommonOutputDirectory>
+
+    <BuildConfigurationFolder>build</BuildConfigurationFolder>
+    <OutputFolder>bin</OutputFolder>
+    <TemporaryOutputFolder>obj</TemporaryOutputFolder>
+
+    <BuildConfigurationFolderPath>$(SolutionDir)$(BuildConfigurationFolder)\</BuildConfigurationFolderPath>
+
     <IntermediateOutputBaseFolderPath>$(SolutionDir)$(TemporaryOutputFolder)\</IntermediateOutputBaseFolderPath>
     <BaseIntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <!--
+      https://github.com/dotnet/msbuild/issues/1603
+        https://github.com/NuGet/NuGet.Client/pull/2131
+        https://github.com/dotnet/msbuild/pull/3059
+    -->
     <!--<MSBuildProjectExtensionsPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>-->
     <IntermediateOutputPath>$(IntermediateOutputBaseFolderPath)$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
 
@@ -132,7 +155,7 @@
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <AssemblyOriginatorKeyFile>$(SolutionDir)$(BuildConfigurationFolder)\NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(BuildConfigurationFolderPath)NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -206,6 +229,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpIsNullAnalyzer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
@@ -224,10 +251,14 @@
       https://github.com/Microsoft/dotnet/tree/main/releases/reference-assemblies
     -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
+    <PackageReference Include="Nullable">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(SolutionDir)$(BuildConfigurationFolder)\AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+    <Compile Include="$(BuildConfigurationFolderPath)AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
   </ItemGroup>
 
   <ItemGroup>
