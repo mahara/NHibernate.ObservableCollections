@@ -1,0 +1,20 @@
+<Project>
+
+  <!--
+    PROPERTIES
+  -->
+
+  <!--
+    SOLUTION BUILD (USER-OVERRIDABLE) PROPERTIES
+  -->
+
+  <PropertyGroup>
+    <BuildConfigurationFolderName>build</BuildConfigurationFolderName>
+    <SourceCodeFolderName>src</SourceCodeFolderName>
+    <ArtifactsFolderName>artifacts</ArtifactsFolderName>
+    <OutputFolderName>bin</OutputFolderName>
+    <IntermediateOutputFolderName>obj</IntermediateOutputFolderName>
+    <PackageOutputFolderName>packages</PackageOutputFolderName>
+  </PropertyGroup>
+
+</Project>
