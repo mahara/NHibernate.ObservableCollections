@@ -36,7 +36,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
         /// </summary>
         public static void UpdateOneSide<T>(T thisManySide, object? oldOneSide, object? newOneSide, string oneToManyPropertyName)
         {
-            if (oldOneSide != null && oldOneSide != newOneSide)
+            if (oldOneSide is not null && oldOneSide != newOneSide)
             {
                 var oldCollection = ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
                 if (oldCollection.Contains(thisManySide))
@@ -54,7 +54,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
                 }
             }
 
-            if (newOneSide != null)
+            if (newOneSide is not null)
             {
                 var newCollection = ReflectionUtil.NavigateToManySide<T>(newOneSide, oneToManyPropertyName);
                 if (ReflectionUtil.IsInitialized(newCollection) && !newCollection.Contains(thisManySide))
@@ -83,7 +83,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
                 // addingToManySide: the item that was just added to this one-side's collection
                 foreach (var addingToManySide in e.NewItems!)
                 {
-                    if (addingToManySide != null && NavigateManyToOne(addingToManySide) != _thisOneSide)
+                    if (addingToManySide is not null && NavigateManyToOne(addingToManySide) != _thisOneSide)
                     {
                         SetManyToOne(addingToManySide, _thisOneSide);
                     }
@@ -104,7 +104,7 @@ namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 
         private PropertyInfo GetManyToOneProperty(System.Type manySideType)
         {
-            if (_manyToOneProperty == null)
+            if (_manyToOneProperty is null)
             {
                 var property = manySideType.GetProperty(_manyToOnePropertyName)!;
                 _manyToOneProperty = property.DeclaringType!.GetProperty(_manyToOnePropertyName)!;

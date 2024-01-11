@@ -251,7 +251,7 @@ namespace Iesi.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -361,7 +361,7 @@ namespace Iesi.Collections.Generic
                 return;
             }
 
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -404,7 +404,7 @@ namespace Iesi.Collections.Generic
 
                 base.RemoveItem(index);
 
-                if (lastIndex == index && lastCluster != null)
+                if (lastIndex == index && lastCluster is not null)
                 {
                     lastCluster.Add(item);
                 }
@@ -559,7 +559,7 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (_deferredEventsCollection != null)
+            if (_deferredEventsCollection is not null)
             {
                 _deferredEventsCollection.Add(e);
 
@@ -620,7 +620,7 @@ namespace Iesi.Collections.Generic
         [OnDeserialized]
         private void OnDeserialized(StreamingContext context)
         {
-            if (_monitor != null)
+            if (_monitor is not null)
             {
                 _blockReentrancyCount = _monitor._busyCount;
                 _monitor._collection = this;
@@ -638,7 +638,7 @@ namespace Iesi.Collections.Generic
 
             public SimpleMonitor(ObservableCollection<T> collection)
             {
-                Debug.Assert(collection != null);
+                Debug.Assert(collection is not null);
 
                 _collection = collection!;
             }
@@ -655,8 +655,8 @@ namespace Iesi.Collections.Generic
 
             public DeferredEventsCollection(ObservableCollection<T> collection)
             {
-                Debug.Assert(collection != null);
-                Debug.Assert(collection!._deferredEventsCollection == null);
+                Debug.Assert(collection is not null);
+                Debug.Assert(collection!._deferredEventsCollection is null);
 
                 _collection = collection;
                 _collection._deferredEventsCollection = this;
