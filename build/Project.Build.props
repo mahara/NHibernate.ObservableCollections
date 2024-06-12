@@ -14,56 +14,68 @@
   -->
 
   <PropertyGroup>
-    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
-    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
-    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
-    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
-    <ExeTestTargetFrameworks>net8.0;net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <WinExeTargetFrameworks Condition="'$(WinExeTargetFrameworks)' == ''">net9.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks Condition="'$(WinTestTargetFrameworks)' == ''">net9.0-windows</WinTestTargetFrameworks>
+    <WinLibTargetFrameworks Condition="'$(WinLibTargetFrameworks)' == ''">net9.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks Condition="'$(ExeTargetFrameworks)' == ''">net9.0</ExeTargetFrameworks>
+    <TestTargetFrameworks Condition="'$(TestTargetFrameworks)' == ''">net9.0;net8.0;net48</TestTargetFrameworks>
+    <LibTargetFrameworks Condition="'$(LibTargetFrameworks)' == ''">net9.0;net8.0;net48</LibTargetFrameworks>
 
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <LangVersion Condition="'$(LangVersion)' == ''">latest</LangVersion>
+    <ImplicitUsings Condition="'$(ImplicitUsings)' == ''">enable</ImplicitUsings>
+    <Nullable Condition="'$(Nullable)' == ''">enable</Nullable>
+
+    <!--
+      CA2252: Opt in to preview features before using them
+      https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2252
+    -->
+    <EnablePreviewFeatures Condition="'$(EnablePreviewFeatures)' == ''">true</EnablePreviewFeatures>
   </PropertyGroup>
 
   <PropertyGroup>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ReportAnalyzer Condition="'$(ReportAnalyzer)' == ''">false</ReportAnalyzer>
+
+    <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">false</TreatWarningsAsErrors>
     <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
 
+  <PropertyGroup>
     <BuildVersion>0.0.0</BuildVersion>
     <BuildVersion Condition="'$(APPVEYOR_BUILD_VERSION)' != ''">$(APPVEYOR_BUILD_VERSION)</BuildVersion>
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <AssemblyOriginatorKeyFile>$(BuildConfigurationFolderPath)NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFileName Condition="'$(AssemblyOriginatorKeyFileName)' == ''">NHibernate.snk</AssemblyOriginatorKeyFileName>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(BuildConfigurationFolderPath)$(AssemblyOriginatorKeyFileName)</AssemblyOriginatorKeyFile>
+    <SignAssembly Condition="'$(SignAssembly)' == ''">true</SignAssembly>
 
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
 
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <RepositoryType Condition="'$(RepositoryType)' == ''">git</RepositoryType>
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/nhibernate/nhibernate-core</RepositoryUrl>
   </PropertyGroup>
 
   <!--
     https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <Product>NHibernate.ObservableCollections</Product>
-    <Title>$(Product)</Title>
-    <Description>$(Product)</Description>
-    <Authors>NHibernate.ObservableCollections Contributors</Authors>
-    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
-    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+    <Product Condition="'$(Product)' == ''">NHibernate</Product>
+    <Title Condition="'$(Title)' == ''">$(Product)</Title>
+    <Description Condition="'$(Description)' == ''">$(Product)</Description>
+    <Authors Condition="'$(Authors)' == ''">NHibernate Contributors</Authors>
+    <CurrentYear Condition="'$(CurrentYear)' == ''">$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright Condition="'$(Copyright)' == ''">Copyright (c) $(CurrentYear) NHibernate - https://github.com/nhibernate/nhibernate-core</Copyright>
 
     <VersionPrefix>$(BuildVersion)</VersionPrefix>
     <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
     <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
 
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
-    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
-    <PackageTags>$(Product)</PackageTags>
+    <PackageLicenseExpression Condition="'$(PackageLicenseExpression)' == ''">MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance Condition="'$(PackageRequireLicenseAcceptance)' == ''">false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">https://github.com/nhibernate/nhibernate-core</PackageProjectUrl>
+    <!--<PackageIcon Condition="'$(PackageIcon)' == ''">Framework.png</PackageIcon>-->
+    <PackageTags Condition="'$(PackageTags)' == ''">$(Product)</PackageTags>
     <PackageVersion>$(BuildVersion)</PackageVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <ContentTargetFolders>.</ContentTargetFolders>
@@ -71,12 +83,6 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSource>false</IncludeSource>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Include="$(WorkspaceFolderPath)README.md" Link="Properties\README.md" Pack="true" PackagePath="\" />
-    <None Include="$(WorkspaceFolderPath)CHANGELOG.md" Link="Properties\CHANGELOG.md" Pack="true" PackagePath="\" />
-    <None Include="$(WorkspaceFolderPath)LICENSE" Link="Properties\LICENSE" Pack="true" PackagePath="\" />
-  </ItemGroup>
 
   <PropertyGroup>
     <DiagnosticsConstants>DEBUG</DiagnosticsConstants>
@@ -115,6 +121,12 @@
 
   <ItemGroup>
     <Compile Include="$(BuildConfigurationFolderPath)AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(WorkspaceFolderPath)README.md" Link="Properties\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(WorkspaceFolderPath)CHANGELOG.md" Link="Properties\CHANGELOG.md" Pack="true" PackagePath="\" />
+    <None Include="$(WorkspaceFolderPath)LICENSE" Link="Properties\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

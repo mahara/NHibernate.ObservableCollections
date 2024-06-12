@@ -87,4 +87,4 @@ ECHO --------------------------------------------
 ECHO Running .NET Framework (net48) Unit Tests
 ECHO --------------------------------------------
 
-dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net48\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.exe" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net48_TestResults.xml;format=nunit3"
+dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net48\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net48_TestResults.xml;format=nunit3"
