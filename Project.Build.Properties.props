@@ -1,0 +1,52 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    PROPERTIES
+  -->
+
+  <PropertyGroup>
+    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks>net8.0-windows</WinTestTargetFrameworks>
+    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
+    <TestTargetFrameworks>net8.0;net7.0;net6.0;net48</TestTargetFrameworks>
+    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
+
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      CA2252: Opt in to preview features before using them
+      https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2252
+    -->
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ReportAnalyzer>false</ReportAnalyzer>
+
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--<Content Include="$(WorkspaceFolderPath)docs\images\NHibernate.ObservableCollections.png" Link="Properties\NHibernate.ObservableCollections.png" Pack="true" PackagePath="\" />-->
+  </ItemGroup>
+
+</Project>
