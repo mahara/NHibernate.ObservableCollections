@@ -4,6 +4,10 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E507A42-984B-470D-8A0C-648B9AF8E1DC}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.globalconfig = .globalconfig
 		CHANGELOG.md = CHANGELOG.md
 		LICENSE = LICENSE
 		README.md = README.md
@@ -20,7 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{6E3FEE79
 		Directory.Build.targets = Directory.Build.targets
 		Directory.Packages.props = Directory.Packages.props
 		nuget.config = nuget.config
-		Solution.Build.Folders.props = Solution.Build.Folders.props
+		Project.Build.Properties.props = Project.Build.Properties.props
+		Solution.Build.Properties.props = Solution.Build.Properties.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{E8456C26-3E0D-4272-9794-3041D2DC97E8}"
