@@ -39,36 +39,37 @@
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
-    <AssemblyOriginatorKeyFile>$(BuildConfigurationFolderPath)NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFileName Condition="'$(AssemblyOriginatorKeyFileName)' == ''">NHibernate.snk</AssemblyOriginatorKeyFileName>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(BuildConfigurationFolderPath)$(AssemblyOriginatorKeyFileName)</AssemblyOriginatorKeyFile>
+    <SignAssembly Condition="'$(SignAssembly)' == ''">true</SignAssembly>
 
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!--
     https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <Product>NHibernate.ObservableCollections</Product>
-    <Title>$(Product)</Title>
-    <Description>$(Product)</Description>
-    <Authors>NHibernate.ObservableCollections Contributors</Authors>
-    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
-    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+    <Product Condition="'$(Product)' == ''">NHibernate</Product>
+    <Title Condition="'$(Title)' == ''">$(Product)</Title>
+    <Description Condition="'$(Description)' == ''">$(Product)</Description>
+    <Authors Condition="'$(Authors)' == ''">NHibernate Contributors</Authors>
+    <CurrentYear Condition="'$(CurrentYear)' == ''">$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright Condition="'$(Copyright)' == ''">Copyright (c) 2007-$(CurrentYear) NHibernate - https://github.com/nhibernate/nhibernate-core</Copyright>
 
     <VersionPrefix>$(BuildVersion)</VersionPrefix>
     <AssemblyVersion>$(BuildVersionMajor).0.0</AssemblyVersion>
     <FileVersion>$(BuildVersionNoSuffix)</FileVersion>
 
     <PackageVersion>$(BuildVersion)</PackageVersion>
-    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageTags Condition="'$(PackageTags)' == ''">$(Product)</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
-    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
-    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression Condition="'$(PackageLicenseExpression)' == ''">MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance Condition="'$(PackageRequireLicenseAcceptance)' == ''">false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">https://github.com/nhibernate/nhibernate-core</PackageProjectUrl>
+    <!--<PackageIcon Condition="'$(PackageIcon)' == ''">NHibernate.png</PackageIcon>-->
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/nhibernate/nhibernate-core</RepositoryUrl>
+    <RepositoryType Condition="'$(RepositoryType)' == ''">git</RepositoryType>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>false</IncludeSource>

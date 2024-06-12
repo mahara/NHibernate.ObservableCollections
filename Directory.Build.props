@@ -30,7 +30,7 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
-  <Import Project="Solution.Build.Folders.props" Condition="Exists('Solution.Build.Folders.props')" />
+  <Import Project="Solution.Build.Properties.props" Condition="Exists('Solution.Build.Properties.props')" />
 
   <PropertyGroup>
     <BuildConfigurationFolderName Condition="'$(BuildConfigurationFolderName)' == ''">build</BuildConfigurationFolderName>
