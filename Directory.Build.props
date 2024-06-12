@@ -36,7 +36,7 @@
     <WorkspaceFolderPath>$(MSBuildThisFileDirectory)</WorkspaceFolderPath>
   </PropertyGroup>
 
-  <Import Project="$(WorkspaceFolderPath)Solution.Build.Folders.props" Condition="Exists('$(WorkspaceFolderPath)Solution.Build.Folders.props')" />
+  <Import Project="$(WorkspaceFolderPath)Solution.Build.Properties.props" Condition="Exists('$(WorkspaceFolderPath)Solution.Build.Properties.props')" />
 
   <PropertyGroup>
     <BuildConfigurationFolderName Condition="'$(BuildConfigurationFolderName)' == ''">build</BuildConfigurationFolderName>
