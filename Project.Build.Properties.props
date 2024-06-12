@@ -1,0 +1,29 @@
+<Project>
+
+  <!--
+    PROPERTIES
+  -->
+
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
+    <PackageTags>nhibernate, collections, observable, observablecollections</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--<Content Include="$(WorkspaceFolderPath)docs\images\NHibernate.ObservableCollections.png" Link="Properties\NHibernate.ObservableCollections.png" Pack="true" PackagePath="\" />-->
+  </ItemGroup>
+
+</Project>
