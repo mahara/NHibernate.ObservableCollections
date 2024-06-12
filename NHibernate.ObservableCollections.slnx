@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path=".globalconfig" />
     <File Path="CHANGELOG.md" />
     <File Path="LICENSE" />
     <File Path="README.md" />
@@ -14,7 +18,8 @@
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />
-    <File Path="Solution.Build.Folders.props" />
+    <File Path="Project.Build.Properties.props" />
+    <File Path="Solution.Build.Properties.props" />
   </Folder>
   <Folder Name="/Solution Items/build/build/">
     <File Path="build/AssemblyInfo.Global.cs" />
