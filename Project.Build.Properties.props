@@ -1,0 +1,25 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    PROPERTIES
+  -->
+
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+  </PropertyGroup>
+
+</Project>
