@@ -69,11 +69,10 @@
         - [ProjectName].csproj.nuget.g.props
         - [ProjectName].csproj.nuget.g.targets
 
-        NuGet also uses MSBuildProjectExtensionsPath further as temporary output path
+        NuGet also further uses MSBuildProjectExtensionsPath as temporary output path
         for NuGet specification files (.nuspec) of the project NuGet package,
-        by automatically appending Configuration at the end of the path before,
-
-        The new path contains, at least, the following files:
+        by automatically appending Configuration at the end of the path.
+        That new path contains, at least, the following files:
         - [ProjectPackageId].[ProjectPackageVersion].nuspec
         - [ProjectPackageId].[ProjectPackageVersion].symbols.nuspec
 
