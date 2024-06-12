@@ -1,0 +1,32 @@
+<Project>
+
+  <!--
+    PROPERTIES
+  -->
+
+  <!--
+    PROJECT BUILD (USER-OVERRIDABLE) PROPERTIES
+  -->
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>NHibernate.ObservableCollections</Product>
+    <Authors>NHibernate.ObservableCollections Contributors</Authors>
+    <Company>NHibernate</Company>
+    <CurrentYear>$([System.DateTime]::Now.ToString("yyyy"))</CurrentYear>
+    <Copyright>© 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
+    <!--<PackageIcon>NHibernate.ObservableCollections-logo.png</PackageIcon>-->
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--<Content Include="$(WorkspaceFolderPath)assets\media\images\NHibernate.ObservableCollections-logo.png" Link="Properties\NHibernate.ObservableCollections-logo.png" Pack="true" PackagePath="\" />-->
+  </ItemGroup>
+
+</Project>
