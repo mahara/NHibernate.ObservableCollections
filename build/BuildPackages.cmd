@@ -48,7 +48,7 @@ ECHO ----------------------------------------------------
 ECHO Building "%BUILD_CONFIGURATION%" packages with version "%BUILD_VERSION%"...
 ECHO ----------------------------------------------------
 
-dotnet build "NHibernate.ObservableCollections-full.sln" --configuration %BUILD_CONFIGURATION% -property:APPVEYOR_BUILD_VERSION=%BUILD_VERSION% || EXIT /B 1
+dotnet build "NHibernate.ObservableCollections-All.sln" --configuration %BUILD_CONFIGURATION% -property:APPVEYOR_BUILD_VERSION=%BUILD_VERSION% || EXIT /B 1
 
 dotnet build "tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln" --configuration Release
 SET NEV_COMMAND="%ARTIFACTS_FOLDER_PATH%\tools\nev\nev.exe" "%ARTIFACTS_PACKAGES_FOLDER_PATH%\" "NHibernate.ObservableCollections"
