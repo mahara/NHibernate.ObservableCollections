@@ -14,17 +14,13 @@
 // limitations under the License.
 #endregion
 
+using System.Text;
+using System.Xml;
+
+using Ionic.Zip;
+
 namespace Explicit.NuGet.Versions
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Text;
-    using System.Xml;
-
-    using Ionic.Zip;
-
     internal class Program
     {
         private static void Main(string[] args)
@@ -62,7 +58,7 @@ namespace Explicit.NuGet.Versions
                         packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
                         {
                             EntryName = zipEntry.FileName,
-                            Contents = nuspecXml
+                            Contents = nuspecXml,
                         };
 
                         break;
@@ -78,23 +74,26 @@ namespace Explicit.NuGet.Versions
             foreach (var packageFile in packageMetaData.ToList())
             {
                 var nuspecXmlDocument = new XmlDocument();
+
                 nuspecXmlDocument.LoadXml(packageFile.Value.Contents);
 
                 SetPackageDependencyVersionsToBeExplicitForXmlDocument(nuspecXmlDocument, dependencyNugetId);
 
-                string updatedNuspecXml;
+                string updatedNuspecXmlDocument;
 
                 // UTF8 Encoding without BOM
-                using (var writer = new StringWriterWithEncoding(new UTF8Encoding()))
+                var encoding = new UTF8Encoding();
                 // UTF8 Encoding with BOM
-                //using (var writer = new StringWriterWithEncoding(Encoding.UTF8))
+                //var encoding = Encoding.UTF8;
+
+                using (var writer = new StringWriterWithEncoding(encoding))
                 using (var xmlWriter = new XmlTextWriter(writer) { Formatting = Formatting.Indented })
                 {
                     nuspecXmlDocument.Save(xmlWriter);
-                    updatedNuspecXml = writer.ToString();
+                    updatedNuspecXmlDocument = writer.ToString();
                 }
 
-                packageMetaData[packageFile.Key].Contents = updatedNuspecXml;
+                packageMetaData[packageFile.Key].Contents = updatedNuspecXmlDocument;
             }
         }
 
@@ -144,18 +143,15 @@ namespace Explicit.NuGet.Versions
 
             public string Contents { get; set; } = string.Empty;
         }
-    }
 
-    public sealed class StringWriterWithEncoding : StringWriter
-    {
-        private readonly Encoding _encoding;
-
-        public StringWriterWithEncoding(Encoding encoding)
+        internal sealed class StringWriterWithEncoding : StringWriter
         {
-            _encoding = encoding;
-        }
+            public StringWriterWithEncoding(Encoding encoding)
+            {
+                Encoding = encoding;
+            }
 
-        public override Encoding Encoding =>
-            _encoding;
+            public override Encoding Encoding { get; }
+        }
     }
 }

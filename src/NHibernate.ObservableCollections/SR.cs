@@ -1,7 +1,6 @@
-namespace Iesi.Collections.Generic
+namespace Iesi.Collections.Generic;
+
+internal class SR
 {
-    internal class SR
-    {
-        public const string ObservableCollectionReentrancyNotAllowed = $"Reentrancy not allowed.";
-    }
+    public const string ObservableCollectionReentrancyNotAllowed = $"Reentrancy not allowed.";
 }

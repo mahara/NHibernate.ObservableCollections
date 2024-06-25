@@ -1,33 +1,31 @@
-namespace Iesi.Collections.Generic
+using System.Diagnostics;
+
+namespace Iesi.Collections.Generic;
+
+/// <summary>
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <remarks>
+///     REFERENCES:
+///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs" />
+/// </remarks>
+internal sealed class CollectionDebugView<T>
 {
-    using System.Diagnostics;
+    private readonly ICollection<T> _collection;
 
-    /// <summary>
-    ///
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <remarks>
-    ///     REFERENCES:
-    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs" />
-    /// </remarks>
-    internal sealed class CollectionDebugView<T>
+    public CollectionDebugView(ICollection<T> collection)
     {
-        private readonly ICollection<T> _collection;
+        _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+    }
 
-        public CollectionDebugView(ICollection<T> collection)
+    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+    public T[] Items
+    {
+        get
         {
-            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
-        }
-
-        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        public T[] Items
-        {
-            get
-            {
-                var items = new T[_collection.Count];
-                _collection.CopyTo(items, 0);
-                return items;
-            }
+            var items = new T[_collection.Count];
+            _collection.CopyTo(items, 0);
+            return items;
         }
     }
 }

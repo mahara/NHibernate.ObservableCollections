@@ -1,107 +1,106 @@
-namespace NHibernate.ObservableCollections.Helpers.Outlining
+namespace NHibernate.ObservableCollections.Helpers.Outlining;
+
+/// <summary>
+///     Provides utility methods for manipulating tree structures.
+/// </summary>
+public static class OutliningUtil
 {
-    /// <summary>
-    ///     Provides utility methods for manipulating tree structures.
-    /// </summary>
-    public static class OutliningUtil
+    public static string GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
     {
-        public static string GenerateUniqueName<T>(string newItemType, string nameProperty, ICollection<T> parentCollection)
-        {
-            var result = string.Empty;
-            var isNameUnique = false;
+        var result = string.Empty;
+        var isNameUnique = false;
 
-            for (var i = 0; !isNameUnique; i++)
+        for (var i = 0; !isNameUnique; i++)
+        {
+            // Find a unique name to use.
+            result = i == 0 ? "New " + newItemType : "New " + newItemType + " (" + i + ")";
+            isNameUnique = true;
+            foreach (var existingItem in parentCollection)
             {
-                // Find a unique name to use.
-                result = i == 0 ? "New " + newItemType : "New " + newItemType + " (" + i + ")";
-                isNameUnique = true;
-                foreach (var existingItem in parentCollection)
+                if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem!, nameProperty)))
                 {
-                    if (result.Equals(ReflectionUtil.NavigateToOneSide(existingItem!, nameProperty)))
-                    {
-                        isNameUnique = false;
-                    }
+                    isNameUnique = false;
                 }
             }
-
-            return result;
         }
 
-        /// <summary>
-        ///     Inserts a new node into a tree structure.
-        /// </summary>
-        /// <param name="newItem"></param>
-        /// <param name="relativePos"></param>
-        public static void Insert<T>(T newItem, RelativePosition<T> relativePos)
+        return result;
+    }
+
+    /// <summary>
+    ///     Inserts a new node into a tree structure.
+    /// </summary>
+    /// <param name="newItem"></param>
+    /// <param name="relativePos"></param>
+    public static void Insert<T>(T newItem, RelativePosition<T> relativePos)
+    {
+        var subItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePos.Parent!, relativePos.SubItemsPropertyName!);
+        var newIndex = -1;
+
+        if (relativePos.Command == OutliningCommands.NewSiblingBefore)
         {
-            var subItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(relativePos.Parent!, relativePos.SubItemsPropertyName!);
-            var newIndex = -1;
-
-            if (relativePos.Command == OutliningCommands.NewSiblingBefore)
-            {
-                newIndex = MinimumIndex(subItems, relativePos.InsertRelativeTo);
-            }
-            else if (relativePos.Command == OutliningCommands.NewSiblingAfter)
-            {
-                newIndex = MaximumIndex(subItems, relativePos.InsertRelativeTo) + 1;
-            }
-
-            //((Topic) parent).SubTopics.Insert(newIndex, (Topic) newItem);
-            else if (relativePos.Command == OutliningCommands.NewChild)
-            {
-                if (relativePos.ChildIndex >= 0)
-                {
-                    newIndex = relativePos.ChildIndex;
-                }
-                else
-                {
-                    newIndex = subItems.Count; // Insert the new item at the end of the sub-items list.
-                }
-            }
-            else if (relativePos.Command == OutliningCommands.NewParent)
-            {
-                // Insert the new item at the same position where the first selected item was located:
-                newIndex = MinimumIndex(subItems, relativePos.InsertRelativeTo);
-                var newSubItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem!, relativePos.SubItemsPropertyName!);
-                foreach (var item in relativePos.InsertRelativeTo)
-                {
-                    // Loop thru selected items:
-                    subItems.Remove(item); // Remove item from parent's sub-topics list.
-                    newSubItems.Add(item); // Add it as child of the new item.
-                }
-            }
-
-            subItems.Insert(newIndex, newItem);
+            newIndex = MinimumIndex(subItems, relativePos.InsertRelativeTo);
+        }
+        else if (relativePos.Command == OutliningCommands.NewSiblingAfter)
+        {
+            newIndex = MaximumIndex(subItems, relativePos.InsertRelativeTo) + 1;
         }
 
-        private static int MaximumIndex<T>(IList<T> parentList, IList<T> subItems)
+        //((Topic) parent).SubTopics.Insert(newIndex, (Topic) newItem);
+        else if (relativePos.Command == OutliningCommands.NewChild)
         {
-            var result = 0;
-            foreach (var item in subItems)
+            if (relativePos.ChildIndex >= 0)
             {
-                var index = parentList.IndexOf(item);
-                if (index > result)
-                {
-                    result = index;
-                }
+                newIndex = relativePos.ChildIndex;
             }
-
-            return result;
+            else
+            {
+                newIndex = subItems.Count; // Insert the new item at the end of the sub-items list.
+            }
+        }
+        else if (relativePos.Command == OutliningCommands.NewParent)
+        {
+            // Insert the new item at the same position where the first selected item was located:
+            newIndex = MinimumIndex(subItems, relativePos.InsertRelativeTo);
+            var newSubItems = (IList<T>) ReflectionUtil.NavigateToManySide<T>(newItem!, relativePos.SubItemsPropertyName!);
+            foreach (var item in relativePos.InsertRelativeTo)
+            {
+                // Loop thru selected items:
+                subItems.Remove(item); // Remove item from parent's sub-topics list.
+                newSubItems.Add(item); // Add it as child of the new item.
+            }
         }
 
-        private static int MinimumIndex<T>(IList<T> parentList, IList<T> subItems)
-        {
-            var result = parentList.Count;
-            foreach (var item in subItems)
-            {
-                var index = parentList.IndexOf(item);
-                if (index < result)
-                {
-                    result = index;
-                }
-            }
+        subItems.Insert(newIndex, newItem);
+    }
 
-            return result;
+    private static int MaximumIndex<T>(IList<T> parentList, IList<T> subItems)
+    {
+        var result = 0;
+        foreach (var item in subItems)
+        {
+            var index = parentList.IndexOf(item);
+            if (index > result)
+            {
+                result = index;
+            }
         }
+
+        return result;
+    }
+
+    private static int MinimumIndex<T>(IList<T> parentList, IList<T> subItems)
+    {
+        var result = parentList.Count;
+        foreach (var item in subItems)
+        {
+            var index = parentList.IndexOf(item);
+            if (index < result)
+            {
+                result = index;
+            }
+        }
+
+        return result;
     }
 }
