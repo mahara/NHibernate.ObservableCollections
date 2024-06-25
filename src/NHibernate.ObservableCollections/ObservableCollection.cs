@@ -17,7 +17,10 @@ namespace Iesi.Collections.Generic
     ///     -   Maximilian Haru Raditya
     ///     -   Adrian Alexander
     ///     REFERENCES:
-    ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+    ///     -   <see href="https://github.com/dotnet/designs/pull/320" />
+    ///         -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+    ///         -   <see href="https://github.com/dotnet/wpf/pull/9568" />
+    ///         -   <see href="https://github.com/dotnet/wpf/pull/10845" />
     ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
     ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
     ///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
@@ -103,6 +106,21 @@ namespace Iesi.Collections.Generic
             remove => PropertyChanged -= value;
         }
 
+        /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        public void Refresh()
+        {
+            RefreshItems();
+        }
+
+        protected virtual void RefreshItems()
+        {
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionReset();
+        }
+
         /// <inheritdoc />
         /// <remarks>
         ///     Called by base <see cref="Collection{T}" /> when an item is set in collection.
@@ -112,12 +130,12 @@ namespace Iesi.Collections.Generic
         {
             CheckReentrancy();
 
-            var oldItem = this[index];
+            var itemOld = this[index];
 
             base.SetItem(index, item);
 
             OnIndexerPropertyChanged();
-            OnCollectionChanged(oldItem, item, index);
+            OnCollectionChanged(itemOld, item, index);
         }
 
         /// <inheritdoc />
@@ -150,13 +168,13 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var removedItem = this[index];
+            var itemRemoved = this[index];
 
             base.RemoveItem(index);
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItem, index);
+            OnCollectionChanged(NotifyCollectionChangedAction.Remove, itemRemoved, index);
         }
 
         /// <summary>
@@ -186,13 +204,13 @@ namespace Iesi.Collections.Generic
 
             CheckReentrancy();
 
-            var movedItem = this[oldIndex];
+            var itemMoved = this[oldIndex];
 
             base.RemoveItem(oldIndex);
-            base.InsertItem(newIndex, movedItem);
+            base.InsertItem(newIndex, itemMoved);
 
             OnIndexerPropertyChanged();
-            OnCollectionChanged(movedItem, oldIndex, newIndex);
+            OnCollectionChanged(itemMoved, oldIndex, newIndex);
         }
 
         /// <inheritdoc />
@@ -202,6 +220,14 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected override void ClearItems()
         {
+            if (Count == 0)
+            {
+                return;
+            }
+
+            using var _ = BlockReentrancy();
+            using var __ = DeferEventNotification();
+
             CheckReentrancy();
 
             base.ClearItems();
@@ -251,10 +277,14 @@ namespace Iesi.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(collection);
+#else
             if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
+#endif
 
             if (collection is ICollection<T> countable)
             {
@@ -272,13 +302,13 @@ namespace Iesi.Collections.Generic
 
             var items = (List<T>) Items;
 
-            var addedItems = collection.ToArray();
+            var itemsAdded = collection.ToArray();
 
-            items.InsertRange(index, addedItems);
+            items.InsertRange(index, itemsAdded);
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, addedItems, index);
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, itemsAdded, index);
         }
 
         /// <summary>
@@ -318,7 +348,7 @@ namespace Iesi.Collections.Generic
 
             var items = (List<T>) Items;
 
-            var removedItems = items.GetRange(index, count);
+            var itemsRemoved = items.GetRange(index, count);
 
             items.RemoveRange(index, count);
 
@@ -330,7 +360,7 @@ namespace Iesi.Collections.Generic
             }
             else
             {
-                OnCollectionChanged(NotifyCollectionChangedAction.Remove, removedItems, index);
+                OnCollectionChanged(NotifyCollectionChangedAction.Remove, itemsRemoved, index);
             }
         }
 
@@ -361,10 +391,14 @@ namespace Iesi.Collections.Generic
                 return;
             }
 
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(collection);
+#else
             if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
+#endif
 
             if (collection is ICollection<T> countable)
             {
@@ -440,6 +474,21 @@ namespace Iesi.Collections.Generic
         ///     <see cref="NotifyCollectionChangedAction.Add" />, and/or <see cref="NotifyCollectionChangedAction.Remove" />) events.
         /// </remarks>
         public void ReplaceRange(int index, int count, IEnumerable<T> collection)
+        {
+            ReplaceItemsRange(index, count, collection);
+        }
+
+        /// <summary>
+        ///     Replaces a range of items within the <see cref="ObservableCollection{T}" /> with fewer, equal, or more items.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="count"></param>
+        /// <param name="collection"></param>
+        /// <remarks>
+        ///     Raises <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Replace" />,
+        ///     <see cref="NotifyCollectionChangedAction.Add" />, and/or <see cref="NotifyCollectionChangedAction.Remove" />) events.
+        /// </remarks>
+        protected virtual void ReplaceItemsRange(int index, int count, IEnumerable<T> collection)
         {
             RemoveItemsRange(index, count);
             InsertItemsRange(index, collection);
@@ -546,6 +595,14 @@ namespace Iesi.Collections.Generic
         protected void OnCollectionChanged(NotifyCollectionChangedAction action, IList items, int startingIndex)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, items, startingIndex));
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        /// </summary>
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, IList oldItem, IList newItem, int startingIndex)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, newItem, oldItem, startingIndex));
         }
 
         /// <summary>
