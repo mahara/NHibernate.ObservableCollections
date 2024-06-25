@@ -106,6 +106,21 @@ namespace Iesi.Collections.Generic
             remove => PropertyChanged -= value;
         }
 
+        /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        public void Refresh()
+        {
+            RefreshItems();
+        }
+
+        protected virtual void RefreshItems()
+        {
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionReset();
+        }
+
         /// <inheritdoc />
         /// <remarks>
         ///     Called by base <see cref="Collection{T}" /> when an item is set in collection.
@@ -210,6 +225,9 @@ namespace Iesi.Collections.Generic
                 return;
             }
 
+            using var _ = BlockReentrancy();
+            using var __ = DeferEventNotification();
+
             CheckReentrancy();
 
             base.ClearItems();
@@ -259,10 +277,14 @@ namespace Iesi.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(collection);
+#else
             if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
+#endif
 
             if (collection is ICollection<T> countable)
             {
@@ -369,10 +391,14 @@ namespace Iesi.Collections.Generic
                 return;
             }
 
+#if NET8_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(collection);
+#else
             if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
+#endif
 
             if (collection is ICollection<T> countable)
             {
