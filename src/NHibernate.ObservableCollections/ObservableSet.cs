@@ -134,6 +134,23 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        public void Refresh()
+        {
+            RefreshItems();
+        }
+
+        /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        protected virtual void RefreshItems()
+        {
+            OnCountPropertyChanged();
+            OnCollectionReset();
+        }
+
+        /// <summary>
         ///     Determines whether the <see cref="ObservableSet{T}" /> object contains the specified element.
         /// </summary>
         /// <param name="item">The element to locate in the <see cref="ObservableSet{T}" />.</param>
@@ -248,12 +265,10 @@ namespace Iesi.Collections.Generic
 
             OnCountPropertyChanging();
 
-            var removed = this.ToArray();
-
             _set.Clear();
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
+            OnCollectionReset();
         }
 
         /// <summary>
@@ -480,6 +495,14 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
+        /// </summary>
+        protected void OnCollectionReset()
+        {
+            OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
+        }
+
+        /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
         protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
@@ -565,6 +588,7 @@ namespace Iesi.Collections.Generic
 
             public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
+            public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
         }
     }
 }
