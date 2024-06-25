@@ -4,28 +4,12 @@ namespace NHibernate.ObservableCollections.Helpers
     {
         public static bool ContainsAll<T>(ICollection<T> source, ICollection<T> target)
         {
-            foreach (var element in target)
-            {
-                if (!source.Contains(element))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return source.All(target.Contains);
         }
 
         public static bool ContainsAny<T>(ICollection<T> source, ICollection<T> target)
         {
-            foreach (var element in target)
-            {
-                if (source.Contains(element))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return source.Any(target.Contains);
         }
 
         /// <summary>
