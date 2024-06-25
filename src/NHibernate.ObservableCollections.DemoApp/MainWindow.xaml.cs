@@ -1,160 +1,159 @@
-namespace NHibernate.ObservableCollections.DemoApp
+namespace NHibernate.ObservableCollections.DemoApp;
+
+using System.Windows;
+using System.Windows.Controls;
+
+using NHibernate.ObservableCollections.DemoApp.DataAccess;
+
+public partial class MainWindow
 {
-    using System.Windows;
-    using System.Windows.Controls;
+    private SampleSetContainer _sampleSetContainer = new();
+    private SampleListContainer _sampleListContainer = new();
 
-    using NHibernate.ObservableCollections.DemoApp.DataAccess;
-
-    public partial class MainWindow
+    public MainWindow()
     {
-        private SampleSetContainer _sampleSetContainer = new();
-        private SampleListContainer _sampleListContainer = new();
+        InitializeComponent();
+    }
 
-        public MainWindow()
+    private bool TryGetSelection(out object? selectedContainer, out SampleItem? selectedItem)
+    {
+        if (SampleSetBox.SelectedItem is not null)
         {
-            InitializeComponent();
+            selectedContainer = _sampleSetContainer;
+            selectedItem = (SampleItem) SampleSetBox.SelectedItem;
+            return true;
         }
 
-        private bool TryGetSelection(out object? selectedContainer, out SampleItem? selectedItem)
+        if (SampleListBox.SelectedItem is not null)
         {
-            if (SampleSetBox.SelectedItem is not null)
-            {
-                selectedContainer = _sampleSetContainer;
-                selectedItem = (SampleItem) SampleSetBox.SelectedItem;
-                return true;
-            }
-
-            if (SampleListBox.SelectedItem is not null)
-            {
-                selectedContainer = _sampleListContainer;
-                selectedItem = (SampleItem) SampleListBox.SelectedItem;
-                return true;
-            }
-
-            selectedContainer = null;
-            selectedItem = null;
-            return false;
+            selectedContainer = _sampleListContainer;
+            selectedItem = (SampleItem) SampleListBox.SelectedItem;
+            return true;
         }
 
-        private void ItemSelectionChange(object s, RoutedEventArgs e)
-        {
-            var sender = (ListBox) s;
-            if (sender.SelectedItem is null)
-            {
-                return;
-            }
+        selectedContainer = null;
+        selectedItem = null;
+        return false;
+    }
 
-            var selectedItem = (SampleItem) sender.SelectedItem;
-            editItemBox.Text = selectedItem.Name; // display item name in text box
-            (sender == SampleSetBox ? SampleListBox : SampleSetBox).UnselectAll(); // deselect in other box
+    private void ItemSelectionChange(object s, RoutedEventArgs e)
+    {
+        var sender = (ListBox) s;
+        if (sender.SelectedItem is null)
+        {
+            return;
         }
 
-        private void AddButton_Click(object sender, RoutedEventArgs e)
+        var selectedItem = (SampleItem) sender.SelectedItem;
+        editItemBox.Text = selectedItem.Name; // display item name in text box
+        (sender == SampleSetBox ? SampleListBox : SampleSetBox).UnselectAll(); // deselect in other box
+    }
+
+    private void AddButton_Click(object sender, RoutedEventArgs e)
+    {
+        var newItem = new SampleItem
         {
-            var newItem = new SampleItem
-            {
-                Name = editItemBox.Text // add new item from value in text box
-            };
-            if (_sampleSetContainer.SampleSet.Add(newItem))
-            {
-                newItem.ParentSetContainer = _sampleSetContainer;
-
-                using var dbMgr = new NHibernateDatabaseManager();
-
-                dbMgr.Save(newItem);
-            }
-        }
-
-        private void CopyToButton_Click(object sender, RoutedEventArgs e)
+            Name = editItemBox.Text // add new item from value in text box
+        };
+        if (_sampleSetContainer.SampleSet.Add(newItem))
         {
-            if (SampleSetBox.SelectedItem is null)
-            {
-                return;
-            }
-
-            var selectedItem = (SampleItem) SampleSetBox.SelectedItem;
-            _sampleListContainer.SampleList.Add(selectedItem);
+            newItem.ParentSetContainer = _sampleSetContainer;
 
             using var dbMgr = new NHibernateDatabaseManager();
 
-            dbMgr.Update(_sampleListContainer);
+            dbMgr.Save(newItem);
+        }
+    }
+
+    private void CopyToButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (SampleSetBox.SelectedItem is null)
+        {
+            return;
         }
 
-        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        var selectedItem = (SampleItem) SampleSetBox.SelectedItem;
+        _sampleListContainer.SampleList.Add(selectedItem);
+
+        using var dbMgr = new NHibernateDatabaseManager();
+
+        dbMgr.Update(_sampleListContainer);
+    }
+
+    private void DeleteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetSelection(out var selectedContainer, out var selectedItem))
         {
-            if (!TryGetSelection(out var selectedContainer, out var selectedItem))
-            {
-                return;
-            }
+            return;
+        }
 
-            if (selectedContainer is SampleSetContainer)
+        if (selectedContainer is SampleSetContainer)
+        {
+            // then delete item from set
+            if (selectedItem is not null && _sampleSetContainer.SampleSet.Remove(selectedItem))
             {
-                // then delete item from set
-                if (selectedItem is not null && _sampleSetContainer.SampleSet.Remove(selectedItem))
+                selectedItem.ParentSetContainer = null;
+
+                using var dbMgr = new NHibernateDatabaseManager();
+
+                if (_sampleListContainer.SampleList.Contains(selectedItem))
                 {
-                    selectedItem.ParentSetContainer = null;
-
+                    dbMgr.Update(selectedItem);
+                }
+                else
+                {
+                    dbMgr.Delete(selectedItem);
+                }
+            }
+        }
+        else
+        {
+            // delete item from list
+            if (selectedItem is not null && _sampleListContainer.SampleList.Remove(selectedItem))
+            {
+                if (selectedContainer is not null)
+                {
                     using var dbMgr = new NHibernateDatabaseManager();
 
-                    if (_sampleListContainer.SampleList.Contains(selectedItem))
-                    {
-                        dbMgr.Update(selectedItem);
-                    }
-                    else
+                    dbMgr.Update(selectedContainer);
+
+                    if (!(_sampleSetContainer.SampleSet.Contains(selectedItem) ||
+                          _sampleListContainer.SampleList.Contains(selectedItem)))
                     {
                         dbMgr.Delete(selectedItem);
                     }
                 }
             }
-            else
-            {
-                // delete item from list
-                if (selectedItem is not null && _sampleListContainer.SampleList.Remove(selectedItem))
-                {
-                    if (selectedContainer is not null)
-                    {
-                        using var dbMgr = new NHibernateDatabaseManager();
+        }
+    }
 
-                        dbMgr.Update(selectedContainer);
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        // load the set and list containers from database, then bind their items to list boxes
+        using var dbMgr = new NHibernateDatabaseManager();
 
-                        if (!(_sampleSetContainer.SampleSet.Contains(selectedItem) ||
-                              _sampleListContainer.SampleList.Contains(selectedItem)))
-                        {
-                            dbMgr.Delete(selectedItem);
-                        }
-                    }
-                }
-            }
+        _sampleSetContainer = dbMgr.Get<SampleSetContainer>(1);
+        NHibernateUtil.Initialize(_sampleSetContainer.SampleSet);
+        SampleSetBox.ItemsSource = _sampleSetContainer.SampleSet;
+        _sampleListContainer = dbMgr.Get<SampleListContainer>(2);
+        NHibernateUtil.Initialize(_sampleListContainer.SampleList);
+        SampleListBox.ItemsSource = _sampleListContainer.SampleList;
+    }
+
+    private void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetSelection(out _, out var selectedItem))
+        {
+            return;
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        if (selectedItem is not null)
         {
-            // load the set and list containers from database, then bind their items to list boxes
+            selectedItem.Name = editItemBox.Text; // update selected item from value in text box
+
             using var dbMgr = new NHibernateDatabaseManager();
 
-            _sampleSetContainer = dbMgr.Get<SampleSetContainer>(1);
-            NHibernateUtil.Initialize(_sampleSetContainer.SampleSet);
-            SampleSetBox.ItemsSource = _sampleSetContainer.SampleSet;
-            _sampleListContainer = dbMgr.Get<SampleListContainer>(2);
-            NHibernateUtil.Initialize(_sampleListContainer.SampleList);
-            SampleListBox.ItemsSource = _sampleListContainer.SampleList;
-        }
-
-        private void UpdateButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (!TryGetSelection(out _, out var selectedItem))
-            {
-                return;
-            }
-
-            if (selectedItem is not null)
-            {
-                selectedItem.Name = editItemBox.Text; // update selected item from value in text box
-
-                using var dbMgr = new NHibernateDatabaseManager();
-
-                dbMgr.Update(selectedItem);
-            }
+            dbMgr.Update(selectedItem);
         }
     }
 }
