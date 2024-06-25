@@ -1,8 +1,7 @@
-namespace NHibernate.ObservableCollections.DemoApp
-{
-    using System.Windows;
+namespace NHibernate.ObservableCollections.DemoApp;
 
-    public partial class App : Application
-    {
-    }
+using System.Windows;
+
+public partial class App : Application
+{
 }
