@@ -149,6 +149,23 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        public void Refresh()
+        {
+            RefreshItems();
+        }
+
+        /// <summary>
+        ///     Raises a <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
+        /// </summary>
+        protected virtual void RefreshItems()
+        {
+            OnCountPropertyChanged();
+            OnCollectionReset();
+        }
+
+        /// <summary>
         ///     Determines whether the <see cref="ObservableSet{T}" /> object contains the specified element.
         /// </summary>
         /// <param name="item">The element to locate in the <see cref="ObservableSet{T}" />.</param>
