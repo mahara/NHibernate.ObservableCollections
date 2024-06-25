@@ -1,45 +1,44 @@
-namespace NHibernate.ObservableCollections.DemoApp
+using System.ComponentModel;
+
+using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
+
+namespace NHibernate.ObservableCollections.DemoApp;
+
+public class SampleItem : INotifyPropertyChanged
 {
-    using System.ComponentModel;
+    private string _name = string.Empty;
 
-    using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
+    private SampleSetContainer? _parentSetContainer;
 
-    public class SampleItem : INotifyPropertyChanged
+    public virtual int Id { get; protected set; }
+
+    public virtual string Name
     {
-        private string _name = string.Empty;
-
-        private SampleSetContainer? _parentSetContainer;
-
-        public virtual int Id { get; protected set; }
-
-        public virtual string Name
+        get => _name;
+        set
         {
-            get => _name;
-            set
-            {
-                _name = value;
+            _name = value;
 
-                OnPropertyChanged(nameof(Name));
-            }
+            OnPropertyChanged(nameof(Name));
         }
+    }
 
-        public virtual SampleSetContainer? ParentSetContainer
+    public virtual SampleSetContainer? ParentSetContainer
+    {
+        get => _parentSetContainer;
+        set
         {
-            get => _parentSetContainer;
-            set
-            {
-                Console.WriteLine("setting sample item's parent set container");
-                var oldParentSetContainer = _parentSetContainer;
-                _parentSetContainer = value;
-                OneToManyAssociationSync.UpdateOneSide(this, oldParentSetContainer!, _parentSetContainer!, "SampleSet");
-            }
+            Console.WriteLine("setting sample item's parent set container");
+            var oldParentSetContainer = _parentSetContainer;
+            _parentSetContainer = value;
+            OneToManyAssociationSync.UpdateOneSide(this, oldParentSetContainer!, _parentSetContainer!, "SampleSet");
         }
+    }
 
-        public virtual event PropertyChangedEventHandler? PropertyChanged;
+    public virtual event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+    protected void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

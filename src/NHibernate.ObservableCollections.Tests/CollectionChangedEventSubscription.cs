@@ -1,23 +1,22 @@
-namespace Iesi.Collections.Generic.Tests
+namespace Iesi.Collections.Generic.Tests;
+
+internal readonly struct CollectionChangedEventSubscription : IDisposable
 {
-    internal readonly struct CollectionChangedEventSubscription : IDisposable
+    private readonly INotifyCollectionChanged _collection;
+    private readonly NotifyCollectionChangedEventHandler _collectionChangedEventHandler;
+
+    public CollectionChangedEventSubscription(
+        INotifyCollectionChanged collection,
+        NotifyCollectionChangedEventHandler collectionChangedEventHandler)
     {
-        private readonly INotifyCollectionChanged _collection;
-        private readonly NotifyCollectionChangedEventHandler _collectionChangedMethod;
+        _collection = collection;
+        _collectionChangedEventHandler = collectionChangedEventHandler;
 
-        public CollectionChangedEventSubscription(
-            INotifyCollectionChanged collection,
-            NotifyCollectionChangedEventHandler collectionChangedMethod)
-        {
-            _collection = collection;
-            _collectionChangedMethod = collectionChangedMethod;
+        _collection.CollectionChanged += _collectionChangedEventHandler;
+    }
 
-            _collection.CollectionChanged += _collectionChangedMethod;
-        }
-
-        public void Dispose()
-        {
-            _collection.CollectionChanged -= _collectionChangedMethod;
-        }
+    public void Dispose()
+    {
+        _collection.CollectionChanged -= _collectionChangedEventHandler;
     }
 }
