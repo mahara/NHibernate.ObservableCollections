@@ -16,6 +16,7 @@ using System.Runtime.Serialization;
 ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
 ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
 ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
+///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
@@ -175,6 +176,9 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void ClearItems()
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         CheckReentrancy();
 
         base.ClearItems();
@@ -191,6 +195,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void AddRange(IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         InsertItemsRange(Count, collection);
     }
 
@@ -202,6 +209,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         InsertItemsRange(index, collection);
     }
 
@@ -212,6 +222,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void RemoveRange(IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         RemoveItemsRange(collection);
     }
 
@@ -223,6 +236,9 @@ public class ObservableCollection<T> :
     /// <param name="count"></param>
     public void RemoveRange(int index, int count)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         RemoveItemsRange(index, count);
     }
 
@@ -235,6 +251,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void ReplaceRange(int index, int count, IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEvents();
+
         RemoveItemsRange(index, count);
         InsertItemsRange(index, collection);
     }
@@ -293,6 +312,7 @@ public class ObservableCollection<T> :
             else if (countable.Count == 1)
             {
                 using var enumerator = countable.GetEnumerator();
+
                 enumerator.MoveNext();
 
                 Remove(enumerator.Current);
@@ -546,7 +566,7 @@ public class ObservableCollection<T> :
         internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization)
 
         [NonSerialized]
-        internal ObservableCollection<T> _collection = null!;
+        internal ObservableCollection<T> _collection;
 
         public SimpleMonitor(ObservableCollection<T> collection)
         {
