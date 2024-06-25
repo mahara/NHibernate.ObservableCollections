@@ -299,4 +299,42 @@ public class ObservableCollectionTests
 
         Assert.That(collection, Has.Count.EqualTo(itemsCount));
     }
+
+    [Test]
+    public void CanReplaceRange_NonEmptyObservableCollection()
+    {
+        NotifyCollectionChangedEventArgs args = null!;
+        var notificationCount = 0;
+
+        var collection = new ObservableCollection<int>(_items);
+        var itemsCount = collection.Count;
+
+        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+
+        using var _ = new CollectionChangedEventSubscription(
+            collection,
+            (o, e) =>
+            {
+                args = e;
+                notificationCount++;
+            });
+
+        var replaceStartingIndex = 4;
+        var replacedItemsCount = 4;
+
+        collection.ReplaceRange(replaceStartingIndex, replacedItemsCount, _items);
+
+        Assert.That(args, Is.Not.Null);
+        Assert.That(notificationCount, Is.GreaterThanOrEqualTo(1));
+
+        var addedItems = args.NewItems! as IEnumerable;
+
+        Assert.That(addedItems, Is.Not.Null);
+        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(itemsCount));
+        Assert.That(args.NewStartingIndex, Is.EqualTo(replaceStartingIndex));
+
+        var newItemsCount = _items.Count - 4 + _items.Count;
+
+        Assert.That(collection, Has.Count.EqualTo(newItemsCount));
+    }
 }
