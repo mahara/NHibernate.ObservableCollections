@@ -66,6 +66,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollec
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NHibernate.ObservableCollections.Tests", "src\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.csproj", "{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NHibernate.ObservableCollections.PerformanceTests", "src\NHibernate.ObservableCollections.PerformanceTests\NHibernate.ObservableCollections.PerformanceTests.csproj", "{5968CD0D-C7B7-4443-BC2F-4928E50EA5A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -80,6 +82,10 @@ Global
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E1305F2-75E0-4736-9A07-B2AD69C4F1A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5968CD0D-C7B7-4443-BC2F-4928E50EA5A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5968CD0D-C7B7-4443-BC2F-4928E50EA5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5968CD0D-C7B7-4443-BC2F-4928E50EA5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5968CD0D-C7B7-4443-BC2F-4928E50EA5A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
