@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.1.593" />
     <PackageVersion Include="DotNetZip" Version="1.16.0" />
@@ -25,7 +26,9 @@
     <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageVersion Include="NunitXml.TestLogger" Version="4.0.254" />
     <PackageVersion Include="PublicApiGenerator" Version="11.1.0" />
+    <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="8.0.1" />
   </ItemGroup>
 
 </Project>
