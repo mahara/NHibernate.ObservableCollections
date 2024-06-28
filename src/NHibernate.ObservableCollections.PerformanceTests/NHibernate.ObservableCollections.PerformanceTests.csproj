@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TestTargetFrameworks)</TargetFrameworks>
+
+    <OutputType>Exe</OutputType>
+    <StartupObject>Program</StartupObject>
+  </PropertyGroup>
+
+  <!--
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <AssemblyName>NHibernate.ObservableCollections.PerformanceTests</AssemblyName>
+    <RootNamespace>NHibernate.ObservableCollections.PerformanceTests</RootNamespace>
+
+    <Title>NHibernate.ObservableCollections.PerformanceTests</Title>
+    <Description>NHibernate.ObservableCollections.PerformanceTests</Description>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="NHibernate" VersionOverride="5.4.10" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NHibernate.ObservableCollections\NHibernate.ObservableCollections.csproj" />
+  </ItemGroup>
+
+</Project>
