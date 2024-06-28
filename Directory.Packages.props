@@ -8,6 +8,7 @@
     <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.1.495" />
     <PackageVersion Include="DotNetZip" Version="1.16.0" />
@@ -24,6 +25,9 @@
     <PackageVersion Include="NUnitLite" Version="4.1.0" />
     <PackageVersion Include="NunitXml.TestLogger" Version="3.1.20" />
     <PackageVersion Include="PublicApiGenerator" Version="11.1.0" />
+    <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageVersion Include="System.Reflection.Metadata" Version="8.0.1" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 </Project>
