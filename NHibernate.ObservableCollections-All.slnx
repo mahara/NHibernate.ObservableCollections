@@ -44,6 +44,7 @@
   </Folder>
   <Folder Name="/Solution Items/db/" />
   <Folder Name="/Solution Items/docs/" />
+  <Project Path="src/Iesi.Collections.Generic.PerformanceTests/Iesi.Collections.Generic.PerformanceTests.csproj" />
   <Project Path="src/NHibernate.ObservableCollections.DemoApp/NHibernate.ObservableCollections.DemoApp.csproj" />
   <Project Path="src/NHibernate.ObservableCollections.Helpers/NHibernate.ObservableCollections.Helpers.csproj" />
   <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
