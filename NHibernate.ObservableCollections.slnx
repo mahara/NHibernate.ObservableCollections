@@ -46,6 +46,7 @@
     <File Path="tools/Explicit.NuGet.Versions/Program.cs" />
     <File Path="tools/Explicit.NuGet.Versions/Project.Build.References.props" />
   </Folder>
+  <Project Path="src/NHibernate.ObservableCollections.PerformanceTests/NHibernate.ObservableCollections.PerformanceTests.csproj" />
   <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
   <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
 </Solution>
