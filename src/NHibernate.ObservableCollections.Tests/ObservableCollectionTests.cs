@@ -37,10 +37,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var addedItems = args.NewItems! as IEnumerable;
+        var addedItems = args.NewItems;
 
         Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(addedItemsCount));
+        Assert.That(addedItems, Has.Count.EqualTo(addedItemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(itemsCount));
 
         itemsCount += addedItemsCount;
@@ -75,10 +75,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var removedItems = args.OldItems! as IEnumerable;
+        var removedItems = args.OldItems;
 
         Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
+        Assert.That(removedItems, Has.Count.EqualTo(removedItemsCount));
         Assert.That(args.OldStartingIndex, Is.EqualTo(removedItemIndex));
 
         itemsCount -= removedItemsCount;
@@ -111,10 +111,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var addedItems = args.NewItems! as IEnumerable;
+        var addedItems = args.NewItems;
 
         Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(addedItemsCount));
+        Assert.That(addedItems, Has.Count.EqualTo(addedItemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(itemsCount));
 
         itemsCount += addedItemsCount;
@@ -147,10 +147,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var addedItems = args.NewItems! as IEnumerable;
+        var addedItems = args.NewItems;
 
         Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(addedItemsCount));
+        Assert.That(addedItems, Has.Count.EqualTo(addedItemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(itemsCount));
 
         itemsCount += addedItemsCount;
@@ -185,10 +185,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var removedItems = args.OldItems! as IEnumerable;
+        var removedItems = args.OldItems;
 
         Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
+        Assert.That(removedItems, Has.Count.EqualTo(removedItemsCount));
         Assert.That(args.OldStartingIndex, Is.GreaterThanOrEqualTo(0));
 
         itemsCount -= removedItemsCount;
@@ -256,10 +256,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var removedItems = args.OldItems! as IEnumerable;
+        var removedItems = args.OldItems;
 
         Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
+        Assert.That(removedItems, Has.Count.EqualTo(removedItemsCount));
         Assert.That(args.OldStartingIndex, Is.EqualTo(removedItemsIndex));
 
         itemsCount -= removedItemsCount;
@@ -327,10 +327,10 @@ public class ObservableCollectionTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.GreaterThanOrEqualTo(1));
 
-        var addedItems = args.NewItems! as IEnumerable;
+        var addedItems = args.NewItems;
 
         Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(itemsCount));
+        Assert.That(addedItems, Has.Count.EqualTo(itemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(replaceStartingIndex));
 
         var newItemsCount = _items.Count - 4 + _items.Count;
