@@ -13,9 +13,12 @@ using System.Runtime.Serialization;
 /// </typeparam>
 /// <remarks>
 ///     REFERENCES:
+///     -   <see href="https://github.com/dotnet/designs/pull/320" />
 ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+///     -   <see href="https://github.com/dotnet/wpf/pull/9568" />
 ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
 ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
+///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
@@ -31,13 +34,19 @@ public class ObservableCollection<T> :
     Collection<T>,
     INotifyCollectionChanged, INotifyPropertyChanged
 {
+    [NonSerialized]
+    protected readonly List<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlersCore = [];
+
+    [NonSerialized]
+    protected readonly List<PropertyChangedEventHandler> PropertyChangedEventHandlersCore = [];
+
     private SimpleMonitor? _monitor; // Lazily allocated only when a subclass calls BlockReentrancy() or during serialization. Do not rename (binary serialization)
 
     [NonSerialized]
     private int _blockReentrancyCount;
 
     [NonSerialized]
-    private DeferredEventsCollection? _deferredEventsCollection;
+    private DeferredEventArgsCollection? _deferredEventArgsCollection;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ObservableCollection{T}" />
@@ -81,8 +90,14 @@ public class ObservableCollection<T> :
     /// <summary>
     ///     Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
-    [field: NonSerialized]
-    public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged
+    {
+        add => CollectionChangedEventHandlersCore.Add(value!);
+        remove => CollectionChangedEventHandlersCore.Remove(value!);
+    }
+
+    public IReadOnlyCollection<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlers =>
+        new ReadOnlyCollection<NotifyCollectionChangedEventHandler>(CollectionChangedEventHandlersCore);
 
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
@@ -93,17 +108,40 @@ public class ObservableCollection<T> :
         remove => PropertyChanged -= value;
     }
 
+    protected event PropertyChangedEventHandler? PropertyChanged
+    {
+        add => PropertyChangedEventHandlersCore.Add(value!);
+        remove => PropertyChangedEventHandlersCore.Remove(value!);
+    }
+
+    public IReadOnlyCollection<PropertyChangedEventHandler> PropertyChangedEventHandlers =>
+        new ReadOnlyCollection<PropertyChangedEventHandler>(PropertyChangedEventHandlersCore);
+
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    ///     Raises a change notification indicating that all bindings should be refreshed.
     /// </summary>
-    [field: NonSerialized]
-    protected virtual event PropertyChangedEventHandler? PropertyChanged;
+    public void Refresh()
+    {
+        RefreshCore();
+    }
+
+    protected virtual void RefreshCore()
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    }
 
     /// <summary>
     ///     Called by base class <see cref="Collection{T}" /> when an item is added to collection;
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void InsertItem(int index, T item)
+    {
+        InsertItemCore(index, item);
+    }
+
+    protected virtual void InsertItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -120,6 +158,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void RemoveItem(int index)
     {
+        RemoveItemCore(index);
+    }
+
+    protected virtual void RemoveItemCore(int index)
+    {
         CheckReentrancy();
 
         var itemRemoved = this[index];
@@ -135,6 +178,11 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void SetItem(int index, T item)
+    {
+        SetItemCore(index, item);
+    }
+
+    protected virtual void SetItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -159,6 +207,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
+        MoveItemCore(oldIndex, newIndex);
+    }
+
+    protected virtual void MoveItemCore(int oldIndex, int newIndex)
+    {
         CheckReentrancy();
 
         var itemMoved = this[oldIndex];
@@ -174,6 +227,14 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void ClearItems()
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
+        ClearItemsCore();
+    }
+
+    protected virtual void ClearItemsCore()
     {
         CheckReentrancy();
 
@@ -191,6 +252,14 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void AddRange(IEnumerable<T> collection)
     {
+        AddRangeCore(collection);
+    }
+
+    protected virtual void AddRangeCore(IEnumerable<T> collection)
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         InsertItemsRange(Count, collection);
     }
 
@@ -202,10 +271,23 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
+        InsertRangeCore(index, collection);
+    }
+
+    protected virtual void InsertRangeCore(int index, IEnumerable<T> collection)
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         InsertItemsRange(index, collection);
     }
 
     protected virtual void InsertItemsRange(int index, IEnumerable<T> collection)
+    {
+        InsertItemsRangeCore(index, collection);
+    }
+
+    protected virtual void InsertItemsRangeCore(int index, IEnumerable<T> collection)
     {
         if (index < 0 || index > Count)
         {
@@ -252,6 +334,14 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void RemoveRange(IEnumerable<T> collection)
     {
+        RemoveRangeCore(collection);
+    }
+
+    protected virtual void RemoveRangeCore(IEnumerable<T> collection)
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         RemoveItemsRange(collection);
     }
 
@@ -263,10 +353,23 @@ public class ObservableCollection<T> :
     /// <param name="count"></param>
     public void RemoveRange(int index, int count)
     {
+        RemoveRangeCore(index, count);
+    }
+
+    protected virtual void RemoveRangeCore(int index, int count)
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         RemoveItemsRange(index, count);
     }
 
     protected virtual void RemoveItemsRange(IEnumerable<T> collection)
+    {
+        RemoveItemsRangeCore(collection);
+    }
+
+    protected virtual void RemoveItemsRangeCore(IEnumerable<T> collection)
     {
 #if NET8_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(collection);
@@ -346,6 +449,11 @@ public class ObservableCollection<T> :
 
     protected virtual void RemoveItemsRange(int index, int count)
     {
+        RemoveItemsRangeCore(index, count);
+    }
+
+    protected virtual void RemoveItemsRangeCore(int index, int count)
+    {
         if (index < 0 || index > Count || index + count > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -379,18 +487,35 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void ReplaceRange(int index, int count, IEnumerable<T> collection)
     {
+        ReplaceRangeCore(index, count, collection);
+    }
+
+    protected virtual void ReplaceRangeCore(int index, int count, IEnumerable<T> collection)
+    {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         ReplaceItemsRange(index, count, collection);
     }
 
     protected virtual void ReplaceItemsRange(int index, int count, IEnumerable<T> collection)
     {
-        RemoveItemsRange(index, count);
-        InsertItemsRange(index, collection);
+        ReplaceItemsRangeCore(index, count, collection);
     }
 
-    protected virtual IDisposable DeferEvents()
+    protected virtual void ReplaceItemsRangeCore(int index, int count, IEnumerable<T> collection)
     {
-        return new DeferredEventsCollection(this);
+        //
+        // TODO:    Should change ReplaceItemsRangeCore implementation to an optimal one,
+        //          without first range-removing and then range-inserting.
+        //
+        RemoveItemsRangeCore(index, count);
+        InsertItemsRangeCore(index, collection);
+    }
+
+    protected virtual IDisposable DeferEventNotifications()
+    {
+        return new DeferredEventArgsCollection(this);
     }
 
     /// <summary>
@@ -452,22 +577,25 @@ public class ObservableCollection<T> :
     /// </remarks>
     protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (_deferredEventsCollection is not null)
+        if (_deferredEventArgsCollection is not null)
         {
-            _deferredEventsCollection.Add(e);
+            _deferredEventArgsCollection.Add(e);
 
             return;
         }
 
-        var handler = CollectionChanged;
-        if (handler is not null)
+        if (CollectionChangedEventHandlersCore is ICollection<NotifyCollectionChangedEventHandler> handlers &&
+            handlers.Count > 0)
         {
             // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
             _blockReentrancyCount++;
 
             try
             {
-                handler(this, e);
+                foreach (var handler in handlers)
+                {
+                    handler(this, e);
+                }
             }
             finally
             {
@@ -497,7 +625,14 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        PropertyChanged?.Invoke(this, e);
+        if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers &&
+            handlers.Count > 0)
+        {
+            foreach (var handler in handlers)
+            {
+                handler(this, e);
+            }
+        }
     }
 
     [OnSerializing]
@@ -553,7 +688,7 @@ public class ObservableCollection<T> :
             // the problem only arises if reentrant changes make the original event args
             // invalid for later listeners.
             // This keeps existing code working (e.g. Selector.SelectedItems).
-            if (CollectionChanged?.GetInvocationList().Length > 1)
+            if (PropertyChangedEventHandlersCore.Count > 1)
             {
                 throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
             }
@@ -572,7 +707,7 @@ public class ObservableCollection<T> :
         internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization)
 
         [NonSerialized]
-        internal ObservableCollection<T> _collection = null!;
+        internal ObservableCollection<T> _collection;
 
         public SimpleMonitor(ObservableCollection<T> collection)
         {
@@ -587,22 +722,22 @@ public class ObservableCollection<T> :
         }
     }
 
-    private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+    private sealed class DeferredEventArgsCollection : Collection<NotifyCollectionChangedEventArgs>, IDisposable
     {
         private readonly ObservableCollection<T> _collection;
 
-        public DeferredEventsCollection(ObservableCollection<T> collection)
+        public DeferredEventArgsCollection(ObservableCollection<T> collection)
         {
             Debug.Assert(collection is not null);
-            Debug.Assert(collection!._deferredEventsCollection is null);
+            Debug.Assert(collection!._deferredEventArgsCollection is null);
 
             _collection = collection;
-            _collection._deferredEventsCollection = this;
+            _collection._deferredEventArgsCollection = this;
         }
 
         public void Dispose()
         {
-            _collection._deferredEventsCollection = null;
+            _collection._deferredEventArgsCollection = null;
             foreach (var args in this)
             {
                 _collection.OnCollectionChanged(args);
