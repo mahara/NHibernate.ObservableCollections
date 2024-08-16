@@ -13,9 +13,12 @@ using System.Runtime.Serialization;
 /// </typeparam>
 /// <remarks>
 ///     REFERENCES:
+///     -   <see href="https://github.com/dotnet/designs/pull/320" />
 ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+///     -   <see href="https://github.com/dotnet/wpf/pull/9568" />
 ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
 ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
+///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
@@ -37,7 +40,7 @@ public class ObservableCollection<T> :
     private int _blockReentrancyCount;
 
     [NonSerialized]
-    private DeferredEventsCollection? _deferredEventsCollection;
+    private DeferredEventArgsCollection? _deferredEventArgsCollection;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ObservableCollection{T}" />
@@ -175,6 +178,9 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void ClearItems()
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         CheckReentrancy();
 
         base.ClearItems();
@@ -191,6 +197,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void AddRange(IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         InsertItemsRange(Count, collection);
     }
 
@@ -202,6 +211,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         InsertItemsRange(index, collection);
     }
 
@@ -212,6 +224,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void RemoveRange(IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         RemoveItemsRange(collection);
     }
 
@@ -223,6 +238,9 @@ public class ObservableCollection<T> :
     /// <param name="count"></param>
     public void RemoveRange(int index, int count)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         RemoveItemsRange(index, count);
     }
 
@@ -235,6 +253,9 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void ReplaceRange(int index, int count, IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         RemoveItemsRange(index, count);
         InsertItemsRange(index, collection);
     }
@@ -293,6 +314,7 @@ public class ObservableCollection<T> :
             else if (countable.Count == 1)
             {
                 using var enumerator = countable.GetEnumerator();
+
                 enumerator.MoveNext();
 
                 Remove(enumerator.Current);
@@ -370,9 +392,9 @@ public class ObservableCollection<T> :
         }
     }
 
-    protected virtual IDisposable DeferEvents()
+    protected virtual IDisposable DeferEventNotifications()
     {
-        return new DeferredEventsCollection(this);
+        return new DeferredEventArgsCollection(this);
     }
 
     /// <summary>
@@ -386,9 +408,9 @@ public class ObservableCollection<T> :
     /// </remarks>
     protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (_deferredEventsCollection is not null)
+        if (_deferredEventArgsCollection is not null)
         {
-            _deferredEventsCollection.Add(e);
+            _deferredEventArgsCollection.Add(e);
 
             return;
         }
@@ -546,7 +568,7 @@ public class ObservableCollection<T> :
         internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization)
 
         [NonSerialized]
-        internal ObservableCollection<T> _collection = null!;
+        internal ObservableCollection<T> _collection;
 
         public SimpleMonitor(ObservableCollection<T> collection)
         {
@@ -561,22 +583,22 @@ public class ObservableCollection<T> :
         }
     }
 
-    private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+    private sealed class DeferredEventArgsCollection : Collection<NotifyCollectionChangedEventArgs>, IDisposable
     {
         private readonly ObservableCollection<T> _collection;
 
-        public DeferredEventsCollection(ObservableCollection<T> collection)
+        public DeferredEventArgsCollection(ObservableCollection<T> collection)
         {
             Debug.Assert(collection is not null);
-            Debug.Assert(collection!._deferredEventsCollection is null);
+            Debug.Assert(collection!._deferredEventArgsCollection is null);
 
             _collection = collection;
-            _collection._deferredEventsCollection = this;
+            _collection._deferredEventArgsCollection = this;
         }
 
         public void Dispose()
         {
-            _collection._deferredEventsCollection = null;
+            _collection._deferredEventArgsCollection = null;
             foreach (var args in this)
             {
                 _collection.OnCollectionChanged(args);

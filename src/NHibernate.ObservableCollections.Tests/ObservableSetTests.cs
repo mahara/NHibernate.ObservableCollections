@@ -37,10 +37,10 @@ public class ObservableSetTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var addedItems = args.NewItems! as IEnumerable;
+        var addedItems = args.NewItems;
 
         Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(addedItemsCount));
+        Assert.That(addedItems, Has.Count.EqualTo(addedItemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(-1));
 
         itemsCount += addedItemsCount;
@@ -75,10 +75,10 @@ public class ObservableSetTests
         Assert.That(args, Is.Not.Null);
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var removedItems = args.OldItems! as IEnumerable;
+        var removedItems = args.OldItems;
 
         Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
+        Assert.That(removedItems, Has.Count.EqualTo(removedItemsCount));
         Assert.That(args.OldStartingIndex, Is.EqualTo(-1));
 
         itemsCount -= removedItemsCount;
