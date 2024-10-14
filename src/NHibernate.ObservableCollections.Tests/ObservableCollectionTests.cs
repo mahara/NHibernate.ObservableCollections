@@ -1,5 +1,7 @@
 namespace Iesi.Collections.Generic.Tests;
 
+using System.Collections;
+
 [TestFixture]
 public class ObservableCollectionTests
 {
@@ -392,7 +394,8 @@ public class ObservableCollectionTests
 
         var itemsRemovedIndex = 3;
         var itemsRemovedCount = 4;
-        var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
         var notificationCount = 1;
 
         var collection = new ObservableCollection<int>(items);
@@ -434,7 +437,8 @@ public class ObservableCollectionTests
 
         var itemsRemovedIndex = 0;
         var itemsRemovedCount = itemsCount;
-        var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
         var notificationCount = 1;
 
         var collection = new ObservableCollection<int>(items);
@@ -472,7 +476,8 @@ public class ObservableCollectionTests
 
         var itemsRemovedIndex = 3;
         var itemsRemovedCount = 4;
-        var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
         var notificationCount = 1;
 
         var collection = new ObservableCollection<int>(items);
@@ -544,25 +549,35 @@ public class ObservableCollectionTests
     [Test]
     public void CanReplaceRange_NonEmptyObservableCollection()
     {
+        // 0,4,items
+        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+        // After:   0,1,2,3,4,5,6,7,8,9,4,5,6,7,8,9     (16)
+        // 4,4,items
         // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
         // After:   0,1,2,3,0,1,2,3,4,5,6,7,8,9,8,9     (16)
-
-        //
-        // TODO:    Should change ReplaceItemsRangeCore implementation to an optimal one,
-        //          without first range-removing and then range-inserting.
-        //
+        // 5,4,items
+        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+        // After:   0,1,2,3,4,0,1,2,3,4,5,6,7,8,9,9     (16)
+        // 6,4,items
+        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+        // After:   0,1,2,3,4,5,0,1,2,3,4,5,6,7,8,9     (16)
 
         var argsList = new List<NotifyCollectionChangedEventArgs>();
 
         var items = _items;
         var itemsCount = items.Count;
 
-        var itemsReplacedStartingIndex = 4;
-        var itemsReplacedCount = 4;
-        var notificationCount = 2;
+        var items_ItemsToReplace_IndexStart = 4;
+        var items_ItemsToReplace_Count = 4;
+        var items_ItemsToReplace = items;
+        var notificationCount = 2; // 1 (ReplaceRange) + 1 (AddRange)
+        //var notificationCount = 7; // 6 (Replace) + 1 (AddRange)
+        var itemsReplacedCount = itemsCount - items_ItemsToReplace_IndexStart;
+        //var itemsAddedCount = itemsCount + itemsCount - items_ItemsToReplace_Count;
 
         var collection = new ObservableCollection<int>(items);
         var collectionCount = collection.Count;
+        var collectionCountOld = collectionCount;
 
         Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
@@ -570,23 +585,70 @@ public class ObservableCollectionTests
             collection,
             (o, e) => argsList.Add(e));
 
-        collection.ReplaceRange(itemsReplacedStartingIndex, itemsReplacedCount, items);
+        collection.ReplaceRange(items_ItemsToReplace_IndexStart,
+                                items_ItemsToReplace_Count,
+                                items_ItemsToReplace);
 
         Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        var args = argsList[1];
+        NotifyCollectionChangedEventArgs args;
+        IList? argsOldItems;
+        IList? argsNewItems;
+
+        // ReplaceRange
+        args = argsList[0];
+
+        Assert.That(args, Is.Not.Null);
+        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+
+        argsOldItems = args.OldItems;
+
+        Assert.That(argsOldItems, Is.Not.Null);
+        Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
+        Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+
+        argsNewItems = args.NewItems;
+
+        Assert.That(argsNewItems, Is.Not.Null);
+        Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
+        Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+
+        //// Replace
+        //for (var i = 0; i < notificationCount - 1; i++)
+        //{
+        //    args = argsList[i];
+
+        //    Assert.That(args, Is.Not.Null);
+        //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+
+        //    argsOldItems = args.OldItems;
+
+        //    Assert.That(argsOldItems, Is.Not.Null);
+        //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
+        //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+
+        //    argsNewItems = args.NewItems;
+
+        //    Assert.That(argsNewItems, Is.Not.Null);
+        //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
+        //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+        //}
+
+        // AddRange
+        args = argsList[notificationCount - 1];
 
         Assert.That(args, Is.Not.Null);
         Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
 
-        var newItems = args.NewItems;
+        argsOldItems = args.OldItems;
 
-        Assert.That(newItems, Is.Not.Null);
-        Assert.That(newItems, Has.Count.EqualTo(itemsCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(itemsReplacedStartingIndex));
+        Assert.That(argsOldItems, Is.Null);
 
-        collectionCount = collectionCount - itemsReplacedCount + itemsCount;
+        collectionCount = collectionCount - items_ItemsToReplace_Count + itemsCount;
+        argsNewItems = args.NewItems;
 
+        Assert.That(argsNewItems, Is.Not.Null);
+        Assert.That(argsNewItems, Has.Count.EqualTo(collection.Count - collectionCountOld));
         Assert.That(collection, Has.Count.EqualTo(collectionCount));
     }
 }

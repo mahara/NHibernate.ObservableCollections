@@ -46,7 +46,7 @@ public class ObservableCollection<T> :
     private int _blockReentrancyCount;
 
     [NonSerialized]
-    private DeferredEventArgsCollection? _deferredEventArgsCollection;
+    private DeferredEventArgsCollectionExecution? _deferredEventArgsCollectionExecution;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ObservableCollection{T}" />
@@ -362,7 +362,8 @@ public class ObservableCollection<T> :
 
         var items = (List<T>) Items;
 
-        var itemsRemoved = items.GetRange(index, count);
+        var itemsRemoved = items.GetRange(index..(index + count));
+        //var itemsRemoved = items.GetRange(index, count);
         items.RemoveRange(index, count);
 
         OnCountPropertyChanged();
@@ -503,19 +504,89 @@ public class ObservableCollection<T> :
         ReplaceItemsRangeCore(index, count, collection);
     }
 
-    protected virtual void ReplaceItemsRangeCore(int index, int count, IEnumerable<T> collection)
+    protected virtual void ReplaceItemsRangeCore(
+        int items_ItemsToReplace_IndexStart,
+        int items_ItemsToReplace_Count,
+        IEnumerable<T> itemsToReplace)
     {
-        //
-        // TODO:    Should change ReplaceItemsRangeCore implementation to an optimal one,
-        //          without first range-removing and then range-inserting.
-        //
-        RemoveItemsRangeCore(index, count);
-        InsertItemsRangeCore(index, collection);
+        if (items_ItemsToReplace_IndexStart < 0 || items_ItemsToReplace_IndexStart > Count || items_ItemsToReplace_IndexStart + items_ItemsToReplace_Count > Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(items_ItemsToReplace_IndexStart));
+        }
+
+#if NET8_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(itemsToReplace);
+#else
+        if (itemsToReplace is null)
+        {
+            throw new ArgumentNullException(nameof(itemsToReplace));
+        }
+#endif
+
+        if (itemsToReplace is ICollection<T> countable)
+        {
+            if (countable.Count == 0)
+            {
+                return;
+            }
+        }
+        else if (!itemsToReplace.Any())
+        {
+            return;
+        }
+
+        CheckReentrancy();
+
+        var items = (List<T>) Items;
+
+        var itemsOld = items.ToList();
+        var itemsOldCount = itemsOld.Count;
+
+        //var itemsRemoved = items.GetRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+        items.RemoveRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
+        var itemsInserted = itemsToReplace.ToList();
+        items.InsertRange(items_ItemsToReplace_IndexStart, itemsInserted);
+
+        var itemsNew = items;
+        var itemsNewCount = itemsNew.Count;
+
+        // ReplaceRange
+        OnIndexerPropertyChanged();
+        OnCollectionChanged(
+            NotifyCollectionChangedAction.Replace,
+            itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount),
+            //itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart),
+            itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount),
+            //itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart),
+            items_ItemsToReplace_IndexStart);
+
+        // Replace
+        //for (var i = items_ItemsToReplace_IndexStart; i < itemsOldCount; i++)
+        //{
+        //    var itemOld = itemsOld[i];
+        //    var itemNew = itemsNew[i];
+
+        //    OnIndexerPropertyChanged();
+        //    OnCollectionChanged(NotifyCollectionChangedAction.Replace, itemOld, itemNew, i);
+        //}
+
+        // AddRange
+        if (itemsNewCount > itemsOldCount)
+        {
+            var itemsNewAdded = itemsNew.GetRange(itemsOldCount..itemsNewCount);
+            //var itemsNewAdded = itemsNew.GetRange(itemsOldCount, itemsNewCount - itemsOldCount);
+            var itemsNewAddedCount = itemsNewAdded.Count;
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(NotifyCollectionChangedAction.Add, itemsNewAdded, itemsNewAddedCount);
+        }
     }
 
     protected virtual IDisposable DeferEventNotifications()
     {
-        return new DeferredEventArgsCollection(this);
+        return new DeferredEventArgsCollectionExecution(this);
     }
 
     /// <summary>
@@ -577,9 +648,9 @@ public class ObservableCollection<T> :
     /// </remarks>
     protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (_deferredEventArgsCollection is not null)
+        if (_deferredEventArgsCollectionExecution is not null)
         {
-            _deferredEventArgsCollection.Add(e);
+            _deferredEventArgsCollectionExecution.AddEventArgs(e);
 
             return;
         }
@@ -625,6 +696,13 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
     {
+        if (_deferredEventArgsCollectionExecution is not null)
+        {
+            _deferredEventArgsCollectionExecution.AddEventArgs(e);
+
+            return;
+        }
+
         if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers &&
             handlers.Count > 0)
         {
@@ -722,26 +800,42 @@ public class ObservableCollection<T> :
         }
     }
 
-    private sealed class DeferredEventArgsCollection : Collection<NotifyCollectionChangedEventArgs>, IDisposable
+    private sealed class DeferredEventArgsCollectionExecution : IDisposable
     {
         private readonly ObservableCollection<T> _collection;
+        private readonly List<EventArgs> _eventArgsCollection = [];
 
-        public DeferredEventArgsCollection(ObservableCollection<T> collection)
+        public DeferredEventArgsCollectionExecution(ObservableCollection<T> collection)
         {
             Debug.Assert(collection is not null);
-            Debug.Assert(collection!._deferredEventArgsCollection is null);
+            Debug.Assert(collection!._deferredEventArgsCollectionExecution is null);
 
             _collection = collection;
-            _collection._deferredEventArgsCollection = this;
+            _collection._deferredEventArgsCollectionExecution = this;
         }
 
         public void Dispose()
         {
-            _collection._deferredEventArgsCollection = null;
-            foreach (var args in this)
+            _collection._deferredEventArgsCollectionExecution = null;
+
+            foreach (var e in _eventArgsCollection)
             {
-                _collection.OnCollectionChanged(args);
+                if (e is NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+                {
+                    _collection.OnCollectionChanged(collectionChangedEventArgs);
+                }
+                else if (e is PropertyChangedEventArgs propertyChangedEventArgs)
+                {
+                    _collection.OnPropertyChanged(propertyChangedEventArgs);
+                }
             }
+
+            _eventArgsCollection.Clear();
+        }
+
+        public void AddEventArgs<TEventArgs>(TEventArgs e) where TEventArgs : EventArgs
+        {
+            _eventArgsCollection.Add(e);
         }
     }
 
