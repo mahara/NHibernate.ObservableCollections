@@ -61,6 +61,24 @@ namespace Iesi.Collections.Generic.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Deferred event notifications have already been completed..
+        /// </summary>
+        public static string ObservableCollection_DeferredEventNotificationsCompleted {
+            get {
+                return ResourceManager.GetString("ObservableCollection_DeferredEventNotificationsCompleted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Event notifications are already being deferred for this &apos;ObservableCollection&apos;. Nested deferred event notification operations are not allowed..
+        /// </summary>
+        public static string ObservableCollection_NestedDeferredEventNotificationNotAllowed {
+            get {
+                return ResourceManager.GetString("ObservableCollection_NestedDeferredEventNotificationNotAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Cannot change &apos;ObservableCollection&apos; during a &apos;CollectionChanged&apos; event..
         /// </summary>
         public static string ObservableCollection_ReentrancyNotAllowed {
@@ -70,11 +88,38 @@ namespace Iesi.Collections.Generic.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Deferred event notifications have already been completed..
+        /// </summary>
+        public static string ObservableSet_DeferredEventNotificationsCompleted {
+            get {
+                return ResourceManager.GetString("ObservableSet_DeferredEventNotificationsCompleted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Destination array &apos;{0}&apos; is too small..
+        /// </summary>
+        public static string ObservableSet_DestinationArrayTooSmall {
+            get {
+                return ResourceManager.GetString("ObservableSet_DestinationArrayTooSmall", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The internal storage of &apos;ObservableSet&apos; is inconsistent. &apos;{0}&apos; is {1}, but &apos;{2}&apos; is {3}..
         /// </summary>
         public static string ObservableSet_InternalStorageInconsistent {
             get {
                 return ResourceManager.GetString("ObservableSet_InternalStorageInconsistent", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Event notifications are already being deferred for this &apos;ObservableSet&apos;. Nested deferred event notification operations are not allowed..
+        /// </summary>
+        public static string ObservableSet_NestedDeferredEventNotificationsNotAllowed {
+            get {
+                return ResourceManager.GetString("ObservableSet_NestedDeferredEventNotificationsNotAllowed", resourceCulture);
             }
         }
 
