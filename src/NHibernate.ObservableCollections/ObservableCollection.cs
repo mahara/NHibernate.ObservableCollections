@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 using Iesi.Collections.Generic.Properties;
@@ -48,7 +49,7 @@ namespace Iesi.Collections.Generic
         private int _blockReentrancyCount;
 
         [NonSerialized]
-        private DeferredEventsCollection? _deferredEventsCollection;
+        private DeferredEventNotificationsOperation? _deferredEventNotificationsOperation;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObservableCollection{T}" /> class.
@@ -93,11 +94,75 @@ namespace Iesi.Collections.Generic
         [field: NonSerialized]
         public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
+        public ReadOnlyCollection<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlers
+        {
+            get
+            {
+                if (CollectionChanged is not NotifyCollectionChangedEventHandler handler)
+                {
+#if NET8_0_OR_GREATER
+                    return ReadOnlyCollection<NotifyCollectionChangedEventHandler>.Empty;
+#else
+                    return ReadOnlyCollectionInternal<NotifyCollectionChangedEventHandler>.Empty;
+#endif
+                }
+
+                var invocationList = handler.GetInvocationList();
+
+                if (invocationList.Length == 0)
+                {
+#if NET8_0_OR_GREATER
+                    return ReadOnlyCollection<NotifyCollectionChangedEventHandler>.Empty;
+#else
+                    return ReadOnlyCollectionInternal<NotifyCollectionChangedEventHandler>.Empty;
+#endif
+                }
+
+                var handlers = invocationList.Cast<NotifyCollectionChangedEventHandler>().ToList();
+                return new ReadOnlyCollection<NotifyCollectionChangedEventHandler>(handlers);
+            }
+        }
+
         /// <summary>
         ///     Occurs when a property value changes.
         /// </summary>
         [field: NonSerialized]
         public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+        public ReadOnlyCollection<PropertyChangedEventHandler> PropertyChangedEventHandlers
+        {
+            get
+            {
+                if (PropertyChanged is not PropertyChangedEventHandler handler)
+                {
+#if NET8_0_OR_GREATER
+                    return ReadOnlyCollection<PropertyChangedEventHandler>.Empty;
+#else
+                    return ReadOnlyCollectionInternal<PropertyChangedEventHandler>.Empty;
+#endif
+                }
+
+                var invocationList = handler.GetInvocationList();
+
+                if (invocationList.Length == 0)
+                {
+#if NET8_0_OR_GREATER
+                    return ReadOnlyCollection<PropertyChangedEventHandler>.Empty;
+#else
+                    return ReadOnlyCollectionInternal<PropertyChangedEventHandler>.Empty;
+#endif
+                }
+
+                var handlers = invocationList.Cast<PropertyChangedEventHandler>().ToList();
+                return new ReadOnlyCollection<PropertyChangedEventHandler>(handlers);
+            }
+        }
+
+        protected bool EventNotificationsAreDeferred
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _deferredEventNotificationsOperation is not null;
+        }
 
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" />'s <see cref="NotifyCollectionChangedAction.Reset" /> event to any listeners.
@@ -323,6 +388,7 @@ namespace Iesi.Collections.Generic
             CheckReentrancy();
 
             using var _ = BlockReentrancy();
+            using var __ = DeferEventNotifications();
 
             var items = (List<T>) Items;
 
@@ -382,10 +448,12 @@ namespace Iesi.Collections.Generic
             CheckReentrancy();
 
             using var _ = BlockReentrancy();
+            using var __ = DeferEventNotifications();
 
             var items = (List<T>) Items;
 
             var itemsRemoved = items.GetRange(index, count);
+            //var itemsRemoved = items.GetRange(index..(index + count));
 
             items.RemoveRange(index, count);
 
@@ -463,6 +531,7 @@ namespace Iesi.Collections.Generic
             CheckReentrancy();
 
             using var _ = BlockReentrancy();
+            using var __ = DeferEventNotifications();
 
             var clusters = new Dictionary<int, List<T>>();
 
@@ -562,8 +631,145 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void ReplaceItemsRange(int index, int count, IEnumerable<T> collection)
         {
-            RemoveItemsRange(index, count);
-            InsertItemsRange(index, collection);
+            var items_ItemsToReplace_IndexStart = index;
+            var items_ItemsToReplace_Count = count;
+            var itemsToReplace = collection;
+
+            if (!itemsToReplace.Any())
+            {
+                return;
+            }
+
+            CheckReentrancy();
+
+            using var _ = BlockReentrancy();
+            using var __ = DeferEventNotifications();
+
+            var items = (List<T>) Items;
+
+            var itemsOld = (List<T>) [.. items];
+            var itemsOldCount = itemsOld.Count;
+
+            //
+            // RemoveRange
+            //
+            //var itemsRemoved = items.GetRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
+            items.RemoveRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
+            //
+            // InsertRange
+            //
+            var itemsInserted = (List<T>) [.. itemsToReplace];
+
+            items.InsertRange(items_ItemsToReplace_IndexStart, itemsInserted);
+
+            var itemsNew = items;
+            var itemsNewCount = itemsNew.Count;
+
+            if (itemsNewCount >= itemsOldCount)
+            {
+                //
+                // ReplaceRange Events
+                //
+                var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+                //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+
+                var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+                //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Replace,
+                    itemsOldRemoved_ReplaceRange,
+                    itemsNewAdded_ReplaceRange,
+                    items_ItemsToReplace_IndexStart);
+
+
+
+                //
+                // Replace Events
+                //
+                //for (var i = items_ItemsToReplace_IndexStart; i < itemsOldCount; i++)
+                //{
+                //    var itemOld = itemsOld[i];
+                //    var itemNew = itemsNew[i];
+
+                //    OnCollectionChanged(
+                //        NotifyCollectionChangedAction.Replace,
+                //        itemOld,
+                //        itemNew,
+                //        i);
+                //}
+
+
+
+                //
+                // AddRange Events
+                //
+                if (itemsNewCount > itemsOldCount)
+                {
+                    var itemsNewAdded_AddRange = itemsNew.GetRange(itemsOldCount, itemsNewCount - itemsOldCount);
+                    //var itemsNewAdded = itemsNew.GetRange(itemsOldCount..itemsNewCount);
+                    var itemsNewAddedCount_AddRange = itemsNewAdded_AddRange.Count;
+
+                    OnCountPropertyChanged();
+                    OnIndexerPropertyChanged();
+                    OnCollectionChanged(
+                        NotifyCollectionChangedAction.Add,
+                        itemsNewAdded_AddRange,
+                        itemsNewAddedCount_AddRange);
+                }
+            }
+            else
+            {
+                //
+                // ReplaceRange Events
+                //
+                var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+                //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+
+                var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+                //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Replace,
+                    itemsOldRemoved_ReplaceRange,
+                    itemsNewAdded_ReplaceRange,
+                    items_ItemsToReplace_IndexStart);
+
+
+
+                //
+                // Replace Events
+                //
+                //for (var i = items_ItemsToReplace_IndexStart; i < itemsNewCount; i++)
+                //{
+                //    var itemOld = itemsOld[i];
+                //    var itemNew = itemsNew[i];
+
+                //    OnCollectionChanged(
+                //        NotifyCollectionChangedAction.Replace,
+                //        itemOld,
+                //        itemNew,
+                //        i);
+                //}
+
+
+
+                //
+                // RemoveRange Events
+                //
+                var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount, itemsOldCount - itemsNewCount);
+                //var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount..itemsOldCount);
+
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Remove,
+                    itemsOldRemoved_RemoveRange,
+                    itemsNewCount);
+
+                OnCountPropertyChanged();
+                OnIndexerPropertyChanged();
+            }
         }
 
         /// <summary>
@@ -626,7 +832,7 @@ namespace Iesi.Collections.Generic
 
         protected virtual IDisposable DeferEventNotifications()
         {
-            return new DeferredEventsCollection(this);
+            return new DeferredEventNotificationsOperation(this);
         }
 
         /// <summary>
@@ -671,6 +877,14 @@ namespace Iesi.Collections.Generic
 
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
+        /// </summary>
+        protected void OnCollectionChanged(NotifyCollectionChangedAction action, IList oldItems, IList newItems, int startingIndex)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, newItems, oldItems, startingIndex));
+        }
+
+        /// <summary>
+        ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         ///     Properties/methods modifying this <see cref="ObservableCollection{T}" /> will raise
         ///     a <see cref="CollectionChanged" /> event through this virtual method.
         /// </summary>
@@ -680,9 +894,9 @@ namespace Iesi.Collections.Generic
         /// </remarks>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (_deferredEventsCollection is not null)
+            if (_deferredEventNotificationsOperation is not null)
             {
-                _deferredEventsCollection.Add(e);
+                _deferredEventNotificationsOperation.AddEventArgs(e);
 
                 return;
             }
@@ -724,7 +938,17 @@ namespace Iesi.Collections.Generic
         /// </summary>
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChanged?.Invoke(this, e);
+            if (_deferredEventNotificationsOperation is not null)
+            {
+                _deferredEventNotificationsOperation.AddEventArgs(e);
+
+                return;
+            }
+
+            if (PropertyChanged is PropertyChangedEventHandler handler)
+            {
+                handler(this, e);
+            }
         }
 
         [OnSerializing]
@@ -767,27 +991,42 @@ namespace Iesi.Collections.Generic
             }
         }
 
-        private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+        private sealed class DeferredEventNotificationsOperation : IDisposable
         {
             private readonly ObservableCollection<T> _collection;
+            private readonly List<EventArgs> _eventArgsList = [];
 
-            public DeferredEventsCollection(ObservableCollection<T> collection)
+            public DeferredEventNotificationsOperation(ObservableCollection<T> collection)
             {
                 Debug.Assert(collection is not null);
-                Debug.Assert(collection!._deferredEventsCollection is null);
+                Debug.Assert(collection!._deferredEventNotificationsOperation is null);
 
                 _collection = collection;
-                _collection._deferredEventsCollection = this;
+                _collection._deferredEventNotificationsOperation = this;
             }
 
             public void Dispose()
             {
-                _collection._deferredEventsCollection = null;
+                _collection._deferredEventNotificationsOperation = null;
 
-                foreach (var eventArgs in this)
+                foreach (var eventArgs in _eventArgsList)
                 {
-                    _collection.OnCollectionChanged(eventArgs);
+                    if (eventArgs is NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+                    {
+                        _collection.OnCollectionChanged(collectionChangedEventArgs);
+                    }
+                    else if (eventArgs is PropertyChangedEventArgs propertyChangedEventArgs)
+                    {
+                        _collection.OnPropertyChanged(propertyChangedEventArgs);
+                    }
                 }
+
+                _eventArgsList.Clear();
+            }
+
+            public void AddEventArgs<TEventArgs>(TEventArgs eventArgs) where TEventArgs : EventArgs
+            {
+                _eventArgsList.Add(eventArgs);
             }
         }
 
@@ -797,5 +1036,23 @@ namespace Iesi.Collections.Generic
             public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
             public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
         }
+
+#if !NET8_0_OR_GREATER
+        private class ReadOnlyCollectionInternal<TItem> : ReadOnlyCollection<TItem>
+        {
+            internal ReadOnlyCollectionInternal(IList<TItem> list) :
+                base(list)
+            {
+            }
+
+            /// <summary>
+            ///     Gets an empty <see cref="ReadOnlyCollection{T}" />.
+            /// </summary>
+            /// <value>An empty <see cref="ReadOnlyCollection{T}" />.</value>
+            /// <remarks>The returned instance is immutable and will always be empty.</remarks>
+            public static ReadOnlyCollection<TItem> Empty { get; } =
+                new ReadOnlyCollection<TItem>(Array.Empty<TItem>());
+        }
+#endif
     }
 }
