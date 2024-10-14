@@ -20,7 +20,7 @@ public class LoopsBenchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _items = Enumerable.Range(1, ItemsCount).ToList();
+        _items = [.. Enumerable.Range(1, ItemsCount)];
     }
 
     [Benchmark]
@@ -28,7 +28,7 @@ public class LoopsBenchmarks
     {
         for (var i = 0; i < _items.Count; i++)
         {
-            var item = _items[i];
+            _ = _items[i];
         }
     }
 
