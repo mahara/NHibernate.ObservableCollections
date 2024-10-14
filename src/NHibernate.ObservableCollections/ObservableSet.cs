@@ -190,7 +190,8 @@ public class ObservableSet<T> :
             return 0;
         }
 
-        var removed = _set.Where(i => !copy.Contains(i)).ToList();
+        var removed = (IList) _set.Where(i => !copy.Contains(i));
+        //var removed = _set.Where(i => !copy.Contains(i)).ToList();
 
         OnCountPropertyChanging();
 
@@ -223,7 +224,8 @@ public class ObservableSet<T> :
 
         OnCountPropertyChanging();
 
-        var removed = this.ToList();
+        var removed = (IList) this;
+        //var removed = this.ToList();
 
         _set.Clear();
 
@@ -269,7 +271,8 @@ public class ObservableSet<T> :
             return;
         }
 
-        var added = copy.Where(i => !_set.Contains(i)).ToList();
+        var added = (IList) copy.Where(i => !_set.Contains(i));
+        //var added = copy.Where(i => !_set.Contains(i)).ToList();
 
         OnCountPropertyChanging();
 
@@ -295,7 +298,8 @@ public class ObservableSet<T> :
             return;
         }
 
-        var removed = _set.Where(i => !copy.Contains(i)).ToList();
+        var removed = (IList) _set.Where(i => !copy.Contains(i));
+        //var removed = _set.Where(i => !copy.Contains(i)).ToList();
 
         OnCountPropertyChanging();
 
@@ -320,7 +324,8 @@ public class ObservableSet<T> :
             return;
         }
 
-        var removed = _set.Where(i => !copy.Contains(i)).ToList();
+        var removed = (IList) _set.Where(i => !copy.Contains(i));
+        //var removed = _set.Where(i => !copy.Contains(i)).ToList();
 
         OnCountPropertyChanging();
 
@@ -341,8 +346,10 @@ public class ObservableSet<T> :
 
         copy.SymmetricExceptWith(other);
 
-        var removed = _set.Where(i => !copy.Contains(i)).ToList();
-        var added = copy.Where(i => !_set.Contains(i)).ToList();
+        var removed = (IList) _set.Where(i => !copy.Contains(i));
+        //var removed = _set.Where(i => !copy.Contains(i)).ToList();
+        var added = (IList) copy.Where(i => !_set.Contains(i));
+        //var added = copy.Where(i => !_set.Contains(i)).ToList();
 
         if (removed.Count == 0 &&
             added.Count == 0)
@@ -520,7 +527,7 @@ public class ObservableSet<T> :
     {
         public static readonly List<T> NoItems = [];
 
-        public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(ObservableSet<T>.Count));
-        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(ObservableSet<T>.Count));
+        public static readonly PropertyChangingEventArgs CountPropertyChanging = new(nameof(Count));
+        public static readonly PropertyChangedEventArgs CountPropertyChanged = new(nameof(Count));
     }
 }

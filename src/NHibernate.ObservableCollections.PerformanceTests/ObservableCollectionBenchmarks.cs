@@ -16,7 +16,7 @@ public class ObservableCollection_Benchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _items = Enumerable.Range(1, ItemsCount).ToList();
+        _items = [.. Enumerable.Range(1, ItemsCount)];
     }
 
     [Benchmark]
@@ -63,13 +63,13 @@ public class ObservableCollection_ReplaceRange_Benchmarks
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _items = Enumerable.Range(1, ItemsCount).ToList();
+        _items = [.. Enumerable.Range(1, ItemsCount)];
     }
 
     [IterationSetup]
     public void IterationSetup()
     {
-        _collection = new(_items);
+        _collection = [.. _items];
     }
 
     [Benchmark]

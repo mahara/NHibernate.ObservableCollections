@@ -16,7 +16,7 @@ public class ObservableSetTests
     public void CanAdd_EmptyObservableSet()
     {
         var items = _items;
-        var itemsCount = items.Count;
+        //var itemsCount = items.Count;
 
         var itemAdded = items[0];
         var itemsAddedCount = 1;

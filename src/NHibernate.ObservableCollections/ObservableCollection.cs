@@ -1,6 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+#if NET6_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 using System.Runtime.Serialization;
 
 namespace Iesi.Collections.Generic;
@@ -63,7 +66,7 @@ public class ObservableCollection<T> :
     /// </remarks>
     /// <exception cref="ArgumentNullException"> collection is a null reference </exception>
     public ObservableCollection(IEnumerable<T> collection) :
-        base(new List<T>(collection ?? throw new ArgumentNullException(nameof(collection))))
+        base([.. collection ?? throw new ArgumentNullException(nameof(collection))])
     {
     }
 
@@ -78,14 +81,14 @@ public class ObservableCollection<T> :
     /// </remarks>
     /// <exception cref="ArgumentNullException"> list is a null reference </exception>
     public ObservableCollection(List<T> list) :
-        base(new List<T>(list ?? throw new ArgumentNullException(nameof(list))))
+        base([.. list ?? throw new ArgumentNullException(nameof(list))])
     {
     }
 
     /// <summary>
     ///     Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
-    public event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
     public ReadOnlyCollection<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlers
     {
@@ -125,7 +128,7 @@ public class ObservableCollection<T> :
         remove => PropertyChanged -= value;
     }
 
-    protected event PropertyChangedEventHandler? PropertyChanged;
+    protected virtual event PropertyChangedEventHandler? PropertyChanged;
 
     public ReadOnlyCollection<PropertyChangedEventHandler> PropertyChangedEventHandlers
     {
@@ -201,6 +204,7 @@ public class ObservableCollection<T> :
         CheckReentrancy();
 
         var itemRemoved = this[index];
+
         base.RemoveItem(index);
 
         OnCountPropertyChanged();
@@ -217,6 +221,7 @@ public class ObservableCollection<T> :
         CheckReentrancy();
 
         var itemOld = this[index];
+
         base.SetItem(index, item);
 
         OnIndexerPropertyChanged();
@@ -240,6 +245,7 @@ public class ObservableCollection<T> :
         CheckReentrancy();
 
         var itemMoved = this[oldIndex];
+
         base.RemoveItem(oldIndex);
         base.InsertItem(newIndex, itemMoved);
 
@@ -305,7 +311,9 @@ public class ObservableCollection<T> :
 
         var items = (List<T>) Items;
 
-        var itemsAdded = collection.ToList();
+        var itemsAdded = collection.ToArray();
+        //var itemsAdded = collection.ToList();
+
         items.InsertRange(index, itemsAdded);
 
         OnCountPropertyChanged();
@@ -338,8 +346,9 @@ public class ObservableCollection<T> :
 
         var items = (List<T>) Items;
 
-        //var itemsRemoved = items.GetRange(index, count);
-        var itemsRemoved = items.GetRange(index..(index + count));
+        var itemsRemoved = items.GetRange(index, count);
+        //var itemsRemoved = items.GetRange(index..(index + count));
+
         items.RemoveRange(index, count);
 
         OnCountPropertyChanged();
@@ -489,30 +498,64 @@ public class ObservableCollection<T> :
 
         var items = (List<T>) Items;
 
+#if NET
+        var itemsOld = items.ToArray();
+        var itemsOldCount = itemsOld.Length;
+#else
         var itemsOld = items.ToList();
         var itemsOldCount = itemsOld.Count;
+#endif
 
+        //
+        // RemoveRange
+        //
         //var itemsRemoved = items.GetRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
         items.RemoveRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
 
+        //
+        // InsertRange
+        //
+#if NET
+        var itemsInserted = itemsToReplace.ToArray();
+#else
         var itemsInserted = itemsToReplace.ToList();
+#endif
+
         items.InsertRange(items_ItemsToReplace_IndexStart, itemsInserted);
 
+#if NET6_0_OR_GREATER
+        var itemsNew = CollectionsMarshal.AsSpan(items);
+        var itemsNewCount = itemsNew.Length;
+#else
         var itemsNew = items;
         var itemsNewCount = itemsNew.Count;
+#endif
 
         if (itemsNewCount >= itemsOldCount)
         {
             //
             // ReplaceRange
             //
+#if NET
+            var itemsOldRemoved_ReplaceRange = itemsOld[items_ItemsToReplace_IndexStart..itemsOldCount];
+#else
+            var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+            //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+#endif
+
+#if NET6_0_OR_GREATER
+            var itemsNewAdded_ReplaceRange = itemsNew[items_ItemsToReplace_IndexStart..itemsOldCount].ToArray();
+#else
+            var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+            //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+#endif
+
             OnIndexerPropertyChanged();
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Replace,
-                //itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart),
-                itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount),
-                //itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart),
-                itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount),
+                itemsOldRemoved_ReplaceRange,
+                itemsNewAdded_ReplaceRange,
                 items_ItemsToReplace_IndexStart);
 
             //
@@ -525,7 +568,11 @@ public class ObservableCollection<T> :
             //    var itemNew = itemsNew[i];
 
             //    OnIndexerPropertyChanged();
-            //    OnCollectionChanged(NotifyCollectionChangedAction.Replace, itemOld, itemNew, i);
+            //    OnCollectionChanged(
+            //        NotifyCollectionChangedAction.Replace,
+            //        itemOld,
+            //        itemNew,
+            //        i);
             //}
 
             //
@@ -533,13 +580,21 @@ public class ObservableCollection<T> :
             //
             if (itemsNewCount > itemsOldCount)
             {
-                //var itemsNewAdded = itemsNew.GetRange(itemsOldCount, itemsNewCount - itemsOldCount);
-                var itemsNewAdded = itemsNew.GetRange(itemsOldCount..itemsNewCount);
-                var itemsNewAddedCount = itemsNewAdded.Count;
+#if NET6_0_OR_GREATER
+                var itemsNewAdded_AddRange = itemsNew[itemsOldCount..itemsNewCount].ToArray();
+                var itemsNewAddedCount_AddRange = itemsNewAdded_AddRange.Length;
+#else
+                var itemsNewAdded_AddRange = itemsNew.GetRange(itemsOldCount, itemsNewCount - itemsOldCount);
+                //var itemsNewAdded = itemsNew.GetRange(itemsOldCount..itemsNewCount);
+                var itemsNewAddedCount_AddRange = itemsNewAdded_AddRange.Count;
+#endif
 
                 OnCountPropertyChanged();
                 OnIndexerPropertyChanged();
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, itemsNewAdded, itemsNewAddedCount);
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Add,
+                    itemsNewAdded_AddRange,
+                    itemsNewAddedCount_AddRange);
             }
         }
         else
@@ -547,13 +602,25 @@ public class ObservableCollection<T> :
             //
             // ReplaceRange
             //
+#if NET
+            var itemsOldRemoved_ReplaceRange = itemsOld[items_ItemsToReplace_IndexStart..itemsNewCount];
+#else
+            var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+            //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+#endif
+
+#if NET6_0_OR_GREATER
+            var itemsNewAdded_ReplaceRange = itemsNew[items_ItemsToReplace_IndexStart..itemsNewCount].ToArray();
+#else
+            var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+            //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+#endif
+
             OnIndexerPropertyChanged();
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Replace,
-                //itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart),
-                itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount),
-                //itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart),
-                itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount),
+                itemsOldRemoved_ReplaceRange,
+                itemsNewAdded_ReplaceRange,
                 items_ItemsToReplace_IndexStart);
 
             //
@@ -566,16 +633,29 @@ public class ObservableCollection<T> :
             //    var itemNew = itemsNew[i];
 
             //    OnIndexerPropertyChanged();
-            //    OnCollectionChanged(NotifyCollectionChangedAction.Replace, itemOld, itemNew, i);
+            //    OnCollectionChanged(
+            //        NotifyCollectionChangedAction.Replace,
+            //        itemOld,
+            //        itemNew,
+            //        i);
             //}
 
-            //var itemsOldRemoved = itemsOld.GetRange(itemsNewCount, itemsOldCount - itemsNewCount);
-            var itemsOldRemoved = itemsOld.GetRange(itemsNewCount..itemsOldCount);
-            var itemsNewRemovedCount = itemsOldRemoved.Count;
+            //
+            // RemoveRange
+            //
+#if NET
+            var itemsOldRemoved_RemoveRange = itemsOld[itemsNewCount..itemsOldCount];
+#else
+            var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount, itemsOldCount - itemsNewCount);
+            //var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount..itemsOldCount);
+#endif
 
             OnCountPropertyChanged();
             OnIndexerPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, itemsOldRemoved, itemsNewCount);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Remove,
+                itemsOldRemoved_RemoveRange,
+                itemsNewCount);
         }
     }
 
