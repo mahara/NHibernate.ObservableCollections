@@ -34,7 +34,9 @@ public class ReadOnlyObservableCollection<T> :
     ///     Gets an empty <see cref="ReadOnlyObservableCollection{T}" />.
     /// </summary>
     /// <value>An empty <see cref="ReadOnlyObservableCollection{T}" />.</value>
-    /// <remarks>The returned instance is immutable and will always be empty.</remarks>
+    /// <remarks>
+    ///     The returned instance is immutable and will always be empty.
+    /// </remarks>
     public static ReadOnlyObservableCollection<T> Empty { get; } =
         new ReadOnlyObservableCollection<T>([]);
 #endif
