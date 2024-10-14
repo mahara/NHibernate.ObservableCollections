@@ -15,74 +15,79 @@ public class ObservableSetTests
     [Test]
     public void CanAdd_EmptyObservableSet()
     {
-        NotifyCollectionChangedEventArgs args = null!;
-        var notificationCount = 0;
+        var items = _items;
+        var itemsCount = items.Count;
 
-        var collection = new ObservableSet<int>();
-        var itemsCount = collection.Count;
+        var itemAdded = items[0];
+        var itemsAddedCount = 1;
+        var notificationCount = itemsAddedCount;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        var collection = new TestObservableSet<int>();
+        var collectionCount = collection.Count;
 
-        using var _ = new CollectionChangedEventSubscription(
-            collection,
-            (o, e) =>
-            {
-                args = e;
-                notificationCount++;
-            });
+        Assert.That(collection, Has.Count.EqualTo(0));
 
-        collection.Add(_items[0]);
-        var addedItemsCount = 1;
+        var argsList = collection.CollectionChangedEventArgsList;
+
+        Assert.That(argsList, Has.Count.EqualTo(0));
+
+        collection.Add(itemAdded);
+
+        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+
+        var args = argsList[0];
 
         Assert.That(args, Is.Not.Null);
-        Assert.That(notificationCount, Is.EqualTo(1));
+        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
 
-        var addedItems = args.NewItems;
+        var argsNewItems = args.NewItems;
 
-        Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems.Cast<object>().Count(), Is.EqualTo(addedItemsCount));
+        Assert.That(argsNewItems, Is.Not.Null);
+        Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(-1));
 
-        itemsCount += addedItemsCount;
+        collectionCount += itemsAddedCount;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        Assert.That(collection, Has.Count.EqualTo(collectionCount));
     }
 
     [Test]
     public void CanRemove_NonEmptyObservableSet()
     {
-        NotifyCollectionChangedEventArgs args = null!;
-        var notificationCount = 0;
+        var items = _items;
+        var itemsCount = items.Count;
 
-        var removedItemIndex = 3;
+        var itemRemovedIndex = 3;
+        var itemRemoved = items[itemRemovedIndex];
+        var itemsRemovedCount = 1;
+        var notificationCount = itemsRemovedCount;
 
-        var collection = new ObservableSet<int>(_items);
-        var itemsCount = collection.Count;
+        var collection = new TestObservableSet<int>(items);
+        var collectionCount = collection.Count;
 
         Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        using var _ = new CollectionChangedEventSubscription(
-            collection,
-            (o, e) =>
-            {
-                args = e;
-                notificationCount++;
-            });
+        var argsList = collection.CollectionChangedEventArgsList;
 
-        collection.Remove(_items[removedItemIndex]);
-        var removedItemsCount = 1;
+        Assert.That(argsList, Has.Count.EqualTo(0));
+
+        collection.Remove(itemRemoved);
+
+        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+
+        var args = argsList[0];
 
         Assert.That(args, Is.Not.Null);
-        Assert.That(notificationCount, Is.EqualTo(1));
+        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-        var removedItems = args.OldItems;
+        var argsOldItems = args.OldItems;
 
-        Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems.Cast<object>().Count(), Is.EqualTo(removedItemsCount));
+        Assert.That(argsOldItems, Is.Not.Null);
+        Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
         Assert.That(args.OldStartingIndex, Is.EqualTo(-1));
 
-        itemsCount -= removedItemsCount;
+        collectionCount -= itemsRemovedCount;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        Assert.That(collection, Has.Count.EqualTo(collectionCount));
     }
 }
