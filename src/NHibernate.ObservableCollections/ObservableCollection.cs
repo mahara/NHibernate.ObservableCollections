@@ -1,5 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+#if NET6_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
 using System.Runtime.Serialization;
 
 namespace Iesi.Collections.Generic;
@@ -13,9 +17,12 @@ namespace Iesi.Collections.Generic;
 /// </typeparam>
 /// <remarks>
 ///     REFERENCES:
+///     -   <see href="https://github.com/dotnet/designs/pull/320" />
 ///     -   <see href="https://github.com/dotnet/runtime/issues/18087" />
+///     -   <see href="https://github.com/dotnet/wpf/pull/9568" />
 ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
 ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
+///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
@@ -37,7 +44,7 @@ public class ObservableCollection<T> :
     private int _blockReentrancyCount;
 
     [NonSerialized]
-    private DeferredEventsCollection? _deferredEventsCollection;
+    private DeferredEventArgsCollectionExecution? _deferredEventArgsCollectionExecution;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ObservableCollection{T}" />
@@ -84,6 +91,34 @@ public class ObservableCollection<T> :
     [field: NonSerialized]
     public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
 
+    public ReadOnlyCollection<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlers
+    {
+        get
+        {
+            if (CollectionChanged is not NotifyCollectionChangedEventHandler handler)
+            {
+#if NET8_0_OR_GREATER
+                return ReadOnlyCollection<NotifyCollectionChangedEventHandler>.Empty;
+#else
+                return ReadOnlyCollectionInternal<NotifyCollectionChangedEventHandler>.Empty;
+#endif
+            }
+
+            var invocationList = handler.GetInvocationList();
+            if (invocationList.Length == 0)
+            {
+#if NET8_0_OR_GREATER
+                return ReadOnlyCollection<NotifyCollectionChangedEventHandler>.Empty;
+#else
+                return ReadOnlyCollectionInternal<NotifyCollectionChangedEventHandler>.Empty;
+#endif
+            }
+
+            var handlers = invocationList.Cast<NotifyCollectionChangedEventHandler>().ToList();
+            return new ReadOnlyCollection<NotifyCollectionChangedEventHandler>(handlers);
+        }
+    }
+
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
     /// </summary>
@@ -98,6 +133,55 @@ public class ObservableCollection<T> :
     /// </summary>
     [field: NonSerialized]
     protected virtual event PropertyChangedEventHandler? PropertyChanged;
+
+    public ReadOnlyCollection<PropertyChangedEventHandler> PropertyChangedEventHandlers
+    {
+        get
+        {
+            if (PropertyChanged is not PropertyChangedEventHandler handler)
+            {
+#if NET8_0_OR_GREATER
+                return ReadOnlyCollection<PropertyChangedEventHandler>.Empty;
+#else
+                return ReadOnlyCollectionInternal<PropertyChangedEventHandler>.Empty;
+#endif
+            }
+
+            var invocationList = handler.GetInvocationList();
+            if (invocationList.Length == 0)
+            {
+#if NET8_0_OR_GREATER
+                return ReadOnlyCollection<PropertyChangedEventHandler>.Empty;
+#else
+                return ReadOnlyCollectionInternal<PropertyChangedEventHandler>.Empty;
+#endif
+            }
+
+            var handlers = invocationList.Cast<PropertyChangedEventHandler>().ToList();
+            return new ReadOnlyCollection<PropertyChangedEventHandler>(handlers);
+        }
+    }
+
+    protected bool EventNotificationsAreDeferred
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _deferredEventArgsCollectionExecution is not null;
+    }
+
+    /// <summary>
+    ///     Raises a change notification indicating that all bindings should be refreshed.
+    /// </summary>
+    public void Refresh()
+    {
+        RefreshItems();
+    }
+
+    protected virtual void RefreshItems()
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    }
 
     /// <summary>
     ///     Called by base class <see cref="Collection{T}" /> when an item is added to collection;
@@ -120,6 +204,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void RemoveItem(int index)
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
         CheckReentrancy();
 
         var itemRemoved = this[index];
@@ -137,6 +226,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void SetItem(int index, T item)
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
         CheckReentrancy();
 
         var itemOld = this[index];
@@ -161,6 +255,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
         CheckReentrancy();
 
         var itemMoved = this[oldIndex];
@@ -178,6 +277,14 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void ClearItems()
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         CheckReentrancy();
 
         base.ClearItems();
@@ -210,28 +317,15 @@ public class ObservableCollection<T> :
 
     protected virtual void InsertItemsRange(int index, IEnumerable<T> collection)
     {
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         if (index < 0 || index > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
 
-#if NET8_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(collection);
-#else
-        if (collection is null)
-        {
-            throw new ArgumentNullException(nameof(collection));
-        }
-#endif
-
-        if (collection is ICollection<T> countable)
-        {
-            if (countable.Count == 0)
-            {
-                return;
-            }
-        }
-        else if (!collection.Any())
+        if (!collection.Any())
         {
             return;
         }
@@ -240,7 +334,7 @@ public class ObservableCollection<T> :
 
         var items = (List<T>) Items;
 
-        var itemsAdded = collection.ToList();
+        var itemsAdded = (List<T>) [.. collection];
 
         items.InsertRange(index, itemsAdded);
 
@@ -262,6 +356,14 @@ public class ObservableCollection<T> :
 
     protected virtual void RemoveItemsRange(int index, int count)
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
         if (index < 0 || index > Count || index + count > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -272,6 +374,7 @@ public class ObservableCollection<T> :
         var items = (List<T>) Items;
 
         var itemsRemoved = items.GetRange(index, count);
+        //var itemsRemoved = items.GetRange(index..(index + count));
 
         items.RemoveRange(index, count);
 
@@ -299,6 +402,14 @@ public class ObservableCollection<T> :
 
     protected virtual void RemoveItemsRange(IEnumerable<T> collection)
     {
+        if (Count == 0)
+        {
+            return;
+        }
+
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
 #if NET8_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(collection);
 #else
@@ -308,11 +419,7 @@ public class ObservableCollection<T> :
         }
 #endif
 
-        if (Count == 0)
-        {
-            return;
-        }
-        else if (collection is ICollection<T> countable)
+        if (collection is ICollection<T> countable)
         {
             if (countable.Count == 0)
             {
@@ -389,13 +496,166 @@ public class ObservableCollection<T> :
 
     protected virtual void ReplaceItemsRange(int index, int count, IEnumerable<T> collection)
     {
-        RemoveItemsRange(index, count);
-        InsertItemsRange(index, collection);
+        if (Count == 0)
+        {
+            return;
+        }
+
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
+
+        if (index < 0 || index > Count || index + count > Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+#if NET8_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(collection);
+#else
+        if (collection is null)
+        {
+            throw new ArgumentNullException(nameof(collection));
+        }
+#endif
+
+        var items_ItemsToReplace_IndexStart = index;
+        var items_ItemsToReplace_Count = count;
+        var itemsToReplace = collection;
+
+        if (!itemsToReplace.Any())
+        {
+            return;
+        }
+
+        CheckReentrancy();
+
+        var items = (List<T>) Items;
+
+        var itemsOld = items.ToList();
+        var itemsOldCount = itemsOld.Count;
+
+        //
+        // RemoveRange
+        //
+        //var itemsRemoved = items.GetRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
+        items.RemoveRange(items_ItemsToReplace_IndexStart, items_ItemsToReplace_Count);
+
+        //
+        // InsertRange
+        //
+        var itemsInserted = (List<T>) [.. itemsToReplace];
+
+        items.InsertRange(items_ItemsToReplace_IndexStart, itemsInserted);
+
+        var itemsNew = items;
+        var itemsNewCount = itemsNew.Count;
+
+        if (itemsNewCount >= itemsOldCount)
+        {
+            //
+            // ReplaceRange
+            //
+            var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+            //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+
+            var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsOldCount - items_ItemsToReplace_IndexStart);
+            //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsOldCount);
+
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Replace,
+                itemsOldRemoved_ReplaceRange,
+                itemsNewAdded_ReplaceRange,
+                items_ItemsToReplace_IndexStart);
+
+            //
+            // Replace
+            //
+            //OnIndexerPropertyChanged();
+            //for (var i = items_ItemsToReplace_IndexStart; i < itemsOldCount; i++)
+            //{
+            //    var itemOld = itemsOld[i];
+            //    var itemNew = itemsNew[i];
+
+            //    OnIndexerPropertyChanged();
+            //    OnCollectionChanged(
+            //        NotifyCollectionChangedAction.Replace,
+            //        itemOld,
+            //        itemNew,
+            //        i);
+            //}
+
+            //
+            // AddRange
+            //
+            if (itemsNewCount > itemsOldCount)
+            {
+                var itemsNewAdded_AddRange = itemsNew.GetRange(itemsOldCount, itemsNewCount - itemsOldCount);
+                //var itemsNewAdded = itemsNew.GetRange(itemsOldCount..itemsNewCount);
+                var itemsNewAddedCount_AddRange = itemsNewAdded_AddRange.Count;
+
+                OnCountPropertyChanged();
+                OnIndexerPropertyChanged();
+                OnCollectionChanged(
+                    NotifyCollectionChangedAction.Add,
+                    itemsNewAdded_AddRange,
+                    itemsNewAddedCount_AddRange);
+            }
+        }
+        else
+        {
+            //
+            // ReplaceRange
+            //
+            var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+            //var itemsOldRemoved_ReplaceRange = itemsOld.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+
+            var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart, itemsNewCount - items_ItemsToReplace_IndexStart);
+            //var itemsNewAdded_ReplaceRange = itemsNew.GetRange(items_ItemsToReplace_IndexStart..itemsNewCount);
+
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Replace,
+                itemsOldRemoved_ReplaceRange,
+                itemsNewAdded_ReplaceRange,
+                items_ItemsToReplace_IndexStart);
+
+            //
+            // Replace
+            //
+            //OnIndexerPropertyChanged();
+            //for (var i = items_ItemsToReplace_IndexStart; i < itemsNewCount; i++)
+            //{
+            //    var itemOld = itemsOld[i];
+            //    var itemNew = itemsNew[i];
+
+            //    OnIndexerPropertyChanged();
+            //    OnCollectionChanged(
+            //        NotifyCollectionChangedAction.Replace,
+            //        itemOld,
+            //        itemNew,
+            //        i);
+            //}
+
+            //
+            // RemoveRange
+            //
+            var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount, itemsOldCount - itemsNewCount);
+            //var itemsOldRemoved_RemoveRange = itemsOld.GetRange(itemsNewCount..itemsOldCount);
+
+            OnCountPropertyChanged();
+            OnIndexerPropertyChanged();
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Remove,
+                itemsOldRemoved_RemoveRange,
+                itemsNewCount);
+        }
     }
 
-    protected virtual IDisposable DeferEvents()
+    protected virtual IDisposable DeferEventNotifications()
     {
-        return new DeferredEventsCollection(this);
+        return new DeferredEventArgsCollectionExecution(this);
     }
 
     /// <summary>
@@ -457,15 +717,14 @@ public class ObservableCollection<T> :
     /// </remarks>
     protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
     {
-        if (_deferredEventsCollection is not null)
+        if (_deferredEventArgsCollectionExecution is not null)
         {
-            _deferredEventsCollection.Add(e);
+            _deferredEventArgsCollectionExecution.AddEventArgs(e);
 
             return;
         }
 
-        var handler = CollectionChanged;
-        if (handler is not null)
+        if (CollectionChanged is NotifyCollectionChangedEventHandler handler)
         {
             // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
             _blockReentrancyCount++;
@@ -502,7 +761,17 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        PropertyChanged?.Invoke(this, e);
+        if (_deferredEventArgsCollectionExecution is not null)
+        {
+            _deferredEventArgsCollectionExecution.AddEventArgs(e);
+
+            return;
+        }
+
+        if (PropertyChanged is PropertyChangedEventHandler handler)
+        {
+            handler(this, e);
+        }
     }
 
     [OnSerializing]
@@ -558,7 +827,8 @@ public class ObservableCollection<T> :
             // the problem only arises if reentrant changes make the original event args
             // invalid for later listeners.
             // This keeps existing code working (e.g. Selector.SelectedItems).
-            if (CollectionChanged?.GetInvocationList().Length > 1)
+            if (CollectionChanged is NotifyCollectionChangedEventHandler handler &&
+                handler.GetInvocationList().Length > 1)
             {
                 throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
             }
@@ -577,7 +847,7 @@ public class ObservableCollection<T> :
         internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization).
 
         [NonSerialized]
-        internal ObservableCollection<T> _collection = null!;
+        internal ObservableCollection<T> _collection;
 
         public SimpleMonitor(ObservableCollection<T> collection)
         {
@@ -592,26 +862,42 @@ public class ObservableCollection<T> :
         }
     }
 
-    private sealed class DeferredEventsCollection : List<NotifyCollectionChangedEventArgs>, IDisposable
+    private sealed class DeferredEventArgsCollectionExecution : IDisposable
     {
         private readonly ObservableCollection<T> _collection;
+        private readonly List<EventArgs> _eventArgsList = [];
 
-        public DeferredEventsCollection(ObservableCollection<T> collection)
+        public DeferredEventArgsCollectionExecution(ObservableCollection<T> collection)
         {
             Debug.Assert(collection is not null);
-            Debug.Assert(collection!._deferredEventsCollection is null);
+            Debug.Assert(collection!._deferredEventArgsCollectionExecution is null);
 
             _collection = collection;
-            _collection._deferredEventsCollection = this;
+            _collection._deferredEventArgsCollectionExecution = this;
         }
 
         public void Dispose()
         {
-            _collection._deferredEventsCollection = null;
-            foreach (var args in this)
+            _collection._deferredEventArgsCollectionExecution = null;
+
+            foreach (var e in _eventArgsList)
             {
-                _collection.OnCollectionChanged(args);
+                if (e is NotifyCollectionChangedEventArgs collectionChangedEventArgs)
+                {
+                    _collection.OnCollectionChanged(collectionChangedEventArgs);
+                }
+                else if (e is PropertyChangedEventArgs propertyChangedEventArgs)
+                {
+                    _collection.OnPropertyChanged(propertyChangedEventArgs);
+                }
             }
+
+            _eventArgsList.Clear();
+        }
+
+        public void AddEventArgs<TEventArgs>(TEventArgs e) where TEventArgs : EventArgs
+        {
+            _eventArgsList.Add(e);
         }
     }
 
@@ -621,4 +907,24 @@ public class ObservableCollection<T> :
         public static readonly PropertyChangedEventArgs IndexerPropertyChanged = new("Item[]");
         public static readonly NotifyCollectionChangedEventArgs ResetCollectionChanged = new(NotifyCollectionChangedAction.Reset);
     }
+
+#if !NET8_0_OR_GREATER
+    private class ReadOnlyCollectionInternal<TItem> : ReadOnlyCollection<TItem>
+    {
+        internal ReadOnlyCollectionInternal(IList<TItem> list) :
+            base(list)
+        {
+        }
+
+        /// <summary>
+        ///     Gets an empty <see cref="ReadOnlyCollection{T}" />.
+        /// </summary>
+        /// <value>An empty <see cref="ReadOnlyCollection{T}" />.</value>
+        /// <remarks>
+        ///     The returned instance is immutable and will always be empty.
+        /// </remarks>
+        public static ReadOnlyCollection<TItem> Empty { get; } =
+            new ReadOnlyCollection<TItem>(Array.Empty<TItem>());
+    }
+#endif
 }

@@ -107,6 +107,20 @@ public class ObservableSet<T> :
         ((ICollection<T>) _set).IsReadOnly;
 
     /// <summary>
+    ///     Raises a change notification indicating that all bindings should be refreshed.
+    /// </summary>
+    public void Refresh()
+    {
+        RefreshItems();
+    }
+
+    protected virtual void RefreshItems()
+    {
+        OnCountPropertyChanged();
+        OnCollectionReset();
+    }
+
+    /// <summary>
     ///     Determines whether the hash set object contains the specified element.
     /// </summary>
     /// <param name="item">The element to locate in the hash set.</param>
@@ -181,6 +195,11 @@ public class ObservableSet<T> :
     /// <returns>The number of elements that were removed from the hash set.</returns>
     public virtual int RemoveWhere(Predicate<T> match)
     {
+        if (_set.Count == 0)
+        {
+            return 0;
+        }
+
         var copy = new HashSet<T>(_set, _set.Comparer);
 
         var removedCount = copy.RemoveWhere(match);
@@ -200,15 +219,6 @@ public class ObservableSet<T> :
         OnCollectionChanged(removed, EventArgsCache.ItemsEmpty);
 
         return removedCount;
-    }
-
-    /// <summary>
-    ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
-    ///     implementation-specific value.
-    /// </summary>
-    public virtual void TrimExcess()
-    {
-        _set.TrimExcess();
     }
 
     /// <summary>
@@ -441,6 +451,15 @@ public class ObservableSet<T> :
     public virtual void CopyTo(T[] array, int arrayIndex, int count)
     {
         _set.CopyTo(array, arrayIndex, count);
+    }
+
+    /// <summary>
+    ///     Sets the capacity of the hash set to the actual number of elements it contains, rounded up to a nearby,
+    ///     implementation-specific value.
+    /// </summary>
+    public virtual void TrimExcess()
+    {
+        _set.TrimExcess();
     }
 
     /// <summary>
