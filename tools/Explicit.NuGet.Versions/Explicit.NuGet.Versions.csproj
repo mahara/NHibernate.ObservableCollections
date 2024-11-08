@@ -5,8 +5,9 @@
 
     <OutputType>Exe</OutputType>
 
-    <OutputPath>$(ArtifactsFolderPath)tools\nev\</OutputPath>
-    <OutDir>$(OutputPath)</OutDir>
+    <OutputFolderPath>$(ArtifactsFolderPath)tools\nev\</OutputFolderPath>
+    <OutputPath>$(OutputFolderPath)</OutputPath>
+    <OutDir>$(OutputFolderPath)</OutDir>
 
     <AssemblyName>nev</AssemblyName>
   </PropertyGroup>
