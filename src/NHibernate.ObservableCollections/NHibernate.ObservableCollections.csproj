@@ -17,7 +17,7 @@
     <PackageId>NHibernate.ObservableCollections</PackageId>
     <PackageDescription>NHibernate.ObservableCollections</PackageDescription>
     <PackageTags>NHibernate; Iesi; Collections; ObservableCollections; ObservableCollection; ObservableSet</PackageTags>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
   </PropertyGroup>
 
   <ItemGroup>

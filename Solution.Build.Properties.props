@@ -14,7 +14,9 @@
     <ArtifactsFolderName>artifacts</ArtifactsFolderName>
     <OutputFolderName>bin</OutputFolderName>
     <IntermediateOutputFolderName>obj</IntermediateOutputFolderName>
+    <TestResultsFolderName>testresults</TestResultsFolderName>
     <PackageOutputFolderName>packages</PackageOutputFolderName>
+    <PublishFolderName>publish</PublishFolderName>
   </PropertyGroup>
 
 </Project>
