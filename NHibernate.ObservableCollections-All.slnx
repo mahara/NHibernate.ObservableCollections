@@ -1,15 +1,16 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="CHANGELOG.md" />
-    <File Path="LICENSE" />
-    <File Path="README.md" />
-  </Folder>
-  <Folder Name="/Solution Items/build/">
+  <Folder Name="/build/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path=".globalconfig" />
+    <File Path="Build.Environment.cmd" />
+    <File Path="Build.Properties.cmd" />
+    <File Path="Build.Properties.ps1" />
     <File Path="BuildPackages.cmd" />
+    <File Path="BuildPackages.ps1" />
     <File Path="CleanPackages.cmd" />
+    <File Path="CleanPackages.ps1" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
     <File Path="Directory.Packages.props" />
@@ -17,27 +18,41 @@
     <File Path="Project.Build.Properties.props" />
     <File Path="Solution.Build.Properties.props" />
   </Folder>
-  <Folder Name="/Solution Items/build/.github/" />
-  <Folder Name="/Solution Items/build/.github/workflows/">
+  <Folder Name="/build/.github/" />
+  <Folder Name="/build/.github/workflows/">
     <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/release.yml" />
   </Folder>
-  <Folder Name="/Solution Items/build/build/">
+  <Folder Name="/build/build/">
     <File Path="build/AssemblyInfo.Global.cs" />
     <File Path="build/BuildPackages.cmd" />
+    <File Path="build/BuildPackages.ps1" />
+    <File Path="build/PrepareNuGetLocalPackageSources.ps1" />
     <File Path="build/Project.Build.props" />
+    <File Path="build/Project.Build.References.props" />
     <File Path="build/Project.Build.targets" />
     <File Path="build/Solution.Build.props" />
     <File Path="build/Solution.Build.targets" />
+    <File Path="build/ValidateBuildInfrastructure.ps1" />
   </Folder>
-  <Folder Name="/Solution Items/build/src/">
+  <Folder Name="/build/src/">
     <File Path="src/Directory.Build.props" />
     <File Path="src/Directory.Build.targets" />
     <File Path="src/Project.Build.References.props" />
   </Folder>
-  <Folder Name="/Solution Items/db/" />
-  <Folder Name="/Solution Items/docs/" />
-  <Project Path="src/NHibernate.ObservableCollections.DemoApp/NHibernate.ObservableCollections.DemoApp.csproj" />
-  <Project Path="src/NHibernate.ObservableCollections.Helpers/NHibernate.ObservableCollections.Helpers.csproj" />
-  <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
-  <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
+  <Folder Name="/db/" />
+  <Folder Name="/docs/" />
+  <Folder Name="/src/">
+    <Project Path="src/NHibernate.ObservableCollections.DemoApp/NHibernate.ObservableCollections.DemoApp.csproj" />
+    <Project Path="src/NHibernate.ObservableCollections.Helpers/NHibernate.ObservableCollections.Helpers.csproj" />
+    <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
+  </Folder>
+  <Folder Name="/_/">
+    <File Path="CHANGELOG.md" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
 </Solution>
