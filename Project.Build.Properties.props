@@ -5,7 +5,26 @@
   -->
 
   <PropertyGroup>
+    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks>net8.0-windows</WinTestTargetFrameworks>
+    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
+    <TestTargetFrameworks>net8.0;net7.0;net6.0;net48</TestTargetFrameworks>
+    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
+
+    <LangVersion>latest</LangVersion>
+
+    <!--
+      CA2252: Opt in to preview features before using them
+      https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2252
+    -->
+    <EnablePreviewFeatures>false</EnablePreviewFeatures>
+
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
     <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
+
+    <ReportAnalyzer>false</ReportAnalyzer>
   </PropertyGroup>
 
   <PropertyGroup>
