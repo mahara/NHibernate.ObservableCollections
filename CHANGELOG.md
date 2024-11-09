@@ -3,8 +3,12 @@
 
 ## 4.0.0 (2024-xx-xx)
 
+### All
+
 Improvements:
 - Added **`.NET 8.0`**, **`.NET 7.0`**, and **`.NET 6.0`** supports.
+
+### NHibernate.ObservableCollections
 
 Breaking Changes:
 - Updated **`NHibernate`** version to 5.4.0.
