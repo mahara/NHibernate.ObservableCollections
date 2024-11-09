@@ -41,9 +41,11 @@
   <Folder Name="/db/" />
   <Folder Name="/docs/" />
   <Folder Name="/src/">
-    <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
+    <Project Path="src/Iesi.ObservableCollections/Iesi.ObservableCollections.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="src/Iesi.ObservableCollections.Tests/Iesi.ObservableCollections.Tests.csproj" />
+  </Folder>
   <Folder Name="/_/">
     <File Path="CHANGELOG.md" />
     <File Path="LICENSE" />
