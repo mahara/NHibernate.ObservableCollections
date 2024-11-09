@@ -54,7 +54,28 @@ REM Build units are executed in the order defined below.
 REM Each build unit completes build -> test -> package before the next build unit starts.
 
 SET BUILD_UNITS=^
+    "Iesi.ObservableCollections";^
     "NHibernate.ObservableCollections"
+
+
+REM ================================================================================
+REM BUILD UNIT: Iesi.ObservableCollections
+REM ================================================================================
+
+SET BUILD_UNIT___Iesi.ObservableCollections___BUILD_PARAMETERS=^
+    "Iesi.ObservableCollections.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%";^
+    "Iesi.ObservableCollections.Tests.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%"
+
+SET BUILD_UNIT___Iesi.ObservableCollections___TEST_PARAMETERS=^
+    "Iesi.ObservableCollections.Tests.dll|%PARAMETER___FRAMEWORKS___DEFAULT%"
+
+SET BUILD_UNIT___Iesi.ObservableCollections___PACKAGE_PARAMETERS=^
+    "Iesi.ObservableCollections.csproj"
+
+REM Not needed here because Iesi.ObservableCollections.nupkg
+REM does not have dependencies on packages whose IDs start with "Iesi.".
+REM SET BUILD_UNIT___Iesi.ObservableCollections___PACKAGE_NEV_PARAMETERS=^
+REM     "Iesi."
 
 
 REM ================================================================================
@@ -63,15 +84,13 @@ REM ============================================================================
 
 SET BUILD_UNIT___NHibernate.ObservableCollections___BUILD_PARAMETERS=^
     "NHibernate.ObservableCollections.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%";^
-    "NHibernate.ObservableCollections.Tests.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%";^
     "NHibernate.ObservableCollections.Helpers.csproj|net10.0-windows";^
     "NHibernate.ObservableCollections.DemoApp.csproj|net10.0-windows"
-
-SET BUILD_UNIT___NHibernate.ObservableCollections___TEST_PARAMETERS=^
-    "NHibernate.ObservableCollections.Tests.dll|%PARAMETER___FRAMEWORKS___DEFAULT%"
 
 SET BUILD_UNIT___NHibernate.ObservableCollections___PACKAGE_PARAMETERS=^
     "NHibernate.ObservableCollections.csproj"
 
+REM Needed here because NHibernate.ObservableCollections.nupkg
+REM has dependencies on packages whose IDs start with "Iesi.".
 SET BUILD_UNIT___NHibernate.ObservableCollections___PACKAGE_NEV_PARAMETERS=^
     "Iesi."

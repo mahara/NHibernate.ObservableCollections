@@ -9,7 +9,7 @@
   -->
   <PropertyGroup>
     <AssemblyName>NHibernate.ObservableCollections</AssemblyName>
-    <RootNamespace>Iesi.Collections</RootNamespace>
+    <RootNamespace>NHibernate.Collection.Generic</RootNamespace>
 
     <Title>NHibernate.ObservableCollections</Title>
     <Description>NHibernate.ObservableCollections</Description>
@@ -17,29 +17,16 @@
     <PackageId>NHibernate.ObservableCollections</PackageId>
     <PackageDescription>NHibernate.ObservableCollections</PackageDescription>
     <PackageTags>nhibernate; collections; observable; observablecollections</PackageTags>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Iesi.Collections" />
+    <PackageReference Include="Iesi.ObservableCollections" />
     <PackageReference Include="NHibernate" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
-    <PackageReference Include="Nullable" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
 </Project>

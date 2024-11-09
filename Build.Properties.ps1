@@ -42,27 +42,47 @@ $PARAMETER___ENABLE_SOURCE_LINK___DEFAULT = 'true'
 # Each build unit completes build -> test -> package before the next build unit starts.
 
 $BUILD_UNITS = @(
+    'Iesi.ObservableCollections'
     'NHibernate.ObservableCollections'
 )
 
 
 $BUILD_UNIT_PARAMETERS = @{
-    'NHibernate.ObservableCollections' = @{
+    'Iesi.ObservableCollections' = @{
         BUILD_PARAMETERS = @(
-            "NHibernate.ObservableCollections.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
-            "NHibernate.ObservableCollections.Tests.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
-            'NHibernate.ObservableCollections.Helpers.csproj|net10.0-windows'
-            'NHibernate.ObservableCollections.DemoApp.csproj|net10.0-windows'
+            "Iesi.ObservableCollections.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
+            "Iesi.ObservableCollections.Tests.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
         )
 
         TEST_PARAMETERS = @(
-            "NHibernate.ObservableCollections.Tests.dll|$PARAMETER___FRAMEWORKS___DEFAULT"
+            "Iesi.ObservableCollections.Tests.dll|$PARAMETER___FRAMEWORKS___DEFAULT"
+        )
+
+        PACKAGE_PARAMETERS = @(
+            'Iesi.ObservableCollections.csproj'
+        )
+
+        # Not needed here because Iesi.ObservableCollections.nupkg
+        # does not have dependencies on packages whose IDs start with "Iesi.".
+        # PACKAGE_NEV_PARAMETERS = @(
+        #     'Iesi.'
+        # )
+    }
+
+
+    'NHibernate.ObservableCollections' = @{
+        BUILD_PARAMETERS = @(
+            "NHibernate.ObservableCollections.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
+            'NHibernate.ObservableCollections.Helpers.csproj|net10.0-windows'
+            'NHibernate.ObservableCollections.DemoApp.csproj|net10.0-windows'
         )
 
         PACKAGE_PARAMETERS = @(
             'NHibernate.ObservableCollections.csproj'
         )
 
+        # Needed here because NHibernate.ObservableCollections.nupkg
+        # has dependencies on packages whose IDs start with "Iesi.".
         PACKAGE_NEV_PARAMETERS = @(
             'Iesi.'
         )

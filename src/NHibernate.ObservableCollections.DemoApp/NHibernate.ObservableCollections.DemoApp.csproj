@@ -23,6 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Iesi.ObservableCollections" />
     <PackageReference Include="NHibernate" VersionOverride="5.4.10" />
     <PackageReference Include="System.Data.SqlClient" />
   </ItemGroup>
