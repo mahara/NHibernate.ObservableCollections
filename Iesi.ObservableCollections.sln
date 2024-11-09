@@ -1,0 +1,120 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{A6497507-A678-48C3-B5DD-FAF6BD5C71CA}"
+	ProjectSection(SolutionItems) = preProject
+		CHANGELOG.md = CHANGELOG.md
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{0459FEF0-9C66-40A3-8FB3-B766A0995FFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "media", "media", "{44E2C9E4-7484-49CB-A3FE-E3E51B38D064}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "images", "images", "{60794352-DEE4-4463-BEDB-90D36D916F74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{854CB877-2A9E-4D7A-B5ED-C2225289004C}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.globalconfig = .globalconfig
+		Build.Environment.cmd = Build.Environment.cmd
+		Build.Properties.cmd = Build.Properties.cmd
+		Build.Properties.ps1 = Build.Properties.ps1
+		BuildPackages.cmd = BuildPackages.cmd
+		BuildPackages.ps1 = BuildPackages.ps1
+		CleanPackages.cmd = CleanPackages.cmd
+		CleanPackages.ps1 = CleanPackages.ps1
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
+		nuget.config = nuget.config
+		Project.Build.Properties.props = Project.Build.Properties.props
+		Solution.Build.Properties.props = Solution.Build.Properties.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{BBAFF222-AC65-4137-AC35-8B5E2536C435}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{A5F5C950-E591-459D-8AB9-A957A4FABFC5}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+		.github\workflows\release.yml = .github\workflows\release.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{5F7B9F1B-217C-49AF-8298-74367EE0FFA3}"
+	ProjectSection(SolutionItems) = preProject
+		build\AssemblyInfo.Global.cs = build\AssemblyInfo.Global.cs
+		build\BuildPackages.cmd = build\BuildPackages.cmd
+		build\BuildPackages.ps1 = build\BuildPackages.ps1
+		build\PrepareNuGetLocalPackageSources.ps1 = build\PrepareNuGetLocalPackageSources.ps1
+		build\Project.Build.props = build\Project.Build.props
+		build\Project.Build.References.props = build\Project.Build.References.props
+		build\Project.Build.targets = build\Project.Build.targets
+		build\Solution.Build.props = build\Solution.Build.props
+		build\Solution.Build.targets = build\Solution.Build.targets
+		build\ValidateBuildInfrastructure.ps1 = build\ValidateBuildInfrastructure.ps1
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5B28214B-C4BF-4151-92AB-BEABBD436DC9}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
+		src\Project.Build.References.props = src\Project.Build.References.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "db", "db", "{0C61877F-059B-4D0F-96F9-4DAAC7023365}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{2CD98D55-FDAD-4495-AA8E-144977E8048B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{F1F8200E-0C41-4142-B39B-04F54D801770}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "media", "media", "{8C1AAF8A-11A4-4729-9650-ABDAE1027658}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "images", "images", "{AC977A98-3C56-4692-84C6-DB27E743B88F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4DC9D87F-0C2A-436D-9E9D-095AE1DB0462}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{712661E7-D72D-45FE-ABC2-3BB18960B9DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections", "src\Iesi.ObservableCollections\Iesi.ObservableCollections.csproj", "{B885F7EE-E976-4D75-B50B-80A6E52558DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections.Tests", "src\Iesi.ObservableCollections.Tests\Iesi.ObservableCollections.Tests.csproj", "{E891E139-445A-4C15-A680-BF9BFCBCDD02}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{44E2C9E4-7484-49CB-A3FE-E3E51B38D064} = {0459FEF0-9C66-40A3-8FB3-B766A0995FFA}
+		{60794352-DEE4-4463-BEDB-90D36D916F74} = {44E2C9E4-7484-49CB-A3FE-E3E51B38D064}
+		{BBAFF222-AC65-4137-AC35-8B5E2536C435} = {854CB877-2A9E-4D7A-B5ED-C2225289004C}
+		{A5F5C950-E591-459D-8AB9-A957A4FABFC5} = {BBAFF222-AC65-4137-AC35-8B5E2536C435}
+		{5F7B9F1B-217C-49AF-8298-74367EE0FFA3} = {854CB877-2A9E-4D7A-B5ED-C2225289004C}
+		{5B28214B-C4BF-4151-92AB-BEABBD436DC9} = {854CB877-2A9E-4D7A-B5ED-C2225289004C}
+		{F1F8200E-0C41-4142-B39B-04F54D801770} = {2CD98D55-FDAD-4495-AA8E-144977E8048B}
+		{8C1AAF8A-11A4-4729-9650-ABDAE1027658} = {F1F8200E-0C41-4142-B39B-04F54D801770}
+		{AC977A98-3C56-4692-84C6-DB27E743B88F} = {8C1AAF8A-11A4-4729-9650-ABDAE1027658}
+		{B885F7EE-E976-4D75-B50B-80A6E52558DE} = {4DC9D87F-0C2A-436D-9E9D-095AE1DB0462}
+		{E891E139-445A-4C15-A680-BF9BFCBCDD02} = {712661E7-D72D-45FE-ABC2-3BB18960B9DB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {58568655-2931-4E27-8187-86FA0624F0EC}
+	EndGlobalSection
+EndGlobal
