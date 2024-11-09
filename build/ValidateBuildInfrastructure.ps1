@@ -188,9 +188,11 @@ function ConvertTo-BuildParameter {
 
     $parts = $BuildParameterSpecification -split '\|', 2
 
-    return [BuildParameter]::new(
-        $parts[0].Trim(),
-        (ConvertTo-Frameworks $parts[1])
+    return (
+        [BuildParameter]::new(
+            $parts[0].Trim(),
+            (ConvertTo-Frameworks $parts[1])
+        )
     )
 }
 
@@ -227,6 +229,8 @@ function ConvertTo-BuildParameterSpecifications {
         return @()
     }
 
+
+
     #
     # .NET/PS Collection Type
     #
@@ -234,6 +238,8 @@ function ConvertTo-BuildParameterSpecifications {
     if ($Value -is [System.Array]) {
         return @(Normalize-StringCollection $Value)
     }
+
+
 
     #
     # CMD Raw String Type
@@ -252,10 +258,11 @@ function ConvertFrom-CmdRawBuildParameterSpecifications {
         return @()
     }
 
-    $regexMatches = [regex]::Matches(
-        [string] $Value,
-        '"([^"]*)"'
-    )
+    $regexMatches = `
+        [regex]::Matches(
+            [string] $Value,
+            '"([^"]*)"'
+        )
 
     return @(
         foreach ($match in $regexMatches) {
@@ -377,9 +384,11 @@ function Get-NormalizedFolderPath {
         return ''
     }
 
-    return [System.IO.Path]::GetFullPath($Value).TrimEnd(
-        [System.IO.Path]::DirectorySeparatorChar,
-        [System.IO.Path]::AltDirectorySeparatorChar
+    return (
+        [System.IO.Path]::GetFullPath($Value).TrimEnd(
+            [System.IO.Path]::DirectorySeparatorChar,
+            [System.IO.Path]::AltDirectorySeparatorChar
+        )
     )
 }
 

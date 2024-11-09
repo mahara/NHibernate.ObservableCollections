@@ -14,6 +14,7 @@
     <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.1.593" />
     <PackageVersion Include="DotNetZip" Version="1.16.0" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
+    <PackageVersion Include="Iesi.ObservableCollections" Version="4.0.0" />
     <PackageVersion Include="IndexRange" Version="1.0.3" />
     <PackageVersion Include="LiquidTestReports.Markdown" Version="1.0.9" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
