@@ -49,12 +49,13 @@
   <Folder Name="/docs/assets/media/" />
   <Folder Name="/docs/assets/media/images/" />
   <Folder Name="/src/">
+    <Project Path="src/Iesi.ObservableCollections/Iesi.ObservableCollections.csproj" />
     <Project Path="src/NHibernate.ObservableCollections.DemoApp/NHibernate.ObservableCollections.DemoApp.csproj" />
     <Project Path="src/NHibernate.ObservableCollections.Helpers/NHibernate.ObservableCollections.Helpers.csproj" />
     <Project Path="src/NHibernate.ObservableCollections/NHibernate.ObservableCollections.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="src/NHibernate.ObservableCollections.Tests/NHibernate.ObservableCollections.Tests.csproj" />
+    <Project Path="src/Iesi.ObservableCollections.Tests/Iesi.ObservableCollections.Tests.csproj" />
   </Folder>
   <Folder Name="/_/">
     <File Path="CHANGELOG.md" />
