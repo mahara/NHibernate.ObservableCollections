@@ -64,7 +64,8 @@ REM ============================================================================
 
 SET BUILD_UNIT___Iesi.ObservableCollections___BUILD_PARAMETERS=^
     "Iesi.ObservableCollections.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%";^
-    "Iesi.ObservableCollections.Tests.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%"
+    "Iesi.ObservableCollections.Tests.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%";^
+    "Iesi.ObservableCollections.PerformanceTests.csproj|%PARAMETER___FRAMEWORKS___DEFAULT%"
 
 SET BUILD_UNIT___Iesi.ObservableCollections___TEST_PARAMETERS=^
     "Iesi.ObservableCollections.Tests.dll|%PARAMETER___FRAMEWORKS___DEFAULT%"
