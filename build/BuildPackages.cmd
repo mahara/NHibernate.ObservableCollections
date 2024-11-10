@@ -1,62 +1,107 @@
 @ECHO OFF
 
-
-:INITIALIZE_BUILD_PARAMETERS
-SET %1
-SET %2
-
-SET BUILD_CONFIGURATION=Release
-SET BUILD_VERSION=1.0.0
-
-GOTO SET_BUILD_CONFIGURATION
-
-
-:SET_BUILD_CONFIGURATION
-IF "%configuration%"=="" GOTO SET_BUILD_VERSION
-SET BUILD_CONFIGURATION=%configuration%
-
-GOTO SET_BUILD_VERSION
+REM https://superuser.com/questions/149951/does-in-batch-file-mean-all-command-line-arguments
+REM https://stackoverflow.com/questions/15420004/write-batch-file-with-hyphenated-parameters
+REM https://superuser.com/questions/1505178/parsing-command-line-argument-in-batch-file
+REM https://ss64.com/nt/for.html
+REM https://ss64.com/nt/for_f.html
+REM https://stackoverflow.com/questions/2591758/batch-script-loop
+REM https://stackoverflow.com/questions/46576996/how-to-use-for-loop-to-get-set-variable-by-batch-file
+REM https://stackoverflow.com/questions/3294599/do-batch-files-support-multiline-variables
+REM https://stackoverflow.com/questions/36228474/batch-file-if-string-starts-with
 
 
-:SET_BUILD_VERSION
-IF "%version%"=="" GOTO SET_FOLDERS
-SET BUILD_VERSION=%version%
-
-GOTO SET_FOLDERS
+IF NOT DEFINED ARTIFACTS_FOLDER_PATH EXIT /B 1
 
 
-:SET_FOLDERS
-SET ARTIFACTS_FOLDER_NAME=artifacts
-SET ARTIFACTS_OUTPUT_FOLDER_NAME=bin
-SET ARTIFACTS_PACKAGES_FOLDER_NAME=packages
-SET ARTIFACTS_TEST_RESULTS_FOLDER_NAME=testresults
+SETLOCAL EnableDelayedExpansion
 
-SET ARTIFACTS_FOLDER_PATH=%ARTIFACTS_FOLDER_NAME%
 
-SET ARTIFACTS_OUTPUT_FOLDER_PATH=%ARTIFACTS_FOLDER_PATH%\%ARTIFACTS_OUTPUT_FOLDER_NAME%
-SET ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH=%ARTIFACTS_OUTPUT_FOLDER_PATH%\%BUILD_CONFIGURATION%
+:INITIALIZE_PARAMETERS
 
-SET ARTIFACTS_PACKAGES_FOLDER_PATH=%ARTIFACTS_FOLDER_PATH%\%ARTIFACTS_PACKAGES_FOLDER_NAME%\%BUILD_CONFIGURATION%
+SET BUILD_PARAMETER___ENABLE_SOURCE_LINK=true
+SET RUN_TEST=true
 
-SET ARTIFACTS_TEST_RESULTS_FOLDER_PATH=%ARTIFACTS_FOLDER_PATH%\%ARTIFACTS_TEST_RESULTS_FOLDER_NAME%\%BUILD_CONFIGURATION%
 
-GOTO BUILD
+:PARSE_ARGS
+
+IF {%1} == {} GOTO BUILD
+
+IF /I "%1" == "--version" (
+    SET "BUILD_ARG___VERSION=%2" & SHIFT
+)
+
+IF /I "%1" == "--configuration" (
+    SET "BUILD_ARG___CONFIGURATION=%2" & SHIFT
+)
+
+IF /I "%1" == "--disable-source-link" (
+    SET BUILD_ARG___ENABLE_SOURCE_LINK=false
+)
+
+IF /I "%1" == "--no-test" (
+    SET RUN_TEST=false
+)
+
+SHIFT
+
+GOTO PARSE_ARGS
 
 
 :BUILD
 
-ECHO ----------------------------------------------------
-ECHO Building "%BUILD_CONFIGURATION%" packages with version "%BUILD_VERSION%"...
-ECHO ----------------------------------------------------
+IF NOT DEFINED BUILD_PARAMETERS EXIT /B 1
 
-dotnet build "NHibernate.ObservableCollections-All.sln" --configuration %BUILD_CONFIGURATION% --property:PACKAGE_VERSION=%BUILD_VERSION% || EXIT /B 1
 
-dotnet build "tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln" --configuration Release
-SET NEV_COMMAND="%ARTIFACTS_FOLDER_PATH%\tools\nev\nev.exe" "%ARTIFACTS_PACKAGES_FOLDER_PATH%\" "NHibernate.ObservableCollections."
-ECHO %NEV_COMMAND%
-%NEV_COMMAND%
+IF DEFINED BUILD_ARG___VERSION (
+    SET BUILD_PARAMETER___VERSION=%BUILD_ARG___VERSION%
+)
 
-GOTO TEST
+IF DEFINED BUILD_ARG___CONFIGURATION (
+    SET BUILD_PARAMETER___CONFIGURATION=%BUILD_ARG___CONFIGURATION%
+)
+
+IF DEFINED BUILD_ARG___ENABLE_SOURCE_LINK (
+    SET BUILD_PARAMETER___ENABLE_SOURCE_LINK=%BUILD_ARG___ENABLE_SOURCE_LINK%
+)
+
+FOR %%G IN (%BUILD_PARAMETERS%) DO (
+    FOR /F "tokens=1,2,3 delims=|" %%H IN (%%G) DO (
+        SET BUILD_PARAMETER___PROJECT_FILE_NAME=%%H
+
+        IF NOT DEFINED BUILD_ARG___VERSION (
+            SET BUILD_PARAMETER___VERSION=%%I
+        )
+
+        IF NOT DEFINED BUILD_ARG___CONFIGURATION (
+            SET BUILD_PARAMETER___CONFIGURATION=%%J
+        )
+
+        ECHO --------------------------------------------------------------------------------
+        ECHO Building "!BUILD_PARAMETER___PROJECT_FILE_NAME!" ^(!BUILD_PARAMETER___VERSION! ^| !BUILD_PARAMETER___CONFIGURATION!^)^.^.^.
+        ECHO --------------------------------------------------------------------------------
+
+        SET BUILD_COMMAND=dotnet build "!WORKSPACE_FOLDER_PATH!\!BUILD_PARAMETER___PROJECT_FILE_NAME!" --property:PACKAGE_VERSION=!BUILD_PARAMETER___VERSION! --configuration !BUILD_PARAMETER___CONFIGURATION! --property:ENABLE_SOURCE_LINK=%BUILD_PARAMETER___ENABLE_SOURCE_LINK% || EXIT /B 4
+        REM ECHO !BUILD_COMMAND!
+        !BUILD_COMMAND!
+    )
+)
+
+
+SET ARTIFACTS_PACKAGES___CONFIGURATION___FOLDER_PATH=%ARTIFACTS_PACKAGES_FOLDER_PATH%\%BUILD_PARAMETER___CONFIGURATION%
+
+dotnet build "%WORKSPACE_FOLDER_PATH%\tools\Explicit.NuGet.Versions\Explicit.NuGet.Versions.sln" --configuration Release
+
+FOR %%G IN (%PACKAGE_PARAMETERS%) DO (
+    SET PACKAGE_PARAMETER___PACKAGE_ID_PREFIX_FILTER=%%G
+
+    SET PACKAGE_NEV_COMMAND="%ARTIFACTS_FOLDER_PATH%\tools\nev\nev.exe" "%ARTIFACTS_PACKAGES___CONFIGURATION___FOLDER_PATH%\" !PACKAGE_PARAMETER___PACKAGE_ID_PREFIX_FILTER!
+    REM ECHO !PACKAGE_NEV_COMMAND!
+    !PACKAGE_NEV_COMMAND!
+)
+
+
+IF /I "%RUN_TEST%" == "false" EXIT /B
 
 
 :TEST
@@ -66,26 +111,27 @@ REM https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-vstest
 REM https://github.com/Microsoft/vstest-docs/blob/main/docs/report.md
 REM https://github.com/spekt/nunit.testlogger/issues/56
 
-ECHO ------------------------------------
-ECHO Running .NET (net8.0) Unit Tests
-ECHO ------------------------------------
+IF NOT DEFINED TEST_PARAMETERS EXIT /B 1
 
-dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net8.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net8.0_TestResults.xml;format=nunit3"
 
-ECHO ------------------------------------
-ECHO Running .NET (net7.0) Unit Tests
-ECHO ------------------------------------
+SET ARTIFACTS_OUTPUT___CONFIGURATION___FOLDER_PATH=%ARTIFACTS_OUTPUT_FOLDER_PATH%\%BUILD_PARAMETER___CONFIGURATION%
+SET ARTIFACTS_TEST_RESULTS___CONFIGURATION___FOLDER_PATH=%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%\%BUILD_PARAMETER___CONFIGURATION%
 
-dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net7.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net7.0_TestResults.xml;format=nunit3"
+FOR %%G IN (%TEST_PARAMETERS%) DO (
+    FOR /F "tokens=1,2 delims=|" %%H IN (%%G) DO (
+        SET TEST_PARAMETER___PROJECT_NAME=%%H
 
-ECHO ------------------------------------
-ECHO Running .NET (net6.0) Unit Tests
-ECHO ------------------------------------
+        FOR %%J IN (%%I) DO (
+            SET TEST_PARAMETER___TARGET_FRAMEWORK=%%J
 
-dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net6.0\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net6.0_TestResults.xml;format=nunit3"
+            ECHO --------------------------------------------------------------------------------
+            ECHO Testing "!TEST_PARAMETER___PROJECT_NAME!" ^(%BUILD_PARAMETER___VERSION% ^| %BUILD_PARAMETER___CONFIGURATION% ^| !TEST_PARAMETER___TARGET_FRAMEWORK!^)^.^.^.
+            ECHO --------------------------------------------------------------------------------
 
-ECHO --------------------------------------------
-ECHO Running .NET Framework (net48) Unit Tests
-ECHO --------------------------------------------
-
-dotnet test "%ARTIFACTS_OUTPUT_BUILD_CONFIGURATION_FOLDER_PATH%\net48\NHibernate.ObservableCollections.Tests\NHibernate.ObservableCollections.Tests.dll" --results-directory "%ARTIFACTS_TEST_RESULTS_FOLDER_PATH%" --logger "nunit;LogFileName=NHibernate.ObservableCollections_net48_TestResults.xml;format=nunit3"
+            REM SET TEST_COMMAND=dotnet test "%SOURCE_CODE_FOLDER_PATH%\!TEST_PARAMETER___PROJECT_NAME!\!TEST_PARAMETER___PROJECT_NAME!.csproj" --configuration %BUILD_PARAMETER___CONFIGURATION% --framework !TEST_PARAMETER___TARGET_FRAMEWORK! --no-build --no-restore --results-directory "%ARTIFACTS_TEST_RESULTS___CONFIGURATION___FOLDER_PATH%" --logger "nunit;LogFileName=!TEST_PARAMETER___PROJECT_NAME!_%BUILD_PARAMETER___VERSION%_%BUILD_PARAMETER___CONFIGURATION%_!TEST_PARAMETER___TARGET_FRAMEWORK!_TestResults.xml;format=nunit3"
+            SET TEST_COMMAND=dotnet test "%ARTIFACTS_OUTPUT___CONFIGURATION___FOLDER_PATH%\!TEST_PARAMETER___TARGET_FRAMEWORK!\!TEST_PARAMETER___PROJECT_NAME!\!TEST_PARAMETER___PROJECT_NAME!.dll" --framework !TEST_PARAMETER___TARGET_FRAMEWORK! --results-directory "%ARTIFACTS_TEST_RESULTS___CONFIGURATION___FOLDER_PATH%" --logger "nunit;LogFileName=!TEST_PARAMETER___PROJECT_NAME!_%BUILD_PARAMETER___VERSION%_%BUILD_PARAMETER___CONFIGURATION%_!TEST_PARAMETER___TARGET_FRAMEWORK!_TestResults.xml;format=nunit3"
+            REM ECHO !TEST_COMMAND!
+            !TEST_COMMAND!
+        )
+    )
+)
