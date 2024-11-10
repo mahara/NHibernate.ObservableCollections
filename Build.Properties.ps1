@@ -52,6 +52,7 @@ $BUILD_UNIT_PARAMETERS = @{
         BUILD_PARAMETERS = @(
             "Iesi.ObservableCollections.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
             "Iesi.ObservableCollections.Tests.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
+            "Iesi.ObservableCollections.PerformanceTests.csproj|$PARAMETER___FRAMEWORKS___DEFAULT"
         )
 
         TEST_PARAMETERS = @(
