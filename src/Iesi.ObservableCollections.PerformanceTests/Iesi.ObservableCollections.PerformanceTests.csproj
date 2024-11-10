@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TestTargetFrameworks)</TargetFrameworks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <OutputType>Exe</OutputType>
+    <StartupObject>Program</StartupObject>
+  </PropertyGroup>
+
+  <!--
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
+  -->
+  <PropertyGroup>
+    <AssemblyName>Iesi.ObservableCollections.PerformanceTests</AssemblyName>
+    <RootNamespace>Iesi.Collections.PerformanceTests</RootNamespace>
+
+    <Title>Iesi.ObservableCollections.PerformanceTests</Title>
+    <Description>Iesi.ObservableCollections.PerformanceTests</Description>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Iesi.ObservableCollections\Iesi.ObservableCollections.csproj" />
+  </ItemGroup>
+
+</Project>

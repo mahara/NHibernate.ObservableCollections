@@ -69,6 +69,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections.Tests", "src\Iesi.ObservableCollections.Tests\Iesi.ObservableCollections.Tests.csproj", "{E891E139-445A-4C15-A680-BF9BFCBCDD02}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.ObservableCollections.PerformanceTests", "src\Iesi.ObservableCollections.PerformanceTests\Iesi.ObservableCollections.PerformanceTests.csproj", "{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E891E139-445A-4C15-A680-BF9BFCBCDD02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +100,7 @@ Global
 		{A5F5C950-E591-459D-8AB9-A957A4FABFC5} = {BBAFF222-AC65-4137-AC35-8B5E2536C435}
 		{B885F7EE-E976-4D75-B50B-80A6E52558DE} = {4DC9D87F-0C2A-436D-9E9D-095AE1DB0462}
 		{E891E139-445A-4C15-A680-BF9BFCBCDD02} = {712661E7-D72D-45FE-ABC2-3BB18960B9DB}
+		{FD0408B7-9E12-4EDF-9CCF-6A19669458B1} = {712661E7-D72D-45FE-ABC2-3BB18960B9DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {58568655-2931-4E27-8187-86FA0624F0EC}
