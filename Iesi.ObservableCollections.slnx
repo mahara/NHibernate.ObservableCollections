@@ -44,6 +44,7 @@
     <Project Path="src/Iesi.ObservableCollections/Iesi.ObservableCollections.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="src/Iesi.ObservableCollections.PerformanceTests/Iesi.ObservableCollections.PerformanceTests.csproj" />
     <Project Path="src/Iesi.ObservableCollections.Tests/Iesi.ObservableCollections.Tests.csproj" />
   </Folder>
   <Folder Name="/_/">
