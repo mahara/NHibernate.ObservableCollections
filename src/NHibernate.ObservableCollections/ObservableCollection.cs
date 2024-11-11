@@ -1,5 +1,6 @@
 namespace Iesi.Collections.Generic;
 
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
@@ -34,6 +35,12 @@ public class ObservableCollection<T> :
     Collection<T>,
     INotifyCollectionChanged, INotifyPropertyChanged
 {
+    [NonSerialized]
+    protected readonly List<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlersCore = [];
+
+    [NonSerialized]
+    protected readonly List<PropertyChangedEventHandler> PropertyChangedEventHandlersCore = [];
+
     private SimpleMonitor? _monitor; // Lazily allocated only when a subclass calls BlockReentrancy() or during serialization. Do not rename (binary serialization)
 
     [NonSerialized]
@@ -84,8 +91,14 @@ public class ObservableCollection<T> :
     /// <summary>
     ///     Occurs when the collection changes, either by adding or removing an item.
     /// </summary>
-    [field: NonSerialized]
-    public virtual event NotifyCollectionChangedEventHandler? CollectionChanged;
+    public event NotifyCollectionChangedEventHandler? CollectionChanged
+    {
+        add => CollectionChangedEventHandlersCore.Add(value!);
+        remove => CollectionChangedEventHandlersCore.Remove(value!);
+    }
+
+    public IReadOnlyCollection<NotifyCollectionChangedEventHandler> CollectionChangedEventHandlers =>
+        new ReadOnlyCollection<NotifyCollectionChangedEventHandler>(CollectionChangedEventHandlersCore);
 
     /// <summary>
     ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
@@ -96,17 +109,40 @@ public class ObservableCollection<T> :
         remove => PropertyChanged -= value;
     }
 
+    protected event PropertyChangedEventHandler? PropertyChanged
+    {
+        add => PropertyChangedEventHandlersCore.Add(value!);
+        remove => PropertyChangedEventHandlersCore.Remove(value!);
+    }
+
+    public IReadOnlyCollection<PropertyChangedEventHandler> PropertyChangedEventHandlers =>
+        new ReadOnlyCollection<PropertyChangedEventHandler>(PropertyChangedEventHandlersCore);
+
     /// <summary>
-    ///     PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    ///     Raises a change notification indicating that all bindings should be refreshed.
     /// </summary>
-    [field: NonSerialized]
-    protected virtual event PropertyChangedEventHandler? PropertyChanged;
+    public void Refresh()
+    {
+        RefreshCore();
+    }
+
+    protected virtual void RefreshCore()
+    {
+        OnCountPropertyChanged();
+        OnIndexerPropertyChanged();
+        OnCollectionReset();
+    }
 
     /// <summary>
     ///     Called by base class <see cref="Collection{T}" /> when an item is added to collection;
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void InsertItem(int index, T item)
+    {
+        InsertItemCore(index, item);
+    }
+
+    protected virtual void InsertItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -123,6 +159,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void RemoveItem(int index)
     {
+        RemoveItemCore(index);
+    }
+
+    protected virtual void RemoveItemCore(int index)
+    {
         CheckReentrancy();
 
         var removedItem = this[index];
@@ -138,6 +179,11 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void SetItem(int index, T item)
+    {
+        SetItemCore(index, item);
+    }
+
+    protected virtual void SetItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -162,6 +208,11 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
+        MoveItemCore(oldIndex, newIndex);
+    }
+
+    protected virtual void MoveItemCore(int oldIndex, int newIndex)
+    {
         CheckReentrancy();
 
         var movedItem = this[oldIndex];
@@ -177,6 +228,11 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void ClearItems()
+    {
+        ClearItemsCore();
+    }
+
+    protected virtual void ClearItemsCore()
     {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
@@ -197,6 +253,11 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void AddRange(IEnumerable<T> collection)
     {
+        AddRangeCore(collection);
+    }
+
+    protected virtual void AddRangeCore(IEnumerable<T> collection)
+    {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
 
@@ -211,6 +272,11 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
+        InsertRangeCore(index, collection);
+    }
+
+    protected virtual void InsertRangeCore(int index, IEnumerable<T> collection)
+    {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
 
@@ -223,6 +289,11 @@ public class ObservableCollection<T> :
     /// </summary>
     /// <param name="collection"></param>
     public void RemoveRange(IEnumerable<T> collection)
+    {
+        RemoveRangeCore(collection);
+    }
+
+    protected virtual void RemoveRangeCore(IEnumerable<T> collection)
     {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
@@ -237,6 +308,11 @@ public class ObservableCollection<T> :
     /// <param name="index"></param>
     /// <param name="count"></param>
     public void RemoveRange(int index, int count)
+    {
+        RemoveRangeCore(index, count);
+    }
+
+    protected virtual void RemoveRangeCore(int index, int count)
     {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
@@ -253,6 +329,11 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void ReplaceRange(int index, int count, IEnumerable<T> collection)
     {
+        ReplaceRangeCore(index, count, collection);
+    }
+
+    protected virtual void ReplaceRangeCore(int index, int count, IEnumerable<T> collection)
+    {
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
 
@@ -261,6 +342,11 @@ public class ObservableCollection<T> :
     }
 
     protected virtual void InsertItemsRange(int index, IEnumerable<T> collection)
+    {
+        InsertItemsRangeCore(index, collection);
+    }
+
+    protected virtual void InsertItemsRangeCore(int index, IEnumerable<T> collection)
     {
         if (index < 0 || index > Count)
         {
@@ -295,6 +381,11 @@ public class ObservableCollection<T> :
     }
 
     protected virtual void RemoveItemsRange(IEnumerable<T> collection)
+    {
+        RemoveItemsRangeCore(collection);
+    }
+
+    protected virtual void RemoveItemsRangeCore(IEnumerable<T> collection)
     {
         if (collection is null)
         {
@@ -369,6 +460,11 @@ public class ObservableCollection<T> :
 
     protected virtual void RemoveItemsRange(int index, int count)
     {
+        RemoveItemsRangeCore(index, count);
+    }
+
+    protected virtual void RemoveItemsRangeCore(int index, int count)
+    {
         if (index < 0 || index > Count || index + count > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -398,6 +494,14 @@ public class ObservableCollection<T> :
     }
 
     /// <summary>
+    ///     Helper to raise a ranged <see cref="CollectionChanged" /> event with action == Reset to any listeners.
+    /// </summary>
+    protected virtual void OnCollectionReset()
+    {
+        OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
+    }
+
+    /// <summary>
     ///     Raises a <see cref="CollectionChanged" /> event to any listeners.
     ///     Properties/methods modifying this <see cref="ObservableCollection{T}" /> instance will raise
     ///     a collection changed event through this virtual method.
@@ -415,15 +519,17 @@ public class ObservableCollection<T> :
             return;
         }
 
-        var handler = CollectionChanged;
-        if (handler is not null)
+        if (CollectionChangedEventHandlersCore is ICollection<NotifyCollectionChangedEventHandler> handlers)
         {
             // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
             _blockReentrancyCount++;
 
             try
             {
-                handler(this, e);
+                foreach (var handler in handlers)
+                {
+                    handler(this, e);
+                }
             }
             finally
             {
@@ -465,25 +571,9 @@ public class ObservableCollection<T> :
     }
 
     /// <summary>
-    ///     Helper to raise a ranged <see cref="CollectionChanged" /> event with action == Reset to any listeners.
-    /// </summary>
-    private void OnCollectionReset()
-    {
-        OnCollectionChanged(EventArgsCache.ResetCollectionChanged);
-    }
-
-    /// <summary>
-    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
-    /// </summary>
-    protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-    {
-        PropertyChanged?.Invoke(this, e);
-    }
-
-    /// <summary>
     ///     Helper to raise a PropertyChanged event for the Count property.
     /// </summary>
-    private void OnCountPropertyChanged()
+    protected virtual void OnCountPropertyChanged()
     {
         OnPropertyChanged(EventArgsCache.CountPropertyChanged);
     }
@@ -491,9 +581,23 @@ public class ObservableCollection<T> :
     /// <summary>
     ///     Helper to raise a PropertyChanged event for the Indexer property.
     /// </summary>
-    private void OnIndexerPropertyChanged()
+    protected virtual void OnIndexerPropertyChanged()
     {
         OnPropertyChanged(EventArgsCache.IndexerPropertyChanged);
+    }
+
+    /// <summary>
+    ///     Raises a PropertyChanged event (per <see cref="INotifyPropertyChanged" />).
+    /// </summary>
+    protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers)
+        {
+            foreach (var handler in handlers)
+            {
+                handler(this, e);
+            }
+        }
     }
 
     [OnSerializing]
@@ -549,7 +653,7 @@ public class ObservableCollection<T> :
             // the problem only arises if reentrant changes make the original event args
             // invalid for later listeners.
             // This keeps existing code working (e.g. Selector.SelectedItems).
-            if (CollectionChanged?.GetInvocationList().Length > 1)
+            if (PropertyChangedEventHandlersCore.Count > 1)
             {
                 throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
             }
