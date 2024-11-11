@@ -117,11 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ObservableCollection_DeferredEventNotificationsCompleted" xml:space="preserve">
+    <value>Deferred event notifications have already been completed.</value>
+  </data>
+  <data name="ObservableCollection_NestedDeferredEventNotificationNotAllowed" xml:space="preserve">
+    <value>Event notifications are already being deferred for this 'ObservableCollection'. Nested deferred event notification operations are not allowed.</value>
+  </data>
   <data name="ObservableCollection_ReentrancyNotAllowed" xml:space="preserve">
     <value>Cannot change 'ObservableCollection' during a 'CollectionChanged' event.</value>
   </data>
+  <data name="ObservableSet_DeferredEventNotificationsCompleted" xml:space="preserve">
+    <value>Deferred event notifications have already been completed.</value>
+  </data>
+  <data name="ObservableSet_DestinationArrayTooSmall" xml:space="preserve">
+    <value>Destination array '{0}' is too small.</value>
+  </data>
   <data name="ObservableSet_InternalStorageInconsistent" xml:space="preserve">
     <value>The internal storage of 'ObservableSet' is inconsistent. '{0}' is {1}, but '{2}' is {3}.</value>
+  </data>
+  <data name="ObservableSet_NestedDeferredEventNotificationsNotAllowed" xml:space="preserve">
+    <value>Event notifications are already being deferred for this 'ObservableSet'. Nested deferred event notification operations are not allowed.</value>
   </data>
   <data name="ObservableSet_ReentrancyNotAllowed" xml:space="preserve">
     <value>Cannot change 'ObservableSet' during a 'CollectionChanged' event.</value>
