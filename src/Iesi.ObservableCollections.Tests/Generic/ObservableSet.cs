@@ -42,21 +42,30 @@ namespace Iesi.Collections.Tests.Generic
         {
             base.OnCollectionChanged(e);
 
-            CollectionChangedEventArgsList.Add(e);
+            if (!EventNotificationsAreDeferred)
+            {
+                CollectionChangedEventArgsList.Add(e);
+            }
         }
 
         protected override void OnPropertyChanging(PropertyChangingEventArgs e)
         {
             base.OnPropertyChanging(e);
 
-            PropertyChangingEventArgsList.Add(e);
+            if (!EventNotificationsAreDeferred)
+            {
+                PropertyChangingEventArgsList.Add(e);
+            }
         }
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
 
-            PropertyChangedEventArgsList.Add(e);
+            if (!EventNotificationsAreDeferred)
+            {
+                PropertyChangedEventArgsList.Add(e);
+            }
         }
     }
 }
