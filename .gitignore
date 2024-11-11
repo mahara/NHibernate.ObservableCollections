@@ -11,8 +11,9 @@ log/
 
 *.suo
 *.user
+*.log
+*.binlog
+*.cache
 *.dbmdl
 *.dbconfig
-*.log
-*.cache
 Thumbs.db
