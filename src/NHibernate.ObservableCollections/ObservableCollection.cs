@@ -749,7 +749,12 @@ namespace Iesi.Collections.Generic
                 // The problem only arises if reentrant changes make the original event args invalid for later listeners.
                 // This keeps existing code working (e.g. Selector.SelectedItems).
                 if (CollectionChanged is NotifyCollectionChangedEventHandler handler &&
-                    handler.GetInvocationList().Length > 1)
+#if NET9_0_OR_GREATER
+                    !handler.HasSingleTarget
+#else
+                    handler.GetInvocationList().Length > 1
+#endif
+               )
                 {
                     throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
                 }
