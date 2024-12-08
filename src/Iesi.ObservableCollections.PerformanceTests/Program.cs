@@ -6,17 +6,15 @@ internal class Program
     {
         var baseJob = Job.Default;
 
-        var jobNet80 = baseJob.WithRuntime(CoreRuntime.Core80).WithBaseline(true);
-        var jobNet70 = baseJob.WithRuntime(CoreRuntime.Core70);
-        var jobNet60 = baseJob.WithRuntime(CoreRuntime.Core60);
+        var jobNet90 = baseJob.WithRuntime(CoreRuntime.Core90).WithBaseline(true);
+        var jobNet80 = baseJob.WithRuntime(CoreRuntime.Core80);
         var jobNet48 = baseJob.WithRuntime(ClrRuntime.Net48);
 
         var baseConfig = DefaultConfig.Instance;
 
         var config = baseConfig
+            .AddJob(jobNet90)
             .AddJob(jobNet80)
-            .AddJob(jobNet70)
-            .AddJob(jobNet60)
             .AddJob(jobNet48)
             .AddDiagnoser(MemoryDiagnoser.Default)
             .AddExporter(RPlotExporter.Default);
