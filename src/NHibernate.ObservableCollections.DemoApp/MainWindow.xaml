@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="NHibernate.ObservableCollections (Demo App)"
         WindowStartupLocation="CenterScreen"
-        Width="800" Height="540"
+        Width="960" Height="680"
         Loaded="MainWindow_Loaded">
 
     <DockPanel>
@@ -20,24 +20,31 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox Name="EditItemBox"
-                     Margin="10,0,10,10" />
-            <WrapPanel Grid.Row="1">
+                     Margin="0,0,0,10" />
+            <WrapPanel Grid.Row="1"
+                       Margin="0,0,0,10">
+                <WrapPanel.Resources>
+                    <Style TargetType="Button"
+                           BasedOn="{StaticResource DefaultButtonStyle}">
+                        <Setter Property="Width" Value="114" />
+                        <Setter Property="Margin" Value="4" />
+                        <Setter Property="Padding" Value="10,12,10,10" />
+                        <Setter Property="FontFamily" Value="Cascadia Code" />
+                    </Style>
+                </WrapPanel.Resources>
                 <Button Name="AddItemButton"
                         Content="Insert New"
-                        Margin="10,0,10,10" Padding="5,2"
                         Click="AddButton_Click" />
                 <Button Name="UpdateItemButton"
                         Content="Update"
-                        Margin="0,0,10,10" Padding="5,2"
                         Click="UpdateButton_Click" />
                 <Button Name="DeleteItemButton"
                         Content="Delete"
-                        Margin="0,0,10,10" Padding="5,2"
                         Click="DeleteButton_Click" />
                 <Button Name="CopyItemToButton"
                         Content="Copy To -&gt;"
-                        Margin="0,0,10,10" Padding="5,2"
-                        Click="CopyToButton_Click" />
+                        Click="CopyToButton_Click">
+                </Button>
             </WrapPanel>
         </Grid>
         <Grid>
