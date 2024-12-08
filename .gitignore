@@ -1,5 +1,6 @@
 ## https://github.com/github/gitignore
 
+
 .vs/
 .idea/
 artifacts/
@@ -8,6 +9,7 @@ obj/
 packages/
 testresults/
 log/
+data/
 
 *.suo
 *.user
