@@ -45,7 +45,7 @@ public partial class MainWindow
         }
 
         var selectedItem = (SampleItem) sender.SelectedItem;
-        editItemBox.Text = selectedItem.Name; // display item name in text box
+        EditItemBox.Text = selectedItem.Name; // display item name in text box
         (sender == SampleSetBox ? SampleListBox : SampleSetBox).UnselectAll(); // deselect in other box
     }
 
@@ -53,7 +53,7 @@ public partial class MainWindow
     {
         var newItem = new SampleItem
         {
-            Name = editItemBox.Text // add new item from value in text box
+            Name = EditItemBox.Text // add new item from value in text box
         };
         if (_sampleSetContainer.SampleSet.Add(newItem))
         {
@@ -149,7 +149,7 @@ public partial class MainWindow
 
         if (selectedItem is not null)
         {
-            selectedItem.Name = editItemBox.Text; // update selected item from value in text box
+            selectedItem.Name = EditItemBox.Text; // update selected item from value in text box
 
             using var dbMgr = new NHibernateDatabaseManager();
 
