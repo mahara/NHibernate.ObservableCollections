@@ -8,6 +8,7 @@ obj/
 packages/
 testresults/
 log/
+data/
 
 *.suo
 *.user
