@@ -23,10 +23,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NHibernate" VersionOverride="5.4.10" />
-    <PackageReference Include="System.Data.SqlClient" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="NHibernate" VersionOverride="5.5.3" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48'))">
   </ItemGroup>
