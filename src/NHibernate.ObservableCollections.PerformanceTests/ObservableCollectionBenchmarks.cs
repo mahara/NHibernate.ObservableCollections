@@ -5,9 +5,8 @@ using BenchmarkDotNet.Jobs;
 
 using Iesi.Collections.Generic;
 
-[SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-[SimpleJob(RuntimeMoniker.Net70)]
-[SimpleJob(RuntimeMoniker.Net60)]
+[SimpleJob(RuntimeMoniker.Net90, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net48)]
 public class ObservableCollection_Benchmarks
 {
@@ -55,9 +54,8 @@ public class ObservableCollection_Benchmarks
     }
 }
 
-[SimpleJob(RuntimeMoniker.Net80, baseline: true)]
-[SimpleJob(RuntimeMoniker.Net70)]
-[SimpleJob(RuntimeMoniker.Net60)]
+[SimpleJob(RuntimeMoniker.Net90, baseline: true)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net48)]
 public class ObservableCollection_ReplaceRange_Benchmarks
 {
