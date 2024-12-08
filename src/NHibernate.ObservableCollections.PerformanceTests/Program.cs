@@ -12,14 +12,13 @@ internal class Program
     public static void Main(string[] args)
     {
         var job = Job.Default;
-        var jobNet80 = job.WithRuntime(CoreRuntime.Core80).WithBaseline(true);
-        var jobNet70 = job.WithRuntime(CoreRuntime.Core70);
-        var jobNet60 = job.WithRuntime(CoreRuntime.Core60);
+        var jobNet90 = job.WithRuntime(CoreRuntime.Core90).WithBaseline(true);
+        var jobNet80 = job.WithRuntime(CoreRuntime.Core80);
         var jobNet48 = job.WithRuntime(ClrRuntime.Net48);
 
         var config = DefaultConfig.Instance
+            .AddJob(jobNet90)
             .AddJob(jobNet80)
-            .AddJob(jobNet70)
             .AddJob(jobNet48)
             .AddDiagnoser(MemoryDiagnoser.Default)
             .AddExporter(RPlotExporter.Default);
