@@ -4,6 +4,15 @@
              xmlns:local="clr-namespace:NHibernate.ObservableCollections.DemoApp"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
 
+                <!--
+                    https://learn.microsoft.com/en-us/dotnet/desktop/wpf/whats-new/net90
+                -->
+                <ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
