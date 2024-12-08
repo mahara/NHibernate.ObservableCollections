@@ -30,9 +30,9 @@ $ARTIFACTS___TEST_RESULTS___FOLDER_PATH = Join-Path -Path $ARTIFACTS_FOLDER_PATH
 $PARAMETER___RUN_BUILD___DEFAULT = $true
 $PARAMETER___RUN_TEST___DEFAULT = $true
 $PARAMETER___RUN_PACKAGE___DEFAULT = $true
-$PARAMETER___VERSION___DEFAULT = '4.0.0'
+$PARAMETER___VERSION___DEFAULT = '5.0.0'
 $PARAMETER___CONFIGURATION___DEFAULT = 'Release'
-$PARAMETER___FRAMEWORKS___DEFAULT = 'net8.0;net7.0;net6.0;net48'
+$PARAMETER___FRAMEWORKS___DEFAULT = 'net9.0;net8.0;net48'
 $PARAMETER___ENABLE_SOURCE_LINK___DEFAULT = $true
 
 
@@ -92,8 +92,8 @@ $BUILD_UNIT_PARAMETERS = @{
 
     'NHibernate.ObservableCollections.DemoApp' = @{
         BUILD_PARAMETERS = @(
-            "NHibernate.ObservableCollections.Helpers.csproj|net8.0-windows"
-            "NHibernate.ObservableCollections.DemoApp.csproj|net8.0-windows"
+            "NHibernate.ObservableCollections.Helpers.csproj|net9.0-windows"
+            "NHibernate.ObservableCollections.DemoApp.csproj|net9.0-windows"
         )
     }
 }
