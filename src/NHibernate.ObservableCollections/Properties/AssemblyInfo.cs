@@ -1,3 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
+[assembly: CLSCompliant(true)]
+[assembly: ComVisible(true)]
 [assembly: InternalsVisibleTo("NHibernate.ObservableCollections.Tests, PublicKey=00240000048000009400000006020000002400005253413100040000010001007386e7726c349d34fc910901551bb25d433ae601853a38e0ce9a8d1a966a5a4b322685d08c193e74fd16cb7dfe4ba6635c7e20b5cced2b4b19128ea8dfbf2892b2eda74faec46c1810df2bbe406d2ff8337784ba0c0294ef1a484d6e752e085e8c39a7a3352bf681d1c6f1ad0f5ac11541e8753a2009b2898a7483ff217095a2")]
