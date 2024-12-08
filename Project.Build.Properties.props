@@ -5,12 +5,12 @@
   -->
 
   <PropertyGroup>
-    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
-    <WinTestTargetFrameworks>net8.0-windows</WinTestTargetFrameworks>
-    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
-    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
-    <TestTargetFrameworks>net8.0;net7.0;net6.0;net48</TestTargetFrameworks>
-    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks>net9.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks>net9.0-windows</WinTestTargetFrameworks>
+    <WinLibTargetFrameworks>net9.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net9.0</ExeTargetFrameworks>
+    <TestTargetFrameworks>net9.0;net8.0;net48</TestTargetFrameworks>
+    <LibTargetFrameworks>net9.0;net8.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
 
@@ -24,7 +24,7 @@
 
     <AssemblyOriginatorKeyFileName>NHibernate.ObservableCollections.snk</AssemblyOriginatorKeyFileName>
 
-    <ReportAnalyzer>false</ReportAnalyzer>
+    <ReportAnalyzer>true</ReportAnalyzer>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,10 +34,10 @@
     <Copyright>Copyright (c) 2007-$(CurrentYear) NHibernate.ObservableCollections - https://github.com/mahara/NHibernate.ObservableCollections</Copyright>
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/mahara/NHibernate.ObservableCollections</PackageProjectUrl>
     <!--<PackageIcon>NHibernate.ObservableCollections.png</PackageIcon>-->
+    <RepositoryUrl>https://github.com/mahara/NHibernate.ObservableCollections</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

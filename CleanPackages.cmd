@@ -1,12 +1,13 @@
 @ECHO OFF
 
 
-SET ARTIFACTS_FOLDER_NAME=artifacts
+@CALL "Build.Properties.cmd"
 
-SET ARTIFACTS_FOLDER_PATH=%ARTIFACTS_FOLDER_NAME%
+IF NOT DEFINED ARTIFACTS_FOLDER_PATH EXIT /B 1
 
-REM dotnet clean %1 --configuration Debug
-REM dotnet clean %1 --configuration Release
+
+REM dotnet clean --configuration Debug
+REM dotnet clean --configuration Release
 
 IF EXIST "%ARTIFACTS_FOLDER_PATH%" (
     ECHO Deleting "%ARTIFACTS_FOLDER_PATH%" folder...
