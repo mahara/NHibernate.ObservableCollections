@@ -9,6 +9,9 @@
     https://learn.microsoft.com/en-us/dotnet/standard/frameworks
     https://learn.microsoft.com/en-us/visualstudio/msbuild/property-functions
     https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions
+    https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/sourcelink
+    https://github.com/dotnet/sourcelink/blob/main/README.md
+    https://github.com/clairernovotny/DeterministicBuilds
     https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
     https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices
     https://github.com/castleproject/Core/pull/616
@@ -19,12 +22,12 @@
   -->
 
   <PropertyGroup>
-    <WinExeTargetFrameworks Condition="'$(WinExeTargetFrameworks)' == ''">net8.0-windows</WinExeTargetFrameworks>
-    <WinTestTargetFrameworks Condition="'$(WinTestTargetFrameworks)' == ''">net8.0-windows</WinTestTargetFrameworks>
-    <WinLibTargetFrameworks Condition="'$(WinLibTargetFrameworks)' == ''">net8.0-windows;net48</WinLibTargetFrameworks>
-    <ExeTargetFrameworks Condition="'$(ExeTargetFrameworks)' == ''">net8.0</ExeTargetFrameworks>
-    <TestTargetFrameworks Condition="'$(TestTargetFrameworks)' == ''">net8.0;net7.0;net6.0;net48</TestTargetFrameworks>
-    <LibTargetFrameworks Condition="'$(LibTargetFrameworks)' == ''">net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
+    <WinExeTargetFrameworks Condition="'$(WinExeTargetFrameworks)' == ''">net9.0-windows</WinExeTargetFrameworks>
+    <WinTestTargetFrameworks Condition="'$(WinTestTargetFrameworks)' == ''">net9.0-windows</WinTestTargetFrameworks>
+    <WinLibTargetFrameworks Condition="'$(WinLibTargetFrameworks)' == ''">net9.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks Condition="'$(ExeTargetFrameworks)' == ''">net9.0</ExeTargetFrameworks>
+    <TestTargetFrameworks Condition="'$(TestTargetFrameworks)' == ''">net9.0;net8.0;net48</TestTargetFrameworks>
+    <LibTargetFrameworks Condition="'$(LibTargetFrameworks)' == ''">net9.0;net8.0;net48</LibTargetFrameworks>
 
     <LangVersion Condition="'$(LangVersion)' == ''">latest</LangVersion>
     <ImplicitUsings Condition="'$(ImplicitUsings)' == ''">enable</ImplicitUsings>
@@ -45,6 +48,9 @@
     <BuildVersionMajor>$(BuildVersion.Split('.')[0])</BuildVersionMajor>
     <BuildVersionNoSuffix>$(BuildVersion.Split('-')[0])</BuildVersionNoSuffix>
 
+    <EnableSourceLink Condition="'$(EnableSourceLink)' == ''">false</EnableSourceLink>
+    <EnableSourceLink Condition="'$(ENABLE_SOURCE_LINK)' != ''">$(ENABLE_SOURCE_LINK)</EnableSourceLink>
+
     <AssemblyOriginatorKeyFileName Condition="'$(AssemblyOriginatorKeyFileName)' == ''">NHibernate.snk</AssemblyOriginatorKeyFileName>
     <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(BuildConfigurationFolderPath)$(AssemblyOriginatorKeyFileName)</AssemblyOriginatorKeyFile>
     <SignAssembly Condition="'$(SignAssembly)' == ''">true</SignAssembly>
@@ -52,6 +58,11 @@
     <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">true</GenerateDocumentationFile>
 
     <ReportAnalyzer Condition="'$(ReportAnalyzer)' == ''">false</ReportAnalyzer>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceLink)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <!--
@@ -78,6 +89,7 @@
     <!--<PackageIcon Condition="'$(PackageIcon)' == ''">NHibernate.png</PackageIcon>-->
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/nhibernate/nhibernate-core</RepositoryUrl>
     <RepositoryType Condition="'$(RepositoryType)' == ''">git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSymbols>true</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
@@ -90,60 +102,21 @@
     <NetFrameworkConstants>TRACE</NetFrameworkConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Debug'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) AND '$(Configuration)' == 'Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net8.0|Release'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) AND '$(Configuration)' == 'Release'">
     <DefineConstants>$(NetConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Debug'">
-    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net7.0|Release'">
-    <DefineConstants>$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Debug'">
-    <DefineConstants>$(DiagnosticsConstants);$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net6.0|Release'">
-    <DefineConstants>$(NetConstants)</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Debug'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48')) AND '$(Configuration)' == 'Debug'">
     <DefineConstants>$(DiagnosticsConstants);$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Configuration)' == 'net48|Release'">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net48')) AND '$(Configuration)' == 'Release'">
     <DefineConstants>$(NetFrameworkConstants)</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CSharpIsNullAnalyzer">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="NETStandard.Library" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-    <PackageReference Include="IndexRange" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" />
-    <!--
-      https://andrewlock.net/using-reference-assemblies-to-build-net-framework-libararies-on-linux-without-mono/
-      https://github.com/Microsoft/dotnet/tree/main/releases/reference-assemblies
-    -->
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
-    <PackageReference Include="Nullable">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(BuildConfigurationFolderPath)AssemblyInfo.Global.cs" Link="Properties\AssemblyInfo.Global.cs" />
