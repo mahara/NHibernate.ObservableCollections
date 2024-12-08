@@ -11,6 +11,7 @@
 
   <Import Project="$(WorkspaceFolderPath)Project.Build.Properties.props" />
   <Import Project="$(BuildConfigurationFolderPath)Project.Build.props" />
+  <Import Project="$(BuildConfigurationFolderPath)Project.Build.References.props" />
   <Import Project="Project.Build.References.props" />
 
 </Project>
