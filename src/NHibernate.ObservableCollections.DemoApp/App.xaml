@@ -5,5 +5,10 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
 
+        <!--
+            https://learn.microsoft.com/en-us/dotnet/desktop/wpf/whats-new/net90?view=netdesktop-9.0
+        -->
+        <!--<ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />-->
+
     </Application.Resources>
 </Application>

@@ -5,11 +5,12 @@
   -->
 
   <PropertyGroup>
-    <WinExeTargetFrameworks>net8.0-windows</WinExeTargetFrameworks>
-    <WinLibTargetFrameworks>net8.0-windows;net48</WinLibTargetFrameworks>
-    <ExeTargetFrameworks>net8.0</ExeTargetFrameworks>
-    <LibTargetFrameworks>net8.0;net7.0;net6.0;net48</LibTargetFrameworks>
-    <ExeTestTargetFrameworks>net8.0;net7.0;net6.0;net48</ExeTestTargetFrameworks>
+    <WinExeTargetFrameworks>net9.0-windows</WinExeTargetFrameworks>
+    <WinExeTestTargetFrameworks>net9.0-windows</WinExeTestTargetFrameworks>
+    <WinLibTargetFrameworks>net9.0-windows;net48</WinLibTargetFrameworks>
+    <ExeTargetFrameworks>net9.0</ExeTargetFrameworks>
+    <ExeTestTargetFrameworks>net9.0;net8.0;net48</ExeTestTargetFrameworks>
+    <LibTargetFrameworks>net9.0;net8.0;net48</LibTargetFrameworks>
 
     <LangVersion>latest</LangVersion>
 
@@ -17,11 +18,11 @@
       CA2252: Opt in to preview features before using them
       https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2252
     -->
-    <EnablePreviewFeatures>false</EnablePreviewFeatures>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
   </PropertyGroup>
 
   <PropertyGroup>
-    <ReportAnalyzer>false</ReportAnalyzer>
+    <ReportAnalyzer>true</ReportAnalyzer>
 
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>

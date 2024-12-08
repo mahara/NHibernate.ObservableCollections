@@ -26,7 +26,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="LiquidTestReports.Markdown" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Win32.Primitives" />
     <PackageReference Include="NUnit" />
     <PackageReference Include="NUnit.Analyzers">
       <PrivateAssets>all</PrivateAssets>
@@ -36,8 +38,17 @@
     <PackageReference Include="NUnitLite" />
     <PackageReference Include="NunitXml.TestLogger" />
     <PackageReference Include="PublicApiGenerator" />
+    <PackageReference Include="System.Diagnostics.Tracing" />
+    <PackageReference Include="System.IO" />
+    <PackageReference Include="System.IO.FileSystem" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" />
+    <PackageReference Include="System.Net.Primitives" />
+    <PackageReference Include="System.Reflection.Primitives" />
+    <PackageReference Include="System.Runtime.InteropServices" />
+    <PackageReference Include="System.Resources.ResourceManager" />
+    <PackageReference Include="System.Text.Encoding.Extensions" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net8.0'">
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
   </ItemGroup>
