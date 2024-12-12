@@ -526,7 +526,7 @@ public class ObservableCollection<T> :
 
             try
             {
-                foreach (var handler in handlers)
+                foreach (var handler in handlers.ToArray())
                 {
                     handler(this, e);
                 }
@@ -593,7 +593,7 @@ public class ObservableCollection<T> :
     {
         if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers)
         {
-            foreach (var handler in handlers)
+            foreach (var handler in handlers.ToArray())
             {
                 handler(this, e);
             }
