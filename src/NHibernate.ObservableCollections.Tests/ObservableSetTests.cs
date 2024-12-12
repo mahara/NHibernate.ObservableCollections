@@ -1,5 +1,7 @@
 namespace Iesi.Collections.Generic.Tests;
 
+using NUnit.Framework.Interfaces;
+
 [TestFixture]
 public class ObservableSetTests
 {
@@ -18,10 +20,16 @@ public class ObservableSetTests
         NotifyCollectionChangedEventArgs args = null!;
         var notificationCount = 0;
 
-        var collection = new ObservableSet<int>();
-        var itemsCount = collection.Count;
+        var items = _items;
+        var itemsCount = items.Count;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        var addedItem = items[0];
+        var addedItemsCount = 1;
+
+        var collection = new ObservableSet<int>();
+        var collectionCount = collection.Count;
+
+        Assert.That(collection, Has.Count.EqualTo(0));
 
         using var _ = new CollectionChangedEventSubscription(
             collection,
@@ -31,21 +39,21 @@ public class ObservableSetTests
                 notificationCount++;
             });
 
-        collection.Add(_items[0]);
-        var addedItemsCount = 1;
+        collection.Add(addedItem);
 
         Assert.That(args, Is.Not.Null);
+        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var addedItems = args.NewItems;
+        var newItems = args.NewItems;
 
-        Assert.That(addedItems, Is.Not.Null);
-        Assert.That(addedItems, Has.Count.EqualTo(addedItemsCount));
+        Assert.That(newItems, Is.Not.Null);
+        Assert.That(newItems, Has.Count.EqualTo(addedItemsCount));
         Assert.That(args.NewStartingIndex, Is.EqualTo(-1));
 
-        itemsCount += addedItemsCount;
+        collectionCount += addedItemsCount;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        Assert.That(collection, Has.Count.EqualTo(collectionCount));
     }
 
     [Test]
@@ -54,10 +62,15 @@ public class ObservableSetTests
         NotifyCollectionChangedEventArgs args = null!;
         var notificationCount = 0;
 
-        var removedItemIndex = 3;
+        var items = _items;
+        var itemsCount = items.Count;
 
-        var collection = new ObservableSet<int>(_items);
-        var itemsCount = collection.Count;
+        var removedItemIndex = 3;
+        var removedItem = items[removedItemIndex];
+        var removedItemsCount = 1;
+
+        var collection = new ObservableSet<int>(items);
+        var collectionCount = collection.Count;
 
         Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
@@ -69,20 +82,20 @@ public class ObservableSetTests
                 notificationCount++;
             });
 
-        collection.Remove(_items[removedItemIndex]);
-        var removedItemsCount = 1;
+        collection.Remove(removedItem);
 
         Assert.That(args, Is.Not.Null);
+        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
         Assert.That(notificationCount, Is.EqualTo(1));
 
-        var removedItems = args.OldItems;
+        var oldItems = args.OldItems;
 
-        Assert.That(removedItems, Is.Not.Null);
-        Assert.That(removedItems, Has.Count.EqualTo(removedItemsCount));
+        Assert.That(oldItems, Is.Not.Null);
+        Assert.That(oldItems, Has.Count.EqualTo(removedItemsCount));
         Assert.That(args.OldStartingIndex, Is.EqualTo(-1));
 
-        itemsCount -= removedItemsCount;
+        collectionCount -= removedItemsCount;
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+        Assert.That(collection, Has.Count.EqualTo(collectionCount));
     }
 }

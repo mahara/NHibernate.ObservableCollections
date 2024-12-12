@@ -337,6 +337,10 @@ public class ObservableCollection<T> :
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
 
+        //
+        // TODO:    Should change ReplaceRangeCore implementation to an optimal one,
+        //          without first removing and then adding.
+        //
         RemoveItemsRange(index, count);
         InsertItemsRange(index, collection);
     }
@@ -519,14 +523,15 @@ public class ObservableCollection<T> :
             return;
         }
 
-        if (CollectionChangedEventHandlersCore is ICollection<NotifyCollectionChangedEventHandler> handlers)
+        if (CollectionChangedEventHandlersCore is ICollection<NotifyCollectionChangedEventHandler> handlers &&
+            handlers.Count > 0)
         {
             // Not calling BlockReentrancy() here to avoid the SimpleMonitor allocation.
             _blockReentrancyCount++;
 
             try
             {
-                foreach (var handler in handlers.ToArray())
+                foreach (var handler in handlers)
                 {
                     handler(this, e);
                 }
@@ -591,9 +596,10 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers)
+        if (PropertyChangedEventHandlersCore is ICollection<PropertyChangedEventHandler> handlers &&
+            handlers.Count > 0)
         {
-            foreach (var handler in handlers.ToArray())
+            foreach (var handler in handlers)
             {
                 handler(this, e);
             }
