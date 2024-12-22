@@ -19,12 +19,12 @@ using System.Runtime.Serialization;
 ///     -   <see href="https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091" />
 ///         -   <see href="https://stackoverflow.com/questions/670577/observablecollection-doesnt-support-addrange-method-so-i-get-notified-for-each" />
 ///     -   <see href="https://github.com/CodingOctocat/WpfObservableRangeCollection" />
+///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/ObjectModel/Collection.cs" />
 ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Collections/Generic/List.cs" />
-///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/ObjectModel/ObservableCollection.cs" />
 ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
-///     -   <see href="https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs" />
 ///     -   <see href="https://referencesource.microsoft.com/#System/compmod/system/collections/objectmodel/observablecollection.cs" />
+///     -   <see href="https://referencesource.microsoft.com/#mscorlib/system/collections/objectmodel/collection.cs" />
 ///     -   <see href="https://blog.stephencleary.com/2009/07/interpreting-notifycollectionchangedeve.html" />
 /// </remarks>
 [Serializable]
@@ -122,10 +122,10 @@ public class ObservableCollection<T> :
     /// </summary>
     public void Refresh()
     {
-        RefreshCore();
+        RefreshItems();
     }
 
-    protected virtual void RefreshCore()
+    protected virtual void RefreshItems()
     {
         OnCountPropertyChanged();
         OnIndexerPropertyChanged();
@@ -137,11 +137,6 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void InsertItem(int index, T item)
-    {
-        InsertItemCore(index, item);
-    }
-
-    protected virtual void InsertItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -158,11 +153,6 @@ public class ObservableCollection<T> :
     /// </summary>
     protected override void RemoveItem(int index)
     {
-        RemoveItemCore(index);
-    }
-
-    protected virtual void RemoveItemCore(int index)
-    {
         CheckReentrancy();
 
         var itemRemoved = this[index];
@@ -178,11 +168,6 @@ public class ObservableCollection<T> :
     ///     raises a <see cref="CollectionChanged" /> event to any listeners.
     /// </summary>
     protected override void SetItem(int index, T item)
-    {
-        SetItemCore(index, item);
-    }
-
-    protected virtual void SetItemCore(int index, T item)
     {
         CheckReentrancy();
 
@@ -207,11 +192,6 @@ public class ObservableCollection<T> :
     /// </summary>
     protected virtual void MoveItem(int oldIndex, int newIndex)
     {
-        MoveItemCore(oldIndex, newIndex);
-    }
-
-    protected virtual void MoveItemCore(int oldIndex, int newIndex)
-    {
         CheckReentrancy();
 
         var itemMoved = this[oldIndex];
@@ -231,11 +211,6 @@ public class ObservableCollection<T> :
         using var _ = BlockReentrancy();
         using var __ = DeferEventNotifications();
 
-        ClearItemsCore();
-    }
-
-    protected virtual void ClearItemsCore()
-    {
         CheckReentrancy();
 
         base.ClearItems();
@@ -252,14 +227,6 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void AddRange(IEnumerable<T> collection)
     {
-        AddRangeCore(collection);
-    }
-
-    protected virtual void AddRangeCore(IEnumerable<T> collection)
-    {
-        using var _ = BlockReentrancy();
-        using var __ = DeferEventNotifications();
-
         InsertItemsRange(Count, collection);
     }
 
@@ -271,24 +238,14 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void InsertRange(int index, IEnumerable<T> collection)
     {
-        InsertRangeCore(index, collection);
-    }
-
-    protected virtual void InsertRangeCore(int index, IEnumerable<T> collection)
-    {
-        using var _ = BlockReentrancy();
-        using var __ = DeferEventNotifications();
-
         InsertItemsRange(index, collection);
     }
 
     protected virtual void InsertItemsRange(int index, IEnumerable<T> collection)
     {
-        InsertItemsRangeCore(index, collection);
-    }
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
 
-    protected virtual void InsertItemsRangeCore(int index, IEnumerable<T> collection)
-    {
         if (index < 0 || index > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -335,24 +292,14 @@ public class ObservableCollection<T> :
     /// <param name="count"></param>
     public void RemoveRange(int index, int count)
     {
-        RemoveRangeCore(index, count);
-    }
-
-    protected virtual void RemoveRangeCore(int index, int count)
-    {
-        using var _ = BlockReentrancy();
-        using var __ = DeferEventNotifications();
-
         RemoveItemsRange(index, count);
     }
 
     protected virtual void RemoveItemsRange(int index, int count)
     {
-        RemoveItemsRangeCore(index, count);
-    }
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
 
-    protected virtual void RemoveItemsRangeCore(int index, int count)
-    {
         if (index < 0 || index > Count || index + count > Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
@@ -385,24 +332,14 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void RemoveRange(IEnumerable<T> collection)
     {
-        RemoveRangeCore(collection);
-    }
-
-    protected virtual void RemoveRangeCore(IEnumerable<T> collection)
-    {
-        using var _ = BlockReentrancy();
-        using var __ = DeferEventNotifications();
-
         RemoveItemsRange(collection);
     }
 
     protected virtual void RemoveItemsRange(IEnumerable<T> collection)
     {
-        RemoveItemsRangeCore(collection);
-    }
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
 
-    protected virtual void RemoveItemsRangeCore(IEnumerable<T> collection)
-    {
 #if NET8_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(collection);
 #else
@@ -488,40 +425,31 @@ public class ObservableCollection<T> :
     /// <param name="collection"></param>
     public void ReplaceRange(int index, int count, IEnumerable<T> collection)
     {
-        ReplaceRangeCore(index, count, collection);
-    }
-
-    protected virtual void ReplaceRangeCore(int index, int count, IEnumerable<T> collection)
-    {
-        using var _ = BlockReentrancy();
-        using var __ = DeferEventNotifications();
-
         ReplaceItemsRange(index, count, collection);
     }
 
     protected virtual void ReplaceItemsRange(int index, int count, IEnumerable<T> collection)
     {
-        ReplaceItemsRangeCore(index, count, collection);
-    }
+        using var _ = BlockReentrancy();
+        using var __ = DeferEventNotifications();
 
-    protected virtual void ReplaceItemsRangeCore(
-        int items_ItemsToReplace_IndexStart,
-        int items_ItemsToReplace_Count,
-        IEnumerable<T> itemsToReplace)
-    {
-        if (items_ItemsToReplace_IndexStart < 0 || items_ItemsToReplace_IndexStart > Count || items_ItemsToReplace_IndexStart + items_ItemsToReplace_Count > Count)
+        if (index < 0 || index > Count || index + count > Count)
         {
-            throw new ArgumentOutOfRangeException(nameof(items_ItemsToReplace_IndexStart));
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
 
 #if NET8_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(itemsToReplace);
+        ArgumentNullException.ThrowIfNull(collection);
 #else
-        if (itemsToReplace is null)
+        if (collection is null)
         {
-            throw new ArgumentNullException(nameof(itemsToReplace));
+            throw new ArgumentNullException(nameof(collection));
         }
 #endif
+
+        var items_ItemsToReplace_IndexStart = index;
+        var items_ItemsToReplace_Count = count;
+        var itemsToReplace = collection;
 
         if (itemsToReplace is ICollection<T> countable)
         {
