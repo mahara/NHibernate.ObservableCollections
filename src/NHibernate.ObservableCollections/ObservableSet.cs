@@ -25,10 +25,16 @@ namespace Iesi.Collections.Generic
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     [DebuggerDisplay($"{nameof(Count)} = {{{nameof(Count)}}}")]
     public class ObservableSet<T> :
-        ISet<T>, IReadOnlyCollection<T>,
+        ISet<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         INotifyCollectionChanged, INotifyPropertyChanging, INotifyPropertyChanged
     {
+        private SimpleMonitor? _monitor; // Lazily allocated only when a subclass calls BlockReentrancy() or during serialization. Do not rename (binary serialization).
+
+        [NonSerialized]
+        private int _blockReentrancyCount;
+
         private HashSet<T> _set;
+        private List<T> _list;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ObservableSet{T}" /> class
@@ -62,6 +68,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(comparer);
+            _list = [];
         }
 
         /// <summary>
@@ -78,6 +85,7 @@ namespace Iesi.Collections.Generic
         public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             _set = new HashSet<T>(collection, comparer);
+            _list = [.. _set];
         }
 
         /// <summary>
@@ -109,6 +117,13 @@ namespace Iesi.Collections.Generic
         ///     Gets the <see cref="IEqualityComparer{T}" /> object that is used to determine equality for the values in the set.
         /// </summary>
         public virtual IEqualityComparer<T> Comparer => _set.Comparer;
+
+        /// <summary>
+        ///     Gets the element at the specified index in the <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get.</param>
+        /// <returns>The element at the specified index in the <see cref="ObservableSet{T}" />.</returns>
+        public T this[int index] => _list[index];
 
         /// <summary>
         ///     Returns an enumerator that iterates through the <see cref="ObservableSet{T}" />.
@@ -163,6 +178,21 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Searches for the specified object and returns the zero-based index
+        ///     of the first occurrence within the entire <see cref="ObservableSet{T}" />.
+        /// </summary>
+        /// <param name="item">
+        ///     The object to locate in the <see cref="ObservableSet{T}" />. The value can be null for reference types.
+        /// </param>
+        /// <returns>
+        ///     The zero-based index of the first occurrence of item within the entire <see cref="ObservableSet{T}" />, if found; otherwise, -1.
+        /// </returns>
+        public virtual int IndexOf(T item)
+        {
+            return _list.IndexOf(item);
+        }
+
+        /// <summary>
         ///     Adds the specified element to the <see cref="ObservableSet{T}" />.
         /// </summary>
         /// <param name="item">The element to add to the set.</param>
@@ -171,19 +201,22 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool Add(T item)
         {
-            if (_set.Contains(item))
+            CheckReentrancy();
+
+            var isAdded = _set.Add(item);
+            if (isAdded)
             {
-                return false;
+                OnCountPropertyChanging();
+
+                _list.Add(item);
+
+                var index = _set.Count - 1;
+
+                OnCountPropertyChanged();
+                OnCollectionChanged(NotifyCollectionChangedAction.Add, item, index);
             }
 
-            OnCountPropertyChanging();
-
-            _set.Add(item);
-
-            OnCountPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Add, item);
-
-            return true;
+            return isAdded;
         }
 
         /// <inheritdoc />
@@ -201,19 +234,22 @@ namespace Iesi.Collections.Generic
         /// </returns>
         public virtual bool Remove(T item)
         {
-            if (!_set.Contains(item))
+            CheckReentrancy();
+
+            var isRemoved = _set.Remove(item);
+            if (isRemoved)
             {
-                return false;
+                OnCountPropertyChanging();
+
+                var index = _list.IndexOf(item);
+
+                _list.Remove(item);
+
+                OnCountPropertyChanged();
+                OnCollectionChanged(NotifyCollectionChangedAction.Remove, item, index);
             }
 
-            OnCountPropertyChanging();
-
-            _set.Remove(item);
-
-            OnCountPropertyChanged();
-            OnCollectionChanged(NotifyCollectionChangedAction.Remove, item);
-
-            return true;
+            return isRemoved;
         }
 
         /// <summary>
@@ -232,6 +268,8 @@ namespace Iesi.Collections.Generic
                 return 0;
             }
 
+            CheckReentrancy();
+
             var copy = new HashSet<T>(_set, _set.Comparer);
 
             var removedCount = copy.RemoveWhere(match);
@@ -246,9 +284,10 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
+            _list = [.. _set];
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
 
             return removedCount;
         }
@@ -258,6 +297,8 @@ namespace Iesi.Collections.Generic
         /// </summary>
         public virtual void Clear()
         {
+            CheckReentrancy();
+
             if (_set.Count == 0)
             {
                 return;
@@ -266,6 +307,7 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set.Clear();
+            _list.Clear();
 
             OnCountPropertyChanged();
             OnCollectionReset();
@@ -286,6 +328,8 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void UnionWith(IEnumerable<T> other)
         {
+            CheckReentrancy();
+
             var copy = new HashSet<T>(_set, _set.Comparer);
 
             copy.UnionWith(other);
@@ -300,9 +344,10 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
+            _list = [.. _set];
 
             OnCountPropertyChanged();
-            OnCollectionChanged(EventArgsCache.Items_Empty, added);
+            OnCollectionChanged(EventArgsCache.Items_Empty, added, 0);
         }
 
         /// <summary>
@@ -312,6 +357,8 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void IntersectWith(IEnumerable<T> other)
         {
+            CheckReentrancy();
+
             var copy = new HashSet<T>(_set, _set.Comparer);
 
             copy.IntersectWith(other);
@@ -326,9 +373,10 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
+            _list = [.. _set];
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
         }
 
         /// <summary>
@@ -337,6 +385,8 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection of items to remove from the current <see cref="ObservableSet{T}" />.</param>
         public virtual void ExceptWith(IEnumerable<T> other)
         {
+            CheckReentrancy();
+
             var copy = new HashSet<T>(_set, _set.Comparer);
 
             copy.ExceptWith(other);
@@ -351,9 +401,10 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
+            _list = [.. _set];
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, EventArgsCache.Items_Empty);
+            OnCollectionChanged(removed, EventArgsCache.Items_Empty, 0);
         }
 
         /// <summary>
@@ -363,6 +414,8 @@ namespace Iesi.Collections.Generic
         /// <param name="other">The collection to compare to the current <see cref="ObservableSet{T}" />.</param>
         public virtual void SymmetricExceptWith(IEnumerable<T> other)
         {
+            CheckReentrancy();
+
             var copy = new HashSet<T>(_set, _set.Comparer);
 
             copy.SymmetricExceptWith(other);
@@ -378,9 +431,10 @@ namespace Iesi.Collections.Generic
             OnCountPropertyChanging();
 
             _set = copy;
+            _list = [.. _set];
 
             OnCountPropertyChanged();
-            OnCollectionChanged(removed, added);
+            OnCollectionChanged(removed, added, 0);
         }
 
         /// <summary>
@@ -495,6 +549,69 @@ namespace Iesi.Collections.Generic
         }
 
         /// <summary>
+        ///     Checks if there is currently no reentrancy that is making any changes to this collection.
+        ///
+        ///     -- ORIGINAL SUMMARY --
+        ///     Check and assert for reentrant attempts to change this collection.
+        /// </summary>
+        /// <remarks>
+        ///     This should be done before making any changes to this collection.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        ///     Raised when changing the collection while another collection change is still being notified to other listeners.
+        /// </exception>
+        protected void CheckReentrancy()
+        {
+            if (_blockReentrancyCount > 0)
+            {
+                // We can allow changes if there's only one listener.
+                // The problem only arises if reentrant changes make the original event args invalid for later listeners.
+                // This keeps existing code working (e.g. Selector.SelectedItems).
+                if (CollectionChanged is NotifyCollectionChangedEventHandler handler &&
+#if NET9_0_OR_GREATER
+                    !handler.HasSingleTarget
+#else
+                    handler.GetInvocationList().Length > 1
+#endif
+               )
+                {
+                    throw new InvalidOperationException(SR.ObservableCollectionReentrancyNotAllowed);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Blocks new reentrancy to prevent any changes to this collection.
+        ///
+        ///     -- ORIGINAL SUMMARY --
+        ///     Disallow reentrant attempts to change this collection.
+        ///     E.g. an event handler of the <see cref="CollectionChanged" /> event is not allowed to make changes to this collection.
+        /// </summary>
+        /// <remarks>
+        ///     Typical usage is to wrap e.g. a <see cref="OnCollectionChanged(NotifyCollectionChangedEventArgs)" /> call with a using() scope:
+        ///     <code>
+        ///         using (BlockReentrancy())
+        ///         {
+        ///             OnCollectionChanged(this, new NotifyCollectionChangedEventArgs(action, item, index));
+        ///         }
+        ///     </code>
+        /// </remarks>
+        /// <returns>
+        ///     A <see cref="SimpleMonitor" /> that blocks new reentrancy.
+        /// </returns>
+        protected IDisposable BlockReentrancy()
+        {
+            _blockReentrancyCount++;
+
+            return EnsureMonitorInitialized();
+        }
+
+        private SimpleMonitor EnsureMonitorInitialized()
+        {
+            return _monitor ??= new SimpleMonitor(this);
+        }
+
+        /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> (<see cref="NotifyCollectionChangedAction.Reset" />) event to any listeners.
         /// </summary>
         protected void OnCollectionReset()
@@ -505,6 +622,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
+        [Obsolete("Use OnCollectionChanged(NotifyCollectionChangedAction, object?, int) instead.")]
         protected void OnCollectionChanged(NotifyCollectionChangedAction action, object? item)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
@@ -529,6 +647,7 @@ namespace Iesi.Collections.Generic
         /// <summary>
         ///     Raises the <see cref="CollectionChanged" /> event to any listeners.
         /// </summary>
+        [Obsolete("Use OnCollectionChanged(IList, IList, int) instead.")]
         protected void OnCollectionChanged(IList oldItems, IList newItems)
         {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
@@ -580,6 +699,28 @@ namespace Iesi.Collections.Generic
         protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChanged?.Invoke(this, e);
+        }
+
+        // This class helps prevent reentrant calls.
+        [Serializable]
+        private sealed class SimpleMonitor : IDisposable
+        {
+            internal int _busyCount; // Only used during (de)serialization to maintain compatibility with desktop. Do not rename (binary serialization).
+
+            [NonSerialized]
+            internal ObservableSet<T> _collection;
+
+            public SimpleMonitor(ObservableSet<T> collection)
+            {
+                Debug.Assert(collection is not null);
+
+                _collection = collection!;
+            }
+
+            public void Dispose()
+            {
+                _collection._blockReentrancyCount--;
+            }
         }
 
         internal static class EventArgsCache
