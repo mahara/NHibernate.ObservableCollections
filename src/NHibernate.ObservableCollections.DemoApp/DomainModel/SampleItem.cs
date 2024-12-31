@@ -2,7 +2,7 @@ using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
 
 namespace NHibernate.ObservableCollections.DemoApp
 {
-    public class SampleItem : INotifyPropertyChanged
+    public class SampleItem : IEquatable<SampleItem>, INotifyPropertyChanged
     {
         private string _name = string.Empty;
 
@@ -34,6 +34,33 @@ namespace NHibernate.ObservableCollections.DemoApp
                 _parentSetContainer = value;
                 OneToManyAssociationSync.UpdateOneSide(this, oldParentSetContainer, _parentSetContainer, "SampleSet");
             }
+        }
+
+        public virtual bool Equals(SampleItem? other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            //return Id == other.Id && Name == other.Name;
+            return Name == other.Name;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as SampleItem);
+        }
+
+        public override int GetHashCode()
+        {
+            //return HashCode.Combine(Id, Name);
+            return HashCode.Combine(Name);
         }
 
         protected void OnPropertyChanged(string propertyName)
