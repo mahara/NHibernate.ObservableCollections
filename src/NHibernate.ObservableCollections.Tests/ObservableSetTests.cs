@@ -44,7 +44,7 @@ namespace Iesi.Collections.Generic.Tests
 
             Assert.That(argsNewItems, Is.Not.Null);
             Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
-            Assert.That(args.NewStartingIndex, Is.EqualTo(-1));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(collectionCount));
 
             collectionCount += itemsAddedCount;
 
@@ -84,7 +84,7 @@ namespace Iesi.Collections.Generic.Tests
 
             Assert.That(argsOldItems, Is.Not.Null);
             Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
-            Assert.That(args.OldStartingIndex, Is.EqualTo(-1));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(itemRemovedIndex));
 
             collectionCount -= itemsRemovedCount;
 
