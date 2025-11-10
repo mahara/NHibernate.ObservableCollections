@@ -4,4 +4,4 @@ NHibernate.ObservableCollections
 
 ## License
 
-NHibernate.ObservableCollections is &copy; 2007-2024 NHibernate.ObservableCollections Contributors. It is licensed under the terms of the [MIT](https://opensource.org/license/mit/) license.
+NHibernate.ObservableCollections is &copy; 2007-2025 NHibernate.ObservableCollections Contributors. It is licensed under the terms of the [MIT](https://opensource.org/license/mit/) license.
