@@ -13,12 +13,14 @@ internal class Program
     public static void Main(string[] args)
     {
         var job = Job.Default;
-        var jobNet90 = job.WithRuntime(CoreRuntime.Core90).WithBaseline(true);
+        var jobNet100 = job.WithRuntime(CoreRuntime.Core10_0).WithBaseline(true);
+        var jobNet90 = job.WithRuntime(CoreRuntime.Core90);
         var jobNet80 = job.WithRuntime(CoreRuntime.Core80);
         var jobNet48 = job.WithRuntime(ClrRuntime.Net48)
                           .WithToolchain(InProcessEmitToolchain.Instance);
 
         var config = DefaultConfig.Instance
+            .AddJob(jobNet100)
             .AddJob(jobNet90)
             .AddJob(jobNet80)
             .AddJob(jobNet48)
