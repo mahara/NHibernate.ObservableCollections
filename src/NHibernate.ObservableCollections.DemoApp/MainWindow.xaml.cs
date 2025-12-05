@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 
+using Microsoft.Data.SqlClient;
+
 using NHibernate.ObservableCollections.DemoApp.DataAccess;
 
 namespace NHibernate.ObservableCollections.DemoApp
@@ -13,6 +15,8 @@ namespace NHibernate.ObservableCollections.DemoApp
         public MainWindow()
         {
             InitializeComponent();
+
+            SqlClientFeatures.EnableNewAsyncBehavior();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
