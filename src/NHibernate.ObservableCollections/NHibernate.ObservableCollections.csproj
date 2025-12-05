@@ -19,6 +19,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      TODO: Remove when fixed. A workaround for the following issues:
+      - https://github.com/dotnet/maintenance-packages/issues/243
+        - https://github.com/dotnet/msbuild/issues/12780
+    -->
+    <Reference Include="System.ValueTuple" SpecificVersion="True" />
+
     <PackageReference Include="Iesi.Collections" />
     <PackageReference Include="NHibernate" />
   </ItemGroup>
