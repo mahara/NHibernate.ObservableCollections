@@ -43,9 +43,9 @@ SET "ARTIFACTS___TEST_RESULTS___FOLDER_PATH=%ARTIFACTS_FOLDER_PATH%\%ARTIFACTS__
 SET "PARAMETER___RUN_BUILD___DEFAULT=true"
 SET "PARAMETER___RUN_TEST___DEFAULT=true"
 SET "PARAMETER___RUN_PACKAGE___DEFAULT=true"
-SET "PARAMETER___VERSION___DEFAULT=5.0.0"
+SET "PARAMETER___VERSION___DEFAULT=5.6.0"
 SET "PARAMETER___CONFIGURATION___DEFAULT=Release"
-SET "PARAMETER___FRAMEWORKS___DEFAULT=net9.0;net8.0;net48"
+SET "PARAMETER___FRAMEWORKS___DEFAULT=net10.0;net9.0;net8.0;net48"
 SET "PARAMETER___ENABLE_SOURCE_LINK___DEFAULT=true"
 
 
@@ -102,5 +102,5 @@ REM BUILD UNIT: NHibernate.ObservableCollections.DemoApp
 REM ================================================================================
 
 SET BUILD_UNIT___NHibernate.ObservableCollections.DemoApp___BUILD_PARAMETERS=^
-    "NHibernate.ObservableCollections.Helpers.csproj|net9.0-windows"^
-    "NHibernate.ObservableCollections.DemoApp.csproj|net9.0-windows"
+    "NHibernate.ObservableCollections.Helpers.csproj|net10.0-windows"^
+    "NHibernate.ObservableCollections.DemoApp.csproj|net10.0-windows"
