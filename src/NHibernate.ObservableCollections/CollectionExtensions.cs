@@ -19,6 +19,10 @@ namespace Iesi.Collections.Generic
         ///     -   <see href="https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.getrange" />
         ///     -   <see href="https://learn.microsoft.com/en-us/dotnet/api/system.range" />
         ///     -   <see href="https://learn.microsoft.com/en-us/dotnet/api/system.range.-ctor" />
+        ///     -   <see href="https://github.com/dotnet/maintenance-packages/issues/243" />
+        ///         -   <see href="https://github.com/dotnet/msbuild/issues/12780" />
+        ///     -   <see href="https://github.com/dotnet/runtime/issues/121539" />
+        ///     -   <see href="https://github.com/dotnet/sdk/issues/51265" />
         /// </remarks>
         public static List<T> GetRange<T>(this List<T> list, Range range)
         {
