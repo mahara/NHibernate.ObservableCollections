@@ -1,6 +1,19 @@
 # NHibernate.ObservableCollections - Changelog
 
 
+## 5.7.0 (2025-xx-xx)
+
+### All
+
+Improvements:
+- Added **`.NET 10.0`** support.
+
+### NHibernate.ObservableCollections
+
+Breaking Changes:
+- Updated **`NHibernate`** version to 5.7.0.
+
+
 ## 5.0.0 (2025-11-11)
 
 ### All
