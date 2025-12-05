@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
-    <PackageReference Include="NHibernate" VersionOverride="5.5.3" />
+    <PackageReference Include="NHibernate" VersionOverride="5.6.1" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
   </ItemGroup>
