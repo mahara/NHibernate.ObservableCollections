@@ -28,6 +28,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Memory" />
+    <!--
+      TODO: Remove when fixed. A workaround for the following issues:
+      - https://github.com/dotnet/maintenance-packages/issues/243
+        - https://github.com/dotnet/msbuild/issues/12780
+    -->
+    <Reference Include="System.ValueTuple" SpecificVersion="True" />
   </ItemGroup>
 
 </Project>
