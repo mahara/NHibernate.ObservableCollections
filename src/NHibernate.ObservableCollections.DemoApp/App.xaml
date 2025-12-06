@@ -8,7 +8,7 @@
             <ResourceDictionary.MergedDictionaries>
 
                 <!--
-                    https://learn.microsoft.com/en-us/dotnet/desktop/wpf/whats-new/net90
+                    https://learn.microsoft.com/en-us/dotnet/desktop/wpf/whats-new/net100
                 -->
                 <ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />
 
