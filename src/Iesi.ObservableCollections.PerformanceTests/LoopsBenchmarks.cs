@@ -6,6 +6,7 @@ namespace Iesi.Collections.PerformanceTests
     ///     REFERENCES:
     ///     -   <see href="https://stackoverflow.com/questions/365615/in-net-which-loop-runs-faster-for-or-foreach" />
     /// </remarks>
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory | BenchmarkFeatures.Disassembly)]
     public class LoopsBenchmarks
     {
         [Params(10_000, 10_000_000)]
