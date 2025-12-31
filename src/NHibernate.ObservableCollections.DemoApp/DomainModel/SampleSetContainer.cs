@@ -1,24 +1,26 @@
 using NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
 
-namespace NHibernate.ObservableCollections.DemoApp;
-
-/// <summary>
-///     A parent class that contains a set of child <see cref="SampleItem" /> objects.
-/// </summary>
-public class SampleSetContainer
+namespace NHibernate.ObservableCollections.DemoApp
 {
-    private ISet<SampleItem> _sampleSet = new ObservableSet<SampleItem>();
-
-    public virtual int Id { get; protected set; }
-
-    public virtual ISet<SampleItem> SampleSet
+    /// <summary>
+    ///     A parent class that contains a set of child <see cref="SampleItem" /> objects.
+    /// </summary>
+    public class SampleSetContainer
     {
-        get => _sampleSet;
-        protected set
+        private ISet<SampleItem> _sampleSet = new ObservableSet<SampleItem>();
+
+        public virtual int Id { get; protected set; }
+
+        public virtual ISet<SampleItem> SampleSet
         {
-            _sampleSet = value;
-            ((INotifyCollectionChanged) _sampleSet).CollectionChanged +=
-                new OneToManyAssociationSync(this, nameof(SampleItem.ParentSetContainer)).UpdateManySide;
+            get => _sampleSet;
+            protected set
+            {
+                _sampleSet = value;
+
+                ((INotifyCollectionChanged) _sampleSet).CollectionChanged +=
+                    new OneToManyAssociationSync(this, nameof(SampleItem.ParentSetContainer)).UpdateManySide;
+            }
         }
     }
 }

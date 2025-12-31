@@ -21,9 +21,9 @@ using Ionic.Zip;
 
 namespace Explicit.NuGet.Versions
 {
-    internal class Program
+    class Program
     {
-        private static void Main(string[] args)
+        static void Main(string[] args)
         {
             if (args.Length != 2)
             {
@@ -35,7 +35,6 @@ namespace Explicit.NuGet.Versions
             var packageMetaData = ReadNuspecFromPackages(packageDiscoverDirectoryInfo);
 
             UpdateNuspecManifestContent(packageMetaData, args[1]);
-
             WriteNuspecToPackages(packageMetaData);
         }
 
@@ -54,7 +53,6 @@ namespace Explicit.NuGet.Versions
                         using var zipEntryReader = new StreamReader(zipEntry.OpenReader());
 
                         var nuspecXml = zipEntryReader.ReadToEnd();
-
                         packageNuspecDictionary[packageFilePath.FullName] = new NuspecContentEntry
                         {
                             EntryName = zipEntry.FileName,
@@ -74,7 +72,6 @@ namespace Explicit.NuGet.Versions
             foreach (var packageFile in packageMetaData.ToList())
             {
                 var nuspecXmlDocument = new XmlDocument();
-
                 nuspecXmlDocument.LoadXml(packageFile.Value.Contents);
 
                 SetPackageDependencyVersionsToBeExplicitForXmlDocument(nuspecXmlDocument, dependencyNugetId);
@@ -132,19 +129,18 @@ namespace Explicit.NuGet.Versions
                 using var zipFile = ZipFile.Read(packageFile.Key);
 
                 zipFile.UpdateEntry(packageFile.Value.EntryName, packageFile.Value.Contents);
-
                 zipFile.Save();
             }
         }
 
-        internal record NuspecContentEntry
+        record NuspecContentEntry
         {
             public string EntryName { get; set; } = string.Empty;
 
             public string Contents { get; set; } = string.Empty;
         }
 
-        internal sealed class StringWriterWithEncoding : StringWriter
+        sealed class StringWriterWithEncoding : StringWriter
         {
             public StringWriterWithEncoding(Encoding encoding)
             {

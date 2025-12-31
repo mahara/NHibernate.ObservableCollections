@@ -4,80 +4,55 @@ using NHibernate.DebugHelpers;
 using NHibernate.Engine;
 using NHibernate.Persister.Collection;
 
-namespace Iesi.Collections.Generic;
-
-/// <summary>
-///     Represents a persistent observable collection.
-/// </summary>
-/// <typeparam name="T">
-///     The type of the items in the collection.
-/// </typeparam>
-[Serializable]
-[DebuggerTypeProxy(typeof(CollectionProxy<>))]
-public class PersistentObservableCollection<T> : PersistentGenericList<T>, INotifyCollectionChanged
+namespace Iesi.Collections.Generic
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PersistentObservableCollection{T}" /> class.
+    ///     Represents a persistent observable collection.
     /// </summary>
-    /// <param name="session">
-    ///     The session.
-    /// </param>
-    public PersistentObservableCollection(ISessionImplementor session) :
-        base(session)
+    /// <typeparam name="T">
+    ///     The type of the items in the collection.
+    /// </typeparam>
+    /// <remarks>
+    ///     AUTHORS:
+    ///     -   Adrian Alexander
+    ///     REFERENCES:
+    ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
+    ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
+    /// </remarks>
+    [Serializable]
+    [DebuggerTypeProxy(typeof(CollectionProxy<>))]
+    public class PersistentObservableCollection<T> : PersistentGenericList<T>, INotifyCollectionChanged
     {
-    }
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="PersistentObservableCollection{T}" /> class.
-    /// </summary>
-    /// <param name="session">
-    ///     The session.
-    /// </param>
-    /// <param name="collection">
-    ///     The collection.
-    /// </param>
-    public PersistentObservableCollection(ISessionImplementor session, IList<T> collection) :
-        base(session, collection)
-    {
-        if (collection is not null)
+        public PersistentObservableCollection(ISessionImplementor session) :
+            base(session)
         {
-            ((INotifyCollectionChanged) collection).CollectionChanged += OnCollectionChanged;
         }
-    }
 
-    /// <summary>
-    ///     Occurs when the collection changes.
-    /// </summary>
-    /// <inheritdoc />
-    public event NotifyCollectionChangedEventHandler? CollectionChanged;
+        public PersistentObservableCollection(ISessionImplementor session, IList<T> collection) :
+            base(session, collection)
+        {
+            if (collection is not null)
+            {
+                ((INotifyCollectionChanged) collection).CollectionChanged += OnCollectionChanged;
+            }
+        }
 
-    /// <summary>
-    ///     Called when the collection changes.
-    /// </summary>
-    /// <param name="sender">
-    ///     The sender.
-    /// </param>
-    /// <param name="args">
-    ///     The <see cref="NotifyCollectionChangedEventArgs" /> instance containing the event data.
-    /// </param>
-    protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
-    {
-        CollectionChanged?.Invoke(this, args);
-    }
+        /// <summary>
+        ///     Occurs when an item is added, removed, or moved, or the entire collection is refreshed.
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-    /// <summary>
-    ///     Before the initialize.
-    /// </summary>
-    /// <param name="persister">
-    ///     The persister.
-    /// </param>
-    /// <param name="anticipatedSize">
-    ///     Size of the anticipated.
-    /// </param>
-    public override void BeforeInitialize(ICollectionPersister persister, int anticipatedSize)
-    {
-        base.BeforeInitialize(persister, anticipatedSize);
+        /// <inheritdoc />
+        public override void BeforeInitialize(ICollectionPersister persister, int anticipatedSize)
+        {
+            base.BeforeInitialize(persister, anticipatedSize);
 
-        ((INotifyCollectionChanged) WrappedList).CollectionChanged += OnCollectionChanged;
+            ((INotifyCollectionChanged) WrappedList).CollectionChanged += OnCollectionChanged;
+        }
+
+        protected void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            CollectionChanged?.Invoke(this, args);
+        }
     }
 }

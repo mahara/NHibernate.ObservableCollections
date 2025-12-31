@@ -1,31 +1,36 @@
 using System.Diagnostics;
 
-namespace Iesi.Collections.Generic;
-
-/// <summary>
-/// </summary>
-/// <typeparam name="T"></typeparam>
-/// <remarks>
-///     REFERENCES:
-///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs" />
-/// </remarks>
-internal sealed class CollectionDebugView<T>
+namespace Iesi.Collections.Generic
 {
-    private readonly ICollection<T> _collection;
-
-    public CollectionDebugView(ICollection<T> collection)
+    /// <summary>
+    ///     VS IDE can't differentiate between types with the same name from different assembly.
+    ///     So we need to use different names for collection debug view
+    ///     for collections in mscorlib.dll and system.dll.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <remarks>
+    ///     REFERENCES:
+    ///     -   <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.ObjectModel/src/System/Collections/Generic/DebugView.cs" />
+    ///     -   <see href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/debugview.cs" />
+    /// </remarks>
+    internal sealed class CollectionDebugView<T>
     {
-        _collection = collection ?? throw new ArgumentNullException(nameof(collection));
-    }
+        private readonly ICollection<T> _collection;
 
-    [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public T[] Items
-    {
-        get
+        public CollectionDebugView(ICollection<T> collection)
         {
-            var items = new T[_collection.Count];
-            _collection.CopyTo(items, 0);
-            return items;
+            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public T[] Items
+        {
+            get
+            {
+                var items = new T[_collection.Count];
+                _collection.CopyTo(items, 0);
+                return items;
+            }
         }
     }
 }

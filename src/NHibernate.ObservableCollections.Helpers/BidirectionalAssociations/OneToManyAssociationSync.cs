@@ -1,123 +1,126 @@
 using System.Reflection;
 
-namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations;
-
-/// <summary>
-///     Keeps both sides of a bidirectional one-to-many association in sync with each other.
-/// </summary>
-/// <remarks>
-///     AUTHORS:
-///     -   Adrian Alexander
-///     REFERENCES:
-///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
-///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
-/// </remarks>
-public sealed class OneToManyAssociationSync
+namespace NHibernate.ObservableCollections.Helpers.BidirectionalAssociations
 {
-    private readonly object _thisOneSide;
-
-    private readonly string _manyToOnePropertyName;
-
-    private PropertyInfo? _manyToOneProperty;
-
     /// <summary>
-    ///    Initializes a new instance of the <see cref="OneToManyAssociationSync" /> class.
+    ///     Keeps both sides of a bidirectional one-to-many association in sync with each other.
     /// </summary>
-    /// <param name="thisOneSide">The entity participating in the association which has a multiplicity of one.</param>
-    /// <param name="manyToOnePropertyName"></param>
-    public OneToManyAssociationSync(object thisOneSide, string manyToOnePropertyName)
+    /// <remarks>
+    ///     AUTHORS:
+    ///     -   Adrian Alexander
+    ///     REFERENCES:
+    ///     -   <see href="https://happynomad121.blogspot.com/2007/12/collections-for-wpf-and-nhibernate.html" />
+    ///     -   <see href="https://happynomad121.blogspot.com/2008/05/revisiting-bidirectional-assoc-helpers.html" />
+    /// </remarks>
+    public sealed class OneToManyAssociationSync
     {
-        _thisOneSide = thisOneSide;
-        _manyToOnePropertyName = manyToOnePropertyName;
-    }
+        private readonly object _thisOneSide;
 
-    /// <summary>
-    ///     Responds to a many-side entity's parent one-side property being set to a new value.
-    /// </summary>
-    public static void UpdateOneSide<T>(T thisManySide, object oldOneSide, object newOneSide, string oneToManyPropertyName)
-    {
-        if (oldOneSide is not null && oldOneSide != newOneSide)
+        private readonly string _manyToOnePropertyName;
+
+        private PropertyInfo? _manyToOneProperty;
+
+        /// <summary>
+        ///    Initializes a new instance of the <see cref="OneToManyAssociationSync" /> class.
+        /// </summary>
+        /// <param name="thisOneSide">The entity participating in the association which has a multiplicity of one.</param>
+        /// <param name="manyToOnePropertyName"></param>
+        public OneToManyAssociationSync(object thisOneSide, string manyToOnePropertyName)
         {
-            var oldCollection = ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
-            if (oldCollection.Contains(thisManySide))
+            _thisOneSide = thisOneSide;
+            _manyToOnePropertyName = manyToOnePropertyName;
+        }
+
+        /// <summary>
+        ///     Responds to a many-side entity's parent one-side property being set to a new value.
+        /// </summary>
+        public static void UpdateOneSide<T>(T thisManySide, object? oldOneSide, object? newOneSide, string oneToManyPropertyName)
+        {
+            if (oldOneSide is not null && oldOneSide != newOneSide)
             {
-                Console.WriteLine("\tremoving from old parent collection");
-
-                oldCollection.Remove(thisManySide);
-
-                if (oldCollection is IList && oldCollection.Contains(thisManySide))
+                var oldCollection = ReflectionUtil.NavigateToManySide<T>(oldOneSide, oneToManyPropertyName);
+                if (oldCollection.Contains(thisManySide))
                 {
-                    // True if there was more than one
-                    throw new InvalidOperationException("Collection is non-unique");
+                    Console.WriteLine("\tremoving from old parent collection");
+
+                    oldCollection.Remove(thisManySide);
+
+                    if (oldCollection is IList &&
+                        oldCollection.Contains(thisManySide))
+                    {
+                        // true if there was more than one
+                        throw new InvalidOperationException("Collection is non-unique");
+                    }
+                }
+            }
+
+            if (newOneSide is not null)
+            {
+                var newCollection = ReflectionUtil.NavigateToManySide<T>(newOneSide, oneToManyPropertyName);
+                if (ReflectionUtil.IsInitialized(newCollection) && !newCollection.Contains(thisManySide))
+                {
+                    Console.WriteLine("\tadding to new parent collection");
+
+                    if (newCollection is IList &&
+                        newCollection.Contains(thisManySide))
+                    {
+                        // true if add will cause duplicates
+                        throw new InvalidOperationException("Collection is non-unique");
+                    }
+
+                    newCollection.Add(thisManySide);
                 }
             }
         }
 
-        if (newOneSide is not null)
+        /// <summary>
+        ///     Responds to add/remove events raised by the one-side's collection.
+        /// </summary>
+        public void UpdateManySide(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            var newCollection = ReflectionUtil.NavigateToManySide<T>(newOneSide, oneToManyPropertyName);
-            if (ReflectionUtil.IsInitialized(newCollection) && !newCollection.Contains(thisManySide))
+            if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                Console.WriteLine("\tadding to new parent collection");
-
-                if (newCollection is IList && newCollection.Contains(thisManySide))
+                // addingToManySide: the item that was just added to this one-side's collection
+                foreach (var addingToManySide in e.NewItems!)
                 {
-                    // True if add will cause duplicates
-                    throw new InvalidOperationException("Collection is non-unique");
+                    if (addingToManySide is not null && NavigateManyToOne(addingToManySide) != _thisOneSide)
+                    {
+                        SetManyToOne(addingToManySide, _thisOneSide);
+                    }
                 }
-
-                newCollection.Add(thisManySide);
             }
-        }
-    }
-
-    /// <summary>
-    ///     Responds to add/remove events raised by the one-side's collection.
-    /// </summary>
-    public void UpdateManySide(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Add)
-        {
-            // addingToManySide: the item that was just added to this one-side's collection
-            foreach (var addingToManySide in e.NewItems!)
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                if (addingToManySide is not null && NavigateManyToOne(addingToManySide) != _thisOneSide)
+                // removingFromManySide: the item that was just removed from this one-side's collection
+                foreach (var removingFromManySide in e.OldItems!)
                 {
-                    SetManyToOne(addingToManySide, _thisOneSide);
+                    if (NavigateManyToOne(removingFromManySide) == _thisOneSide)
+                    {
+                        SetManyToOne(removingFromManySide, null);
+                    }
                 }
             }
         }
-        else if (e.Action == NotifyCollectionChangedAction.Remove)
+
+        private PropertyInfo GetManyToOneProperty(System.Type manySideType)
         {
-            // removingFromManySide: the item that was just removed from this one-side's collection
-            foreach (var removingFromManySide in e.OldItems!)
+            if (_manyToOneProperty is null)
             {
-                if (NavigateManyToOne(removingFromManySide) == _thisOneSide)
-                {
-                    SetManyToOne(removingFromManySide, null);
-                }
+                var property = manySideType.GetProperty(_manyToOnePropertyName)!;
+                _manyToOneProperty = property.DeclaringType!.GetProperty(_manyToOnePropertyName)!;
             }
-        }
-    }
 
-    private PropertyInfo GetManyToOneProperty(System.Type manySideType)
-    {
-        if (_manyToOneProperty is null)
+            return _manyToOneProperty;
+        }
+
+        private object NavigateManyToOne(object? manySide)
         {
-            var pi = manySideType.GetProperty(_manyToOnePropertyName)!;
-            _manyToOneProperty = pi.DeclaringType!.GetProperty(_manyToOnePropertyName)!;
+            return GetManyToOneProperty(manySide!.GetType()).GetValue(manySide, null)!;
         }
 
-        return _manyToOneProperty;
-    }
-
-    private object NavigateManyToOne(object manySide)
-    {
-        return GetManyToOneProperty(manySide.GetType()).GetValue(manySide, null)!;
-    }
-
-    private void SetManyToOne(object manySide, object? newValue)
-    {
-        GetManyToOneProperty(manySide.GetType()).SetValue(manySide, newValue, null);
+        private void SetManyToOne(object? manySide, object? newValue)
+        {
+            GetManyToOneProperty(manySide!.GetType()).SetValue(manySide, newValue, null);
+        }
     }
 }

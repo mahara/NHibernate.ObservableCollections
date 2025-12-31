@@ -1,832 +1,833 @@
 using System.Collections;
 
-namespace Iesi.Collections.Generic.Tests;
-
-[TestFixture]
-public class ObservableCollectionTests
+namespace Iesi.Collections.Generic.Tests
 {
-    private readonly List<int> _items = [];
-    private readonly List<int> _itemsLarge = [];
-
-    [OneTimeSetUp]
-    public void SetupFixture()
+    [TestFixture]
+    public class ObservableCollectionTests
     {
-        _items.Clear();
-        _items.AddRange(Enumerable.Range(0, 10));
+        private readonly List<int> _items = [];
+        private readonly List<int> _itemsLarge = [];
 
-        _itemsLarge.Clear();
-        _itemsLarge.AddRange(Enumerable.Range(0, 100_000));
-    }
-
-    [Test]
-    public void CanAdd_EmptyObservableCollection()
-    {
-        var items = _items;
-
-        var itemAdded = items[0];
-        var itemsAddedCount = 1;
-        var notificationCount = itemsAddedCount;
-
-        var collection = new TestObservableCollection<int>();
-        var collectionCount = collection.Count;
-
-        Assert.That(collection, Has.Count.EqualTo(0));
-
-        var argsList = collection.CollectionChangedEventArgsList;
-
-        Assert.That(argsList, Has.Count.EqualTo(0));
-
-        collection.Add(itemAdded);
-
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
-
-        var args = argsList[0];
-
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
-
-        var argsNewItems = args.NewItems;
-
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(collectionCount));
-
-        collectionCount += itemsAddedCount;
-
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
-
-    [Test]
-    public void CanAdd_Many_EmptyObservableCollection()
-    {
-        var items = _itemsLarge;
-        var itemsCount = items.Count;
-
-        var itemsAdded = items;
-        var itemsAddedCount = itemsCount;
-        var notificationCount = itemsAddedCount;
-
-        var collection = new TestObservableCollection<int>();
-        var collectionCount = collection.Count;
-
-        Assert.That(collection, Has.Count.EqualTo(0));
-
-        var argsList = collection.CollectionChangedEventArgsList;
-
-        Assert.That(argsList, Has.Count.EqualTo(0));
-
-        foreach (var item in itemsAdded)
+        [OneTimeSetUp]
+        public void SetupFixture()
         {
-            collection.Add(item);
+            _items.Clear();
+            _items.AddRange(Enumerable.Range(0, 10));
+
+            _itemsLarge.Clear();
+            _itemsLarge.AddRange(Enumerable.Range(0, 100_000));
         }
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
-
-        var args = argsList[0];
-
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
-
-        var argsNewItems = args.NewItems;
-
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(1));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(0));
-
-        args = argsList[itemsAddedCount - 1];
-
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
-
-        argsNewItems = args.NewItems;
-
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(1));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(itemsAddedCount - 1));
-
-        collectionCount += itemsAddedCount;
-
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
-
-    [Test]
-    public void CanRemove_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
-
-        var itemRemovedIndex = 3;
-        var itemRemoved = items[itemRemovedIndex];
-        var itemsRemovedCount = 1;
-        var notificationCount = itemsRemovedCount;
-
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
-
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
-
-        var argsList = collection.CollectionChangedEventArgsList;
-
-        Assert.That(argsList, Has.Count.EqualTo(0));
-
-        collection.Remove(itemRemoved);
-
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
-
-        var args = argsList[0];
-
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
-
-        var argsOldItems = args.OldItems;
-
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(itemRemovedIndex));
-
-        collectionCount -= itemsRemovedCount;
-
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
-
-    [Test]
-    public void CanRemove_Many_NonEmptyObservableCollection()
-    {
-        var items = _itemsLarge;
-        var itemsCount = items.Count;
-
-        var itemsRemovedCount = itemsCount;
-        var notificationCount = itemsRemovedCount;
-
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
-
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
-
-        var argsList = collection.CollectionChangedEventArgsList;
-
-        Assert.That(argsList, Has.Count.EqualTo(0));
-
-        foreach (var item in items)
+        [Test]
+        public void CanAdd_EmptyObservableCollection()
         {
-            collection.Remove(item);
+            var items = _items;
+
+            var itemAdded = items[0];
+            var itemsAddedCount = 1;
+            var notificationCount = itemsAddedCount;
+
+            var collection = new TestObservableCollection<int>();
+            var collectionCount = collection.Count;
+
+            Assert.That(collection, Has.Count.EqualTo(0));
+
+            var argsList = collection.CollectionChangedEventArgsList;
+
+            Assert.That(argsList, Has.Count.EqualTo(0));
+
+            collection.Add(itemAdded);
+
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+
+            var args = argsList[0];
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
+
+            var argsNewItems = args.NewItems;
+
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(collectionCount));
+
+            collectionCount += itemsAddedCount;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
         }
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+        [Test]
+        public void CanAdd_Many_EmptyObservableCollection()
+        {
+            var items = _itemsLarge;
+            var itemsCount = items.Count;
 
-        var args = argsList[0];
+            var itemsAdded = items;
+            var itemsAddedCount = itemsCount;
+            var notificationCount = itemsAddedCount;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            var collection = new TestObservableCollection<int>();
+            var collectionCount = collection.Count;
 
-        var argsOldItems = args.OldItems;
+            Assert.That(collection, Has.Count.EqualTo(0));
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(1));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(0));
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        args = argsList[itemsRemovedCount - 1];
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            foreach (var item in itemsAdded)
+            {
+                collection.Add(item);
+            }
 
-        argsOldItems = args.OldItems;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(1));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(0));
+            var args = argsList[0];
 
-        collectionCount -= itemsRemovedCount;
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            var argsNewItems = args.NewItems;
 
-    [Test]
-    public void CanClear_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(1));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(0));
 
-        var itemsRemovedCount = itemsCount;
-        var notificationCount = 1;
+            args = argsList[itemsAddedCount - 1];
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            argsNewItems = args.NewItems;
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(1));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(itemsAddedCount - 1));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            collectionCount += itemsAddedCount;
 
-        collection.Clear();
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+        [Test]
+        public void CanRemove_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        var args = argsList[0];
+            var itemRemovedIndex = 3;
+            var itemRemoved = items[itemRemovedIndex];
+            var itemsRemovedCount = 1;
+            var notificationCount = itemsRemovedCount;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
-        Assert.That(args.OldItems, Is.Null);
-        Assert.That(args.NewItems, Is.Null);
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        collectionCount -= itemsRemovedCount;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            var argsList = collection.CollectionChangedEventArgsList;
 
-    [Test]
-    public void CanClear_NonEmptyObservableCollectionInReadOnlyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        var itemsRemovedCount = itemsCount;
-        var notificationCount = 1;
-        var readOnlyNotificationCount = 1;
+            collection.Remove(itemRemoved);
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            var args = argsList[0];
 
-        var readOnlyCollection = new TestReadOnlyObservableCollection<int>(collection);
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-        Assert.That(readOnlyCollection, Has.Count.EqualTo(itemsCount));
+            var argsOldItems = args.OldItems;
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(itemRemovedIndex));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            collectionCount -= itemsRemovedCount;
 
-        collection.Clear();
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        argsList = collection.CollectionChangedEventArgsList;
+        [Test]
+        public void CanRemove_Many_NonEmptyObservableCollection()
+        {
+            var items = _itemsLarge;
+            var itemsCount = items.Count;
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var itemsRemovedCount = itemsCount;
+            var notificationCount = itemsRemovedCount;
 
-        var args = argsList[0];
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
-        Assert.That(args.OldItems, Is.Null);
-        Assert.That(args.NewItems, Is.Null);
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        var readOnlyArgsList = readOnlyCollection.CollectionChangedEventArgsList;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        Assert.That(readOnlyArgsList, Has.Count.EqualTo(readOnlyNotificationCount));
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        var readOnlyArgs = readOnlyArgsList[0];
+            foreach (var item in items)
+            {
+                collection.Remove(item);
+            }
 
-        Assert.That(readOnlyArgs, Is.Not.Null);
-        Assert.That(readOnlyArgs.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
-        Assert.That(readOnlyArgs.OldItems, Is.Null);
-        Assert.That(readOnlyArgs.NewItems, Is.Null);
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        collectionCount -= itemsRemovedCount;
+            var args = argsList[0];
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-        Assert.That(readOnlyCollection, Has.Count.EqualTo(collectionCount));
-    }
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-    [Test]
-    public void CanAddRange_EmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            var argsOldItems = args.OldItems;
 
-        var itemsAdded = items;
-        var itemsAddedCount = itemsCount;
-        var notificationCount = 1;
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(1));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(0));
 
-        var collection = new TestObservableCollection<int>();
-        var collectionCount = collection.Count;
+            args = argsList[itemsRemovedCount - 1];
 
-        Assert.That(collection, Has.Count.EqualTo(0));
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            argsOldItems = args.OldItems;
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(1));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(0));
 
-        collection.AddRange(itemsAdded);
+            collectionCount -= itemsRemovedCount;
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        var args = argsList[0];
+        [Test]
+        public void CanClear_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
+            var itemsRemovedCount = itemsCount;
+            var notificationCount = 1;
 
-        var argsNewItems = args.NewItems;
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(collectionCount));
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        collectionCount += itemsAddedCount;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-    [Test]
-    public void CanAddRange_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            collection.Clear();
 
-        var itemsAdded = items;
-        var itemsAddedCount = itemsCount;
-        var notificationCount = 1;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            var args = argsList[0];
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+            Assert.That(args.OldItems, Is.Null);
+            Assert.That(args.NewItems, Is.Null);
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            collectionCount -= itemsRemovedCount;
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        collection.AddRange(itemsAdded);
+        [Test]
+        public void CanClear_NonEmptyObservableCollectionInReadOnlyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var itemsRemovedCount = itemsCount;
+            var notificationCount = 1;
+            var readOnlyNotificationCount = 1;
 
-        var args = argsList[0];
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
-        Assert.That(notificationCount, Is.EqualTo(1));
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        var argsNewItems = args.NewItems;
+            var readOnlyCollection = new TestReadOnlyObservableCollection<int>(collection);
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(itemsCount));
+            Assert.That(readOnlyCollection, Has.Count.EqualTo(itemsCount));
 
-        collectionCount += itemsAddedCount;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-    [Test]
-    public void CanRemoveRange_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            collection.Clear();
 
-        var itemsRemovedIndex = 3;
-        var itemsRemovedCount = 4;
-        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
-        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
-        var notificationCount = 1;
+            argsList = collection.CollectionChangedEventArgsList;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            var args = argsList[0];
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+            Assert.That(args.OldItems, Is.Null);
+            Assert.That(args.NewItems, Is.Null);
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            var readOnlyArgsList = readOnlyCollection.CollectionChangedEventArgsList;
 
-        collection.RemoveRange(itemsRemoved);
+            Assert.That(readOnlyArgsList, Has.Count.EqualTo(readOnlyNotificationCount));
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var readOnlyArgs = readOnlyArgsList[0];
 
-        var args = argsList[0];
+            Assert.That(readOnlyArgs, Is.Not.Null);
+            Assert.That(readOnlyArgs.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+            Assert.That(readOnlyArgs.OldItems, Is.Null);
+            Assert.That(readOnlyArgs.NewItems, Is.Null);
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            collectionCount -= itemsRemovedCount;
 
-        var argsOldItems = args.OldItems;
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+            Assert.That(readOnlyCollection, Has.Count.EqualTo(collectionCount));
+        }
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(itemsRemovedIndex));
+        [Test]
+        public void CanAddRange_EmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        collectionCount -= itemsRemovedCount;
+            var itemsAdded = items;
+            var itemsAddedCount = itemsCount;
+            var notificationCount = 1;
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            var collection = new TestObservableCollection<int>();
+            var collectionCount = collection.Count;
 
-    [Test]
-    public void CanRemoveRangeAll_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            Assert.That(collection, Has.Count.EqualTo(0));
 
-        var itemsRemovedIndex = 0;
-        var itemsRemovedCount = itemsCount;
-        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
-        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
-        var notificationCount = 1;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            collection.AddRange(itemsAdded);
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            var args = argsList[0];
 
-        collection.RemoveRange(itemsRemoved);
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var argsNewItems = args.NewItems;
 
-        var args = argsList[0];
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(collectionCount));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
-        Assert.That(args.OldItems, Is.Null);
-        Assert.That(args.NewItems, Is.Null);
+            collectionCount += itemsAddedCount;
 
-        collectionCount -= itemsRemovedCount;
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+        [Test]
+        public void CanAddRange_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-    [Test]
-    public void CanRemoveRangeByIndexAndCount_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            var itemsAdded = items;
+            var itemsAddedCount = itemsCount;
+            var notificationCount = 1;
 
-        var itemsRemovedIndex = 3;
-        var itemsRemovedCount = 4;
-        //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
-        var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
-        var notificationCount = 1;
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            collection.AddRange(itemsAdded);
 
-        collection.RemoveRange(itemsRemoved);
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var args = argsList[0];
 
-        var args = argsList[0];
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
+            Assert.That(notificationCount, Is.EqualTo(1));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            var argsNewItems = args.NewItems;
 
-        var argsOldItems = args.OldItems;
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(itemsCount));
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(itemsRemovedIndex));
+            collectionCount += itemsAddedCount;
 
-        collectionCount -= itemsRemovedCount;
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+        [Test]
+        public void CanRemoveRange_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-    [Test]
-    public void CanRemoveRangeAllByIndexAndCount_NonEmptyObservableCollection()
-    {
-        var items = _items;
-        var itemsCount = items.Count;
+            var itemsRemovedIndex = 3;
+            var itemsRemovedCount = 4;
+            //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+            var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+            var notificationCount = 1;
 
-        var itemsRemovedIndex = 0;
-        var itemsRemovedCount = itemsCount;
-        var notificationCount = 1;
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            collection.RemoveRange(itemsRemoved);
 
-        collection.RemoveRange(itemsRemovedIndex, itemsRemovedCount);
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            var args = argsList[0];
 
-        var args = argsList[0];
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
-        Assert.That(args.OldItems, Is.Null);
-        Assert.That(args.NewItems, Is.Null);
+            var argsOldItems = args.OldItems;
 
-        collectionCount -= itemsRemovedCount;
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(itemsRemovedIndex));
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            collectionCount -= itemsRemovedCount;
 
-    [Test]
-    public void CanReplaceRange_NonEmptyObservableCollection()
-    {
-        // 2,6,[0,1,2,3,4,5]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,0,1,2,3,4,5,8,9                 (10)
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        var items = _items;
-        var itemsCount = items.Count;
+        [Test]
+        public void CanRemoveRangeAll_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        var items_ItemsToReplace_IndexStart = 2;
-        var items_ItemsToReplace_Count = 6;
-        //var itemsToReplace = items.GetRange(0, 6);
-        var itemsToReplace = items.GetRange(0..6);
-        var itemsToReplace_Count = itemsToReplace.Count;
-        var notificationCount = 1; // 1 (ReplaceRange)
-        //var notificationCount = 6; // 6 (Replace)
-        var itemsReplacedCount = itemsCount - items_ItemsToReplace_IndexStart;
+            var itemsRemovedIndex = 0;
+            var itemsRemovedCount = itemsCount;
+            //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+            var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+            var notificationCount = 1;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        collection.ReplaceRange(items_ItemsToReplace_IndexStart,
-                                items_ItemsToReplace_Count,
-                                itemsToReplace);
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            collection.RemoveRange(itemsRemoved);
 
-        NotifyCollectionChangedEventArgs args;
-        IList? argsOldItems;
-        IList? argsNewItems;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        //
-        // ReplaceRange
-        //
-        args = argsList[0];
+            var args = argsList[0];
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+            Assert.That(args.OldItems, Is.Null);
+            Assert.That(args.NewItems, Is.Null);
 
-        argsOldItems = args.OldItems;
+            collectionCount -= itemsRemovedCount;
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        argsNewItems = args.NewItems;
+        [Test]
+        public void CanRemoveRangeByIndexAndCount_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            var itemsRemovedIndex = 3;
+            var itemsRemovedCount = 4;
+            //var itemsRemoved = items.GetRange(itemsRemovedIndex, itemsRemovedCount);
+            var itemsRemoved = items.GetRange(itemsRemovedIndex..(itemsRemovedIndex + itemsRemovedCount));
+            var notificationCount = 1;
 
-        //
-        // Replace
-        //
-        //for (var i = 0; i < itemsReplacedCount - 1; i++)
-        //{
-        //    args = argsList[i];
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        //    Assert.That(args, Is.Not.Null);
-        //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        //    argsOldItems = args.OldItems;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        //    Assert.That(argsOldItems, Is.Not.Null);
-        //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        //    argsNewItems = args.NewItems;
+            collection.RemoveRange(itemsRemoved);
 
-        //    Assert.That(argsNewItems, Is.Not.Null);
-        //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
-        //}
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+            var args = argsList[0];
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
-    }
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
 
-    [Test]
-    public void CanReplaceRange_WithAddRange_NonEmptyObservableCollection()
-    {
-        // 0,4,[0,1,2,3,4,5,6,7,8,9]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,4,5,6,7,8,9,4,5,6,7,8,9     (16)
-        // 4,4,[0,1,2,3,4,5,6,7,8,9]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,0,1,2,3,4,5,6,7,8,9,8,9     (16)
-        // 5,4,[0,1,2,3,4,5,6,7,8,9]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,4,0,1,2,3,4,5,6,7,8,9,9     (16)
-        // 6,4,[0,1,2,3,4,5,6,7,8,9]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,4,5,0,1,2,3,4,5,6,7,8,9     (16)
+            var argsOldItems = args.OldItems;
 
-        var items = _items;
-        var itemsCount = items.Count;
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(itemsRemovedIndex));
 
-        var items_ItemsToReplace_IndexStart = 4;
-        var items_ItemsToReplace_Count = 4;
-        //var itemsToReplace = items.GetRange(0, items.Count);
-        var itemsToReplace = items.GetRange(0..);
-        var itemsToReplace_Count = itemsToReplace.Count;
-        var notificationCount = 2; // 1 (ReplaceRange) + 1 (AddRange)
-        //var notificationCount = 7; // 6 (Replace) + 1 (AddRange)
-        var itemsReplacedCount = itemsCount - items_ItemsToReplace_IndexStart;
-        //var itemsAddedCount = itemsCount - items_ItemsToReplace_Count + itemsToReplace_Count;
-        var itemsAddedCount = 6;
+            collectionCount -= itemsRemovedCount;
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        var argsList = collection.CollectionChangedEventArgsList;
+        [Test]
+        public void CanRemoveRangeAllByIndexAndCount_NonEmptyObservableCollection()
+        {
+            var items = _items;
+            var itemsCount = items.Count;
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            var itemsRemovedIndex = 0;
+            var itemsRemovedCount = itemsCount;
+            var notificationCount = 1;
 
-        collection.ReplaceRange(items_ItemsToReplace_IndexStart,
-                                items_ItemsToReplace_Count,
-                                itemsToReplace);
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        NotifyCollectionChangedEventArgs args;
-        IList? argsOldItems;
-        IList? argsNewItems;
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        //
-        // ReplaceRange
-        //
-        args = argsList[0];
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+            collection.RemoveRange(itemsRemovedIndex, itemsRemovedCount);
 
-        argsOldItems = args.OldItems;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            var args = argsList[0];
 
-        argsNewItems = args.NewItems;
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Reset));
+            Assert.That(args.OldItems, Is.Null);
+            Assert.That(args.NewItems, Is.Null);
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            collectionCount -= itemsRemovedCount;
 
-        //
-        // Replace
-        //
-        //for (var i = 0; i < itemsReplacedCount - 1; i++)
-        //{
-        //    args = argsList[i];
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        //    Assert.That(args, Is.Not.Null);
-        //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+        [Test]
+        public void CanReplaceRange_NonEmptyObservableCollection()
+        {
+            // 2,6,[0,1,2,3,4,5]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,0,1,2,3,4,5,8,9                 (10)
 
-        //    argsOldItems = args.OldItems;
+            var items = _items;
+            var itemsCount = items.Count;
 
-        //    Assert.That(argsOldItems, Is.Not.Null);
-        //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            var items_ItemsToReplace_IndexStart = 2;
+            var items_ItemsToReplace_Count = 6;
+            //var itemsToReplace = items.GetRange(0, 6);
+            var itemsToReplace = items.GetRange(0..6);
+            var itemsToReplace_Count = itemsToReplace.Count;
+            var notificationCount = 1; // 1 (ReplaceRange)
+            //var notificationCount = 6; // 6 (Replace)
+            var itemsReplacedCount = itemsCount - items_ItemsToReplace_IndexStart;
 
-        //    argsNewItems = args.NewItems;
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        //    Assert.That(argsNewItems, Is.Not.Null);
-        //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
-        //}
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
+            collection.ReplaceRange(items_ItemsToReplace_IndexStart,
+                                    items_ItemsToReplace_Count,
+                                    itemsToReplace);
 
-        //
-        // AddRange
-        //
-        args = argsList[notificationCount - 1];
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
+            NotifyCollectionChangedEventArgs args;
+            IList? argsOldItems;
+            IList? argsNewItems;
 
-        argsOldItems = args.OldItems;
+            //
+            // ReplaceRange
+            //
+            args = argsList[0];
 
-        Assert.That(argsOldItems, Is.Null);
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
 
-        argsNewItems = args.NewItems;
+            argsOldItems = args.OldItems;
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
-    }
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
 
-    [Test]
-    public void CanReplaceRange_WithRemoveRange_NonEmptyObservableCollection()
-    {
-        // 0,6,[0,1]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,6,7,8,9                          (6)
-        // 4,6,[0,1]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,0,1                          (6)
-        // 8,4,[0,1]
-        // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
-        // After:   0,1,2,3,4,5,6,7,0,1                  (6)
+            argsNewItems = args.NewItems;
 
-        var items = _items;
-        var itemsCount = items.Count;
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
 
-        var items_ItemsToReplace_IndexStart = 4;
-        var items_ItemsToReplace_Count = 6;
-        //var itemsToReplace = items.GetRange(0, 2);    // 2 items
-        var itemsToReplace = items.GetRange(0..2);    // 2 items
-        var itemsToReplace_Count = itemsToReplace.Count;
-        var notificationCount = 2; // 1 (ReplaceRange) + 1 (RemoveRange)
-        //var notificationCount = 3; // 2 (Replace) + 1 (RemoveRange)
-        var itemsReplacedCount = 2;
-        //var itemsReplacedCount = itemsCount - items_ItemsToReplace_Count - items_ItemsToReplace_IndexStart;
-        var itemsRemovedCount = 4;
-        //var itemsRemovedCount = itemsCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+            //
+            // Replace
+            //
+            //for (var i = 0; i < itemsReplacedCount - 1; i++)
+            //{
+            //    args = argsList[i];
 
-        var collection = new TestObservableCollection<int>(items);
-        var collectionCount = collection.Count;
-        Assert.That(collection, Has.Count.EqualTo(itemsCount));
+            //    Assert.That(args, Is.Not.Null);
+            //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
 
-        var argsList = collection.CollectionChangedEventArgsList;
+            //    argsOldItems = args.OldItems;
 
-        Assert.That(argsList, Has.Count.EqualTo(0));
+            //    Assert.That(argsOldItems, Is.Not.Null);
+            //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
 
-        collection.ReplaceRange(items_ItemsToReplace_IndexStart,
-                                items_ItemsToReplace_Count,
-                                itemsToReplace);
+            //    argsNewItems = args.NewItems;
 
-        Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+            //    Assert.That(argsNewItems, Is.Not.Null);
+            //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            //}
 
-        NotifyCollectionChangedEventArgs args;
-        IList? argsOldItems;
-        IList? argsNewItems;
+            collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
 
-        //
-        // ReplaceRange
-        //
-        args = argsList[0];
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+        }
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+        [Test]
+        public void CanReplaceRange_WithAddRange_NonEmptyObservableCollection()
+        {
+            // 0,4,[0,1,2,3,4,5,6,7,8,9]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,4,5,6,7,8,9,4,5,6,7,8,9     (16)
+            // 4,4,[0,1,2,3,4,5,6,7,8,9]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,0,1,2,3,4,5,6,7,8,9,8,9     (16)
+            // 5,4,[0,1,2,3,4,5,6,7,8,9]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,4,0,1,2,3,4,5,6,7,8,9,9     (16)
+            // 6,4,[0,1,2,3,4,5,6,7,8,9]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,4,5,0,1,2,3,4,5,6,7,8,9     (16)
 
-        argsOldItems = args.OldItems;
+            var items = _items;
+            var itemsCount = items.Count;
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            var items_ItemsToReplace_IndexStart = 4;
+            var items_ItemsToReplace_Count = 4;
+            //var itemsToReplace = items.GetRange(0, items.Count);
+            var itemsToReplace = items.GetRange(0..);
+            var itemsToReplace_Count = itemsToReplace.Count;
+            var notificationCount = 2; // 1 (ReplaceRange) + 1 (AddRange)
+            //var notificationCount = 7; // 6 (Replace) + 1 (AddRange)
+            var itemsReplacedCount = itemsCount - items_ItemsToReplace_IndexStart;
+            //var itemsAddedCount = itemsCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+            var itemsAddedCount = 6;
 
-        argsNewItems = args.NewItems;
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
 
-        Assert.That(argsNewItems, Is.Not.Null);
-        Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
-        Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+            var argsList = collection.CollectionChangedEventArgsList;
 
-        //
-        // Replace
-        //
-        //for (var i = 0; i < itemsReplacedCount - 1; i++)
-        //{
-        //    args = argsList[i];
+            Assert.That(argsList, Has.Count.EqualTo(0));
 
-        //    Assert.That(args, Is.Not.Null);
-        //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+            collection.ReplaceRange(items_ItemsToReplace_IndexStart,
+                                    items_ItemsToReplace_Count,
+                                    itemsToReplace);
 
-        //    argsOldItems = args.OldItems;
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
 
-        //    Assert.That(argsOldItems, Is.Not.Null);
-        //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            NotifyCollectionChangedEventArgs args;
+            IList? argsOldItems;
+            IList? argsNewItems;
 
-        //    argsNewItems = args.NewItems;
+            //
+            // ReplaceRange
+            //
+            args = argsList[0];
 
-        //    Assert.That(argsNewItems, Is.Not.Null);
-        //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
-        //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
-        //}
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
 
-        collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+            argsOldItems = args.OldItems;
 
-        Assert.That(collection, Has.Count.EqualTo(collectionCount));
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
 
-        //
-        // RemoveRange
-        //
-        args = argsList[notificationCount - 1];
+            argsNewItems = args.NewItems;
 
-        Assert.That(args, Is.Not.Null);
-        Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
 
-        argsOldItems = args.OldItems;
+            //
+            // Replace
+            //
+            //for (var i = 0; i < itemsReplacedCount - 1; i++)
+            //{
+            //    args = argsList[i];
 
-        Assert.That(argsOldItems, Is.Not.Null);
-        Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
+            //    Assert.That(args, Is.Not.Null);
+            //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
 
-        argsNewItems = args.NewItems;
+            //    argsOldItems = args.OldItems;
 
-        Assert.That(argsNewItems, Is.Null);
+            //    Assert.That(argsOldItems, Is.Not.Null);
+            //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+
+            //    argsNewItems = args.NewItems;
+
+            //    Assert.That(argsNewItems, Is.Not.Null);
+            //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            //}
+
+            collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+
+            //
+            // AddRange
+            //
+            args = argsList[notificationCount - 1];
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Add));
+
+            argsOldItems = args.OldItems;
+
+            Assert.That(argsOldItems, Is.Null);
+
+            argsNewItems = args.NewItems;
+
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsAddedCount));
+        }
+
+        [Test]
+        public void CanReplaceRange_WithRemoveRange_NonEmptyObservableCollection()
+        {
+            // 0,6,[0,1]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,6,7,8,9                          (6)
+            // 4,6,[0,1]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,0,1                          (6)
+            // 8,4,[0,1]
+            // Before:  0,1,2,3,4,5,6,7,8,9                 (10)
+            // After:   0,1,2,3,4,5,6,7,0,1                  (6)
+
+            var items = _items;
+            var itemsCount = items.Count;
+
+            var items_ItemsToReplace_IndexStart = 4;
+            var items_ItemsToReplace_Count = 6;
+            //var itemsToReplace = items.GetRange(0, 2);    // 2 items
+            var itemsToReplace = items.GetRange(0..2);    // 2 items
+            var itemsToReplace_Count = itemsToReplace.Count;
+            var notificationCount = 2; // 1 (ReplaceRange) + 1 (RemoveRange)
+            //var notificationCount = 3; // 2 (Replace) + 1 (RemoveRange)
+            var itemsReplacedCount = 2;
+            //var itemsReplacedCount = itemsCount - items_ItemsToReplace_Count - items_ItemsToReplace_IndexStart;
+            var itemsRemovedCount = 4;
+            //var itemsRemovedCount = itemsCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+
+            var collection = new TestObservableCollection<int>(items);
+            var collectionCount = collection.Count;
+            Assert.That(collection, Has.Count.EqualTo(itemsCount));
+
+            var argsList = collection.CollectionChangedEventArgsList;
+
+            Assert.That(argsList, Has.Count.EqualTo(0));
+
+            collection.ReplaceRange(items_ItemsToReplace_IndexStart,
+                                    items_ItemsToReplace_Count,
+                                    itemsToReplace);
+
+            Assert.That(argsList, Has.Count.EqualTo(notificationCount));
+
+            NotifyCollectionChangedEventArgs args;
+            IList? argsOldItems;
+            IList? argsNewItems;
+
+            //
+            // ReplaceRange
+            //
+            args = argsList[0];
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+
+            argsOldItems = args.OldItems;
+
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+
+            argsNewItems = args.NewItems;
+
+            Assert.That(argsNewItems, Is.Not.Null);
+            Assert.That(argsNewItems, Has.Count.EqualTo(itemsReplacedCount));
+            Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart));
+
+            //
+            // Replace
+            //
+            //for (var i = 0; i < itemsReplacedCount - 1; i++)
+            //{
+            //    args = argsList[i];
+
+            //    Assert.That(args, Is.Not.Null);
+            //    Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Replace));
+
+            //    argsOldItems = args.OldItems;
+
+            //    Assert.That(argsOldItems, Is.Not.Null);
+            //    Assert.That(argsOldItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.OldStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+
+            //    argsNewItems = args.NewItems;
+
+            //    Assert.That(argsNewItems, Is.Not.Null);
+            //    Assert.That(argsNewItems, Has.Count.EqualTo(1));
+            //    Assert.That(args.NewStartingIndex, Is.EqualTo(items_ItemsToReplace_IndexStart + i));
+            //}
+
+            collectionCount = collectionCount - items_ItemsToReplace_Count + itemsToReplace_Count;
+
+            Assert.That(collection, Has.Count.EqualTo(collectionCount));
+
+            //
+            // RemoveRange
+            //
+            args = argsList[notificationCount - 1];
+
+            Assert.That(args, Is.Not.Null);
+            Assert.That(args.Action, Is.EqualTo(NotifyCollectionChangedAction.Remove));
+
+            argsOldItems = args.OldItems;
+
+            Assert.That(argsOldItems, Is.Not.Null);
+            Assert.That(argsOldItems, Has.Count.EqualTo(itemsRemovedCount));
+
+            argsNewItems = args.NewItems;
+
+            Assert.That(argsNewItems, Is.Null);
+        }
     }
 }

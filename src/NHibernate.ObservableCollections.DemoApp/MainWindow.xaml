@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
-        Title="Example"
+        Title="NHibernate.ObservableCollections (Demo App)"
         WindowStartupLocation="CenterScreen"
         Width="960" Height="680"
         Loaded="MainWindow_Loaded">
@@ -60,7 +60,8 @@
                        FontWeight="Bold" />
                 <ListBox Name="SampleSetBox"
                          Margin="20,0,20,10"
-                         DisplayMemberPath="Name" SelectionChanged="ItemSelectionChange" />
+                         DisplayMemberPath="Name"
+                         SelectionChanged="ItemSelectionChanged" />
             </DockPanel>
             <DockPanel Grid.Column="1">
                 <Label Name="SampleListLabel"
@@ -70,7 +71,8 @@
                        FontWeight="Bold" />
                 <ListBox Name="SampleListBox"
                          Margin="20,0,20,10"
-                         DisplayMemberPath="Name" SelectionChanged="ItemSelectionChange" />
+                         DisplayMemberPath="Name"
+                         SelectionChanged="ItemSelectionChanged" />
             </DockPanel>
         </Grid>
     </DockPanel>

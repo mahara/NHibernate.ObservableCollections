@@ -1,45 +1,47 @@
-namespace NHibernate.ObservableCollections.DemoApp;
-
-/// <summary>
-///     A parent class that contains a list of child <see cref="SampleItem" /> objects.
-/// </summary>
-public class SampleListContainer
+namespace NHibernate.ObservableCollections.DemoApp
 {
-    private IList<SampleItem> _sampleList = new ObservableCollection<SampleItem>();
-
-    public virtual int Id { get; protected set; }
-
-    public virtual IList<SampleItem> SampleList
+    /// <summary>
+    ///     A parent class that contains a list of child <see cref="SampleItem" /> objects.
+    /// </summary>
+    public class SampleListContainer
     {
-        get => _sampleList;
-        protected set
-        {
-            _sampleList = value;
-            ((INotifyCollectionChanged) _sampleList).CollectionChanged += OnSampleListCollectionChanged;
-        }
-    }
+        private IList<SampleItem> _sampleList = new ObservableCollection<SampleItem>();
 
-    private void OnSampleListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Add)
+        public virtual int Id { get; protected set; }
+
+        public virtual IList<SampleItem> SampleList
         {
-            var newItems = e.NewItems;
-            if (newItems is not null)
+            get => _sampleList;
+            protected set
             {
-                foreach (SampleItem item in newItems)
-                {
-                    Console.WriteLine($"{item} added to the list");
-                }
+                _sampleList = value;
+
+                ((INotifyCollectionChanged) _sampleList).CollectionChanged += OnSampleListCollectionChanged;
             }
         }
-        else if (e.Action == NotifyCollectionChangedAction.Remove)
+
+        private void OnSampleListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            var oldItems = e.OldItems;
-            if (oldItems is not null)
+            if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                foreach (SampleItem item in oldItems)
+                var newItems = e.NewItems;
+                if (newItems is not null)
                 {
-                    Console.WriteLine($"{item} removed from the list");
+                    foreach (SampleItem item in newItems)
+                    {
+                        Console.WriteLine($"{item} added to the list");
+                    }
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                var oldItems = e.OldItems;
+                if (oldItems is not null)
+                {
+                    foreach (SampleItem item in oldItems)
+                    {
+                        Console.WriteLine($"{item} removed from the list");
+                    }
                 }
             }
         }

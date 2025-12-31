@@ -37,7 +37,7 @@
               https://github.com/NuGet/Home/issues/6734
               https://github.com/dotnet/wpf/issues/5679
 
-      - UseArtifactsOutput and ArtifactsPath
+      - ArtifactsPath
         https://learn.microsoft.com/en-us/dotnet/core/sdk/artifacts-output
           https://github.com/dotnet/sdk/issues/867
 
@@ -207,11 +207,11 @@
     <BaseOutputBaseFolderPath>$(ArtifactsFolderPath)$(OutputFolderName)\</BaseOutputBaseFolderPath>
     <BaseOutputFolderPath>$(BaseOutputBaseFolderPath)</BaseOutputFolderPath>
     <BaseOutputPath>$(BaseOutputFolderPath)</BaseOutputPath>
+
     <!--
       https://github.com/dotnet/msbuild/issues/87
         https://github.com/MicrosoftDocs/visualstudio-docs/pull/4608
     -->
-
     <OutputBaseFolderPath>$(BaseOutputBaseFolderPath)$(Configuration)\$(TargetFramework)\</OutputBaseFolderPath>
     <OutputFolderPath>$(OutputBaseFolderPath)$(MSBuildProjectName)\</OutputFolderPath>
     <OutputPath>$(OutputFolderPath)</OutputPath>
