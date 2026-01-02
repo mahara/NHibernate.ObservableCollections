@@ -1,7 +1,7 @@
 # NHibernate.ObservableCollections - Changelog
 
 
-## 5.6.0 (2025-xx-xx)
+## 5.6.0 (2026-01-02)
 
 ### All
 
