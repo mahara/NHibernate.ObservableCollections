@@ -12,11 +12,11 @@
     https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/nuget
   -->
   <PropertyGroup>
-    <AssemblyName>NHibernate.ObservableCollections.PerformanceTests</AssemblyName>
-    <RootNamespace>NHibernate.ObservableCollections.PerformanceTests</RootNamespace>
+    <AssemblyName>Iesi.Collections.Generic.PerformanceTests</AssemblyName>
+    <RootNamespace>Iesi.Collections.Generic.PerformanceTests</RootNamespace>
 
-    <Title>NHibernate.ObservableCollections.PerformanceTests</Title>
-    <Description>NHibernate.ObservableCollections.PerformanceTests</Description>
+    <Title>Iesi.Collections.Generic.PerformanceTests</Title>
+    <Description>Iesi.Collections.Generic.PerformanceTests</Description>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>

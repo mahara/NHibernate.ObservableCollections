@@ -6,4 +6,4 @@ global using BenchmarkDotNet.Exporters;
 global using BenchmarkDotNet.Jobs;
 global using BenchmarkDotNet.Running;
 
-global using NHibernate.ObservableCollections.PerformanceTests;
+global using Iesi.Collections.Generic.PerformanceTests;
