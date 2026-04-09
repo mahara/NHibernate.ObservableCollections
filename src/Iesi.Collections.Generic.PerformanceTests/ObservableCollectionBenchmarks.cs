@@ -1,5 +1,6 @@
 namespace Iesi.Collections.Generic.PerformanceTests
 {
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class ObservableCollection_Benchmarks
     {
         [Params(100, 1_000, 10_000)]
@@ -45,6 +46,7 @@ namespace Iesi.Collections.Generic.PerformanceTests
         }
     }
 
+    [BenchmarkFeatures(enable: BenchmarkFeatures.Memory)]
     public class ObservableCollection_ReplaceRange_Benchmarks
     {
         [Params(100, 1_000, 10_000)]
