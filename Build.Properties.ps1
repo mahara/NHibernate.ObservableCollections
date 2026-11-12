@@ -32,7 +32,7 @@ $PARAMETER___RUN_TEST___DEFAULT = $true
 $PARAMETER___RUN_PACKAGE___DEFAULT = $true
 $PARAMETER___VERSION___DEFAULT = '5.7.0'
 $PARAMETER___CONFIGURATION___DEFAULT = 'Release'
-$PARAMETER___FRAMEWORKS___DEFAULT = 'net10.0;net9.0;net8.0;net48'
+$PARAMETER___FRAMEWORKS___DEFAULT = 'net11.0;net10.0;net48'
 $PARAMETER___ENABLE_SOURCE_LINK___DEFAULT = $true
 
 
@@ -92,8 +92,8 @@ $BUILD_UNIT_PARAMETERS = @{
 
     'NHibernate.ObservableCollections.DemoApp' = @{
         BUILD_PARAMETERS = @(
-            "NHibernate.ObservableCollections.Helpers.csproj|net10.0-windows"
-            "NHibernate.ObservableCollections.DemoApp.csproj|net10.0-windows"
+            "NHibernate.ObservableCollections.Helpers.csproj|net11.0-windows"
+            "NHibernate.ObservableCollections.DemoApp.csproj|net11.0-windows"
         )
     }
 }
